@@ -1,0 +1,102 @@
+{
+  "common": {
+    "search": "Search",
+    "categories": "Categories",
+    "pricing": "Pricing",
+    "new": "New",
+    "featured": "Featured",
+    "popular": "Popular",
+    "viewAll": "View All",
+    "submit": "Submit",
+    "learnMore": "Learn More",
+    "visit": "Visit"
+  },
+  "search": {
+    "placeholder": "Search for a tool..."
+  },
+  "nav": {
+    "home": "Home",
+    "tools": "Tools",
+    "about": "About",
+    "submitTool": "Submit Tool"
+  },
+  "hero": {
+    "title": "AI-Powered Education Tools",
+    "subtitle": "for Students & Educators",
+    "description": "Tolzy is your central hub for discovering and exploring the best AI tools designed specifically for learning, teaching, and academic success.",
+    "searchPlaceholder": "Search for AI tools for writing, research, math, and more..."
+  },
+  "categories": {
+    "3D": "3D",
+    "Automation": "Automation",
+    "Business": "Business",
+    "Collaboration": "Collaboration",
+    "Communication": "Communication",
+    "Creativity": "Creativity",
+    "Data Science": "Data Science",
+    "Design": "Design",
+    "Education": "Education",
+    "Electronics": "Electronics",
+    "Freelancing": "Freelancing",
+    "Gamification": "Gamification",
+    "Games": "Games",
+    "Language Learning": "Language Learning",
+    "Library": "Library",
+    "Lifestyle": "Lifestyle",
+    "Math": "Math",
+    "Memory": "Memory",
+    "Online Learning": "Online Learning",
+    "Other": "Other",
+    "Productivity": "Productivity",
+    "Programming": "Programming",
+    "Project Management": "Project Management",
+    "Reading": "Reading",
+    "Research": "Research",
+    "Science": "Science",
+    "Studying": "Studying",
+    "Teaching": "Teaching",
+    "Technology": "Technology",
+    "Test Prep": "Test Prep",
+    "Video": "Video",
+    "Writing": "Writing"
+  },
+  "footer": {
+    "about": "Empowering education through AI tools and resources. Discover the future of learning with our curated selection.",
+    "navigation": "Navigation",
+    "support": "Support",
+    "copyright": "© 2025 Zakerly. All rights reserved.",
+    "developmentStatus": "Launching {{date}}",
+    "madeWith": "Made with",
+    "inEgypt": "in Egypt",
+    "allRightsReserved": "All rights reserved"
+  },
+  "pricing": {
+    "Free": "Free",
+    "Freemium": "Freemium",
+    "Paid": "Paid",
+    "Subscription": "Subscription"
+  },
+  "aiCategories": {
+    "title": "AI Tool Categories",
+    "subtitle": "We've categorized {{count}}+ AI tools into {{categories}} categories.",
+    "tools": "Tools",
+    "noTools": "No tools available at the moment.",
+    "imageTools": "AI Image Tools",
+    "businessTools": "AI Business Tools",
+    "automationTools": "Automation Tools",
+    "productivityTools": "AI Productivity Tools",
+    "videoTools": "AI Video Tools",
+    "artGenerators": "AI Art Generators",
+    "textGenerators": "AI Text Generators",
+    "codeTools": "AI Code Tools",
+    "audioGenerators": "AI Audio Generators",
+    "miscTools": "Misc AI Tools",
+    "description": "Tolzy is a leading AI resource platform, dedicated to empowering professionals across various industries to leverage AI technologies for innovation and growth. In our rapidly evolving technological landscape, harnessing the right AI tools is essential for advancement in nearly all areas of business. Our platform provides access to an array of cutting-edge solutions that simplify professional AI integration into professional practices."
+  },
+  "popularTools": {
+    "popularTab": "Popular Tools",
+    "recentTab": "Recently Added",
+    "mostPopularCategories": "Most Popular Categories",
+    "viewAllTools": "View All Tools"
+  }
+}

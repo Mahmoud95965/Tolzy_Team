@@ -1,0 +1,377 @@
+/* Font import moved to next/font/google in layout.tsx */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* RTL Support */
+html[dir="rtl"] {
+  text-align: right;
+}
+
+/* Global Font Settings */
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-almarai), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 500;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+.dark body {
+  background-color: #0f172a;
+  color: #f8fafc;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Glassmorphism Utilities */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.dark .glass {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+.dark .glass-card {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Text Gradient Utilities */
+.text-gradient {
+  background: linear-gradient(to right, #4f46e5, #7c3aed);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.dark .text-gradient {
+  background: linear-gradient(to right, #818cf8, #a78bfa);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.text-gradient-gold {
+  background: linear-gradient(to right, #f59e0b, #d97706);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Article Styles (Simplified) */
+.article-content {
+  line-height: 1.8;
+  font-size: 1.125rem;
+}
+
+.article-content h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.article-content h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.article-content p {
+  margin-bottom: 1.5rem;
+  color: inherit;
+}
+
+.article-content ul {
+  list-style-type: disc;
+  padding-right: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.article-content a {
+  color: #4f46e5;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.dark .article-content a {
+  color: #818cf8;
+}
+
+html[dir="rtl"] {
+  text-align: right;
+}
+
+/* Fix input directions for search fields */
+input[type="search"],
+input[type="text"],
+input[type="email"] {
+  direction: rtl;
+}
+
+/* Ensure LTR for English content */
+.ltr {
+  direction: ltr;
+}
+
+/* Additional styles for better Arabic text rendering */
+/* Global Font Settings */
+html {
+  font-size: 18px;
+  /* Increased base size */
+}
+
+body {
+  font-feature-settings: "kern" 1;
+  font-kerning: normal;
+}
+
+@layer base {
+  body {
+    @apply bg-slate-50 dark:bg-[#050505] text-slate-900 dark:text-slate-100 antialiased font-sans transition-colors duration-300;
+    direction: rtl;
+    /* Enforce global RTL */
+  }
+}
+
+/* Simple and Stable Animations for Profile Page */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+.animate-fade-in-down {
+  animation: fade-in-down 0.4s ease-out forwards;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out forwards;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.5s ease-out forwards;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+/* Smooth transitions */
+* {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hover effects with smooth transitions */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Article HTML Content Styles */
+.article-content {
+  font-size: 1.125rem;
+  line-height: 1.75;
+  color: rgb(30 41 59);
+}
+
+.dark .article-content {
+  color: rgb(226 232 240);
+}
+
+.article-content p {
+  margin-bottom: 1.25rem;
+}
+
+.article-content h1,
+.article-content h2,
+.article-content h3 {
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: rgb(15 23 42);
+}
+
+.dark .article-content h1,
+.dark .article-content h2,
+.dark .article-content h3 {
+  color: rgb(241 245 249);
+}
+
+.article-content h1 {
+  font-size: 2rem;
+}
+
+.article-content h2 {
+  font-size: 1.5rem;
+}
+
+.article-content h3 {
+  font-size: 1.25rem;
+}
+
+.article-content ul,
+.article-content ol {
+  margin-bottom: 1.25rem;
+  padding-right: 2rem;
+}
+
+.article-content li {
+  margin-bottom: 0.5rem;
+}
+
+.article-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+  margin: 1.5rem auto;
+  display: block;
+}
+
+.article-content blockquote {
+  border-right: 4px solid rgb(99 102 241);
+  padding-right: 1rem;
+  margin: 1.5rem 0;
+  font-style: italic;
+  color: rgb(71 85 105);
+}
+
+.dark .article-content blockquote {
+  border-right-color: rgb(129 140 248);
+  color: rgb(148 163 184);
+}
+
+.article-content code {
+  background-color: rgb(241 245 249);
+  color: rgb(220 38 38);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.875em;
+  font-family: 'Courier New', monospace;
+}
+
+.dark .article-content code {
+  background-color: rgb(30 41 59);
+  color: rgb(248 113 113);
+}
+
+.article-content a {
+  color: rgb(99 102 241);
+  text-decoration: underline;
+}
+
+.article-content a:hover {
+  color: rgb(79 70 229);
+}
+
+.dark .article-content a {
+  color: rgb(129 140 248);
+}
+
+.dark .article-content a:hover {
+  color: rgb(165 180 252);
+}

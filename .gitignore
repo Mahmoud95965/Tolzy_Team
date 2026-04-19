@@ -1,0 +1,63 @@
+# Files to ignore in git
+*.log
+*.txt
+
+# Build artifacts and cache
+.next
+.turbo
+dist
+dist-ssr
+out
+build
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.local
+.env.example
+*.local
+
+# Dependencies
+node_modules
+
+# OS files
+.DS_Store
+Thumbs.db
+*.sw?
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# Testing
+coverage
+
+# Large temporary files
+Tools*.json
+index.html
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Next.js
+next-env.d.ts
+
+# Vite
+vite.config.ts.timestamp-*
+
+
+
+# Database settings
+*.sql
+secure_firebase_rules.md

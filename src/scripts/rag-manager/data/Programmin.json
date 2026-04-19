@@ -1,0 +1,240 @@
+{
+  "totalTools": 39,
+  "categories": ["Website Builder", "Programming"],
+  "tools": [
+    {
+      "id": "51sc1swTsvFmwc5d7FMJ",
+      "name": "Dorik AI",
+      "description": "منصة بناء مواقع (No-Code) سريعة تستخدم AI لإنشاء صفحات هبوط.",
+      "category": "Website Builder"
+    },
+    {
+      "id": "F8pXp46ow1DuEDOISadh",
+      "name": "Stunning.so",
+      "description": "أداة بناء مواقع ويب فورية مدعومة بالذكاء الاصطناعي.",
+      "category": "Website Builder"
+    },
+    {
+      "id": "IJS67JEIs7vtOoCzL8xs",
+      "name": "Softr",
+      "description": "منصة (No-Code) لبناء بوابات (Portals) ومواقع (Websites) من (Airtable/Google Sheets).",
+      "category": "Website Builder"
+    },
+    {
+      "id": "U2ckADU7L3O78YvOHukS",
+      "name": "Wix ADI",
+      "description": "منصة بناء مواقع (Wix) تستخدم AI (ADI) لتصميم موقع كامل تلقائياً.",
+      "category": "Website Builder"
+    },
+    {
+      "id": "UeF319ykUsSwHroKh8Bc",
+      "name": "Durable.co",
+      "description": "أداة بناء مواقع بالـ AI تدعي بناء موقع كامل في 30 ثانية.",
+      "category": "Website Builder"
+    },
+    {
+      "id": "VqhkmyrGYzWLivmFjkrS",
+      "name": "Zyro AI",
+      "description": "أداة بناء مواقع (No-Code) من Hostinger تستخدم AI لإنشاء الموقع.",
+      "category": "Website Builder"
+    },
+    {
+      "id": "m9LeJSaPOuCE8yy1VEAP",
+      "name": "Framer AI",
+      "description": "أداة تصميم وبناء مواقع ويب تحول الأوامر النصية إلى صفحات ويب كاملة.",
+      "category": "Website Builder"
+    },
+    {
+      "id": "eROCQWpezmFIQ6LyDngf",
+      "name": "Bubble.io",
+      "description": "أقوى منصة (No-Code) لبناء تطبيقات ويب (Web Apps) معقدة، الآن مع (AI).",
+      "category": "Website Builder"
+    },
+    {
+      "id": "pbXdW78XaJ0yb18REsx2",
+      "name": "Webflow AI",
+      "description": "ميزات AI مدمجة في منصة (Webflow) لتصميم المواقع (No-Code).",
+      "category": "Website Builder"
+    },
+    {
+      "id": "viZla2DnDGLckIxiW7Pj",
+      "name": "Mixo",
+      "description": "أداة بناء مواقع (AI Website Builder) تركز على (Startups) للتحقق من الأفكار.",
+      "category": "Website Builder"
+    },
+    {
+      "id": "yHSBWadtn4THoRapz5mi",
+      "name": "Relume AI",
+      "description": "أداة لبناء مخططات المواقع (Sitemaps) وهياكلها (Wireframes) باستخدام الذكاء الاصطناعي.",
+      "category": "Website Builder"
+    },
+    {
+      "id": "E8OxLqQIFHbnPvUuNQhU",
+      "name": "10Web.io",
+      "description": "منصة (WordPress) مدعومة بالـ AI (استضافة، بناء مواقع، تحسين سرعة).",
+      "category": "Website Builder"
+    },
+    {
+      "id": "yibH6102FgkzW6uHEWDR",
+      "name": "Glide",
+      "description": "منصة (No-Code) لبناء تطبيقات موبايل وويب (Apps) من (Google Sheets) مع ميزات AI.",
+      "category": "Website Builder"
+    },
+    {
+      "id": "mdxcdtlF4F9BGZArq0cg",
+      "name": "Adalo",
+      "description": "منصة (No-Code) لبناء تطبيقات موبايل (Native Mobile Apps) (iOS/Android).",
+      "category": "Website Builder"
+    },
+    {
+      "id": "m44fbXbBHVRQgQ8qbU3e",
+      "name": "Debuild",
+      "description": "أداة (Low-code) (AI) لبناء (Web Apps) (توليد (React) و (SQL)).",
+      "category": "Website Builder"
+    },
+    {
+      "id": "QoEs84UMfQDh6R49C4P7",
+      "name": "CodiumAI",
+      "description": "أداة تركز على توليد اختبارات (Unit Tests) ذكية لضمان جودة الكود.",
+      "category": "Programming"
+    },
+    {
+      "id": "X7CHFt3vDqYJk7cxYcgN",
+      "name": "Warp",
+      "description": "طرفية (Terminal) ذكية وحديثة تدعم أوامر AI وتسهل العمل الجماعي.",
+      "category": "Programming"
+    },
+    {
+      "id": "dQ70N2l5Mtj59WAuW6EM",
+      "name": "Replit Ghostwriter",
+      "description": "مساعد ذكي مدمج في بيئة Replit لكتابة وشرح الكود وتصحيح الأخطاء.",
+      "category": "Programming"
+    },
+    {
+      "id": "0Ma88PI9wMMXMQlkxBds",
+      "name": "Replit AI",
+      "description": "مساعد برمجة ذكي مدمج في بيئة التطوير السحابية Replit.",
+      "category": "Programming"
+    },
+    {
+      "id": "6l7lX1eeHlysYbmdlDYd",
+      "name": "Codeium",
+      "description": "مساعد برمجة (AI Coding Assistant) مجاني وسريع، وبديل قوي لـ Copilot.",
+      "category": "Programming"
+    },
+    {
+      "id": "CEzGRa07EAaMxDP9btSl",
+      "name": "Tabnine",
+      "description": "مساعد إكمال كود بالذكاء الاصطناعي يركز على الخصوصية والفرق.",
+      "category": "Programming"
+    },
+    {
+      "id": "EGsPw6RV7Z8VmjPRS7Qt",
+      "name": "Google Colab",
+      "description": "بيئة (Jupyter Notebook) سحابية لتشغيل أكواد Python والذكاء الاصطناعي.",
+      "category": "Programming"
+    },
+    {
+      "id": "EUsQvA3DzWlD12YZieHI",
+      "name": "GitHub Copilot",
+      "description": "مساعد برمجة بالذكاء الاصطناعي يقدم اقتراحات ذكية لإكمال الأكواد والدردشة البرمجية.",
+      "category": "Programming"
+    },
+    {
+      "id": "HhC1pIeTF8lvVV2Lf2MY",
+      "name": "Sketch2Code",
+      "description": "أداة من مايكروسوفت تحول صور واجهات المستخدم المرسومة باليد إلى كود HTML.",
+      "category": "Programming"
+    },
+    {
+      "id": "KatlzrQUecD5d6AKxsOA",
+      "name": "v0.dev",
+      "description": "أداة (AI) من (Vercel) لتحويل الأوامر النصية (Text Prompts) إلى واجهات (React) جاهزة.",
+      "category": "Programming"
+    },
+    {
+      "id": "MNQSodbQlzWXuyWNqvQo",
+      "name": "Streamlit",
+      "description": "إطار عمل (Framework) (Python) (Open Source) لبناء تطبيقات بيانات (Data Apps) سريعة.",
+      "category": "Programming"
+    },
+    {
+      "id": "Mlmhos1qp3nwEhyyoxNd",
+      "name": "Blackbox AI",
+      "description": "مساعد برمجة (AI Coding Assistant) يركز على \"البحث عن الكود\" (Code Search).",
+      "category": "Programming"
+    },
+    {
+      "id": "T4L8pCEiiTFmjTbREPAJ",
+      "name": "Cursor",
+      "description": "محرر أكواد (Code Editor) \"AI-first\" مبني على VS Code.",
+      "category": "Programming"
+    },
+    {
+      "id": "TEPebzP8UNEz2upYyBcU",
+      "name": "Vercel AI SDK",
+      "description": "مجموعة أدوات لتطوير واجهات مستخدم لتطبيقات الذكاء الاصطناعي.",
+      "category": "Programming"
+    },
+    {
+      "id": "YrTTc44QTX2DZNmlIIgQ",
+      "name": "Adaboy",
+      "description": "مساعد (AI) لكتابة (Documentation) للبرامج، يركز على (API Docs).",
+      "category": "Programming"
+    },
+    {
+      "id": "i7Aj15mHLxbkMeBdmKfC",
+      "name": "Gradio",
+      "description": "مكتبة Python مفتوحة المصدر لبناء واجهات ويب (Web UIs) لنماذج التعلم الآلي.",
+      "category": "Programming"
+    },
+    {
+      "id": "n6lBBorS5bSE30BRJQLK",
+      "name": "Bito",
+      "description": "مساعد برمجة (AI Coding Assistant) منافس لـ Copilot، يركز على مراجعة الكود (Code Reviews).",
+      "category": "Programming"
+    },
+    {
+      "id": "oHpY7m3Ji4EXvt4vu5LK",
+      "name": "Mintlify",
+      "description": "أداة لإنشاء (Documentation) جميلة وموثقة (Docs) للمطورين بالـ AI.",
+      "category": "Programming"
+    },
+    {
+      "id": "ryMSl3xBhMB5P9yTTH1C",
+      "name": "Amazon CodeWhisperer",
+      "description": "مساعد برمجة بالذكاء الاصطناعي من Amazon، مجاني للاستخدام الفردي.",
+      "category": "Programming"
+    },
+    {
+      "id": "uUWk55zpssnfj5d3hZll",
+      "name": "Fronty",
+      "description": "تحويل صور التصميمات (JPG/PNG) إلى كود HTML/CSS جاهز.",
+      "category": "Programming"
+    },
+    {
+      "id": "vHQQTIXSEaFpIrjnllun",
+      "name": "Voiceflow",
+      "description": "منصة (No-Code) لبناء، اختبار، ونشر روبوتات الدردشة (Chatbots) المعقدة.",
+      "category": "Programming"
+    },
+    {
+      "id": "xPSEdbVsdLy8O2jz5bcH",
+      "name": "Codacy",
+      "description": "منصة (AI) لمراجعة الكود (Code Review) آلياً (Static Analysis).",
+      "category": "Programming"
+    },
+    {
+      "id": "niDfRSqIWuEAPLSnyHEP",
+      "name": "DeepSeek",
+      "description": "شركة ذكاء اصطناعي تركز على تطوير نماذج لغوية متخصصة في البرمجة والرياضيات.",
+      "category": "Programming"
+    },
+    {
+      "id": "qRgf8HeOVyJi4i94432O",
+      "name": "Tailwind AI",
+      "description": "مساعد برمجة متخصص في توليد وتعديل مكونات Tailwind CSS.",
+      "category": "Programming"
+    }
+  ]
+}
