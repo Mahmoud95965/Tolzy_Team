@@ -21,13 +21,17 @@ const styles = `
     50% { opacity: 0.6; }
   }
 
+
   .premium-gradient {
-    background: linear-gradient(135deg, #06b6d4 0%, #2563eb 50%, #1e40af 100%);
-    background-size: 200% auto;
-    animation: shimmer 5s linear infinite;
+    background: #ffffff;
+    color: #000000;
+  }
+  .premium-gradient:hover {
+    background: #f3f4f6;
   }
 
-  .text-premium-gradient {
+
+  .text-white {
     background: linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -43,27 +47,21 @@ const styles = `
     position: relative;
   }
 
+
   .pro-card-glow::before {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    background: linear-gradient(135deg, #06b6d4, #2563eb, #1e40af);
-    border-radius: 1.5rem;
-    z-index: -1;
-    opacity: 0.3;
-    transition: opacity 0.3s ease;
+    display: none;
   }
+
 
   .pro-card-glow:hover::before {
     opacity: 0.6;
   }
 
+
   .mesh-bg {
-    background-image: 
-      radial-gradient(at 0% 0%, hsla(222,47%,11%,1) 0, transparent 50%), 
-      radial-gradient(at 100% 0%, hsla(199,89%,48%,0.15) 0, transparent 50%), 
-      radial-gradient(at 50% 100%, hsla(217,91%,60%,0.1) 0, transparent 50%);
+    background-color: #000000;
   }
+
 
   .custom-scrollbar::-webkit-scrollbar {
     width: 5px;
@@ -380,14 +378,14 @@ export default function PricingPage() {
     {
       title: 'باقة المبتدئين',
       price: 0,
-      description: 'استكشف قوة الذكاء الاصطناعي مجاناً وبدون أي التزامات.',
+      description: 'ابدأ استخدام أدوات الذكاء الاصطناعي مجاناً وبدون أي التزامات.',
       features: ['📊 10 طلبات يومية ذكية', '📚 وصول لـ 630+ أداة متخصصة', '🤖 مساعد TOLZY الأساسي', '⚡ سرعة سيرفرات عادية'],
       cta: 'ابدأ مجاناً الآن',
     },
     {
       title: 'باقة المحترفين PRO',
       price: ORIGINAL_PRICE,
-      description: 'كل ما تحتاجه للسيطرة على مجالك باستخدام أقوى أدوات الذكاء الاصطناعي.',
+      description: 'جميع الميزات التي تحتاجها لزيادة إنتاجيتك باستخدام أقوى أدوات الذكاء الاصطناعي.',
       features: [
         '♾️ استخدام غير محدود لجميع الأدوات',
         '🧠 وصول كامل لنموذج "المفكر" (Thinker)',
@@ -406,7 +404,7 @@ export default function PricingPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: styles }} />
-      <div className="min-h-screen bg-black text-white relative overflow-hidden mesh-bg">
+      <div className="min-h-screen bg-black text-white relative overflow-hidden">
         {/* Scarcity Banner - Sold Out State - HIDDEN */}
         {false && !promoLoading && promoStatus?.remaining_seats === 0 && (
           <div className="sticky top-0 z-50 bg-gradient-to-r from-red-700/95 via-red-700/95 to-red-700/95 backdrop-blur-md py-4 px-4 shadow-2xl border-b-2 border-red-500">
@@ -438,22 +436,21 @@ export default function PricingPage() {
         )}
 
         {/* Ambient Glows */}
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-cyan-600/10 rounded-full blur-[120px] -z-10 animate-pulse-soft"></div>
-        <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[120px] -z-10 animate-pulse-soft" style={{ animationDelay: '2s' }}></div>
+
+
 
         <div className="max-w-6xl mx-auto px-4 py-24 relative z-10">
           {/* Header Section */}
           <div className="text-center mb-24 max-w-3xl mx-auto animate-fade-in-down">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-bold mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-gray-800 text-gray-400 text-xs font-bold mb-6">
               <Sparkles className="w-3 h-3" />
-              <span>نظام TOLZY المتكامل وصل</span>
+              <span>منصة TOLZY المتكاملة</span>
             </div>
             <h1 className="text-5xl md:text-7xl font-black mb-8 leading-tight">
-              أطلق العنان لقوة <br />
-              <span className="text-premium-gradient">ذكائك الاصطناعي</span>
+              خطط أسعار بسيطة وشفافة
             </h1>
             <p className="text-lg md:text-xl text-gray-400 leading-relaxed">
-              انضم إلى آلاف المحترفين الذين يستخدمون TOLZY يومياً لتحويل أفكارهم إلى واقع. أكثر من 630 أداة ذكية في انتظارك.
+              اختر الباقة المناسبة لاحتياجاتك واستفد من أكثر من 630 أداة ذكية متخصصة.
             </p>
           </div>
 
@@ -464,7 +461,7 @@ export default function PricingPage() {
                 key={plan.title}
                 className={`group flex flex-col p-8 md:p-10 rounded-3xl transition-all duration-500 ${
                   plan.isPro 
-                    ? 'pro-card-glow glass-card shadow-2xl scale-[1.02] md:scale-105' 
+                    ? 'bg-[#111] border border-white/10 md:scale-105'
                     : 'bg-white/5 border border-white/10 hover:bg-white/10'
                 }`}
               >
@@ -474,7 +471,7 @@ export default function PricingPage() {
                     <p className="text-gray-400 text-sm max-w-[200px]">{plan.description}</p>
                   </div>
                   {plan.isPro && (
-                    <div className="premium-gradient px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase text-white shadow-lg overflow-hidden relative">
+                    <div className="bg-white text-black px-3 py-1 rounded-full text-xs font-bold uppercase">
                       الأكثر طلباً
                     </div>
                   )}
@@ -545,7 +542,7 @@ export default function PricingPage() {
                       promoStatus?.remaining_seats === 0 && plan.isPro
                         ? 'bg-gray-700 text-gray-500 cursor-not-allowed border border-gray-600'
                         : plan.isPro
-                        ? 'premium-gradient text-white shadow-[0_10px_40px_-10px_rgba(6,182,212,0.3)] hover:shadow-[0_20px_50px_-10px_rgba(6,182,212,0.4)] active:scale-95'
+                        ? 'bg-white text-black hover:bg-gray-200'
                         : 'bg-white/10 text-gray-400 cursor-default border border-white/5'
                     }`}
                   >
@@ -580,8 +577,8 @@ export default function PricingPage() {
             {[
               { 
                 icon: <Brain className="w-6 h-6" />, 
-                title: 'عقل المفكر العميق', 
-                desc: 'وصول مباشر وحصري لنماذج Thinker التي تحل المشكلات البرمجية والتحليلية المعقدة.',
+                title: 'التحليل العميق',
+                desc: 'وصول مباشر لنماذج متقدمة لحل المشكلات البرمجية والتحليلية المعقدة.',
                 bgClass: 'bg-cyan-500/10',
                 textClass: 'text-cyan-400',
                 hoverClass: 'hover:border-cyan-500/30'
@@ -589,7 +586,7 @@ export default function PricingPage() {
               { 
                 icon: <Rocket className="w-6 h-6" />, 
                 title: 'سرعة فائقة', 
-                desc: 'تجاوز طوابير الانتظار مع سيرفرات مخصصة للمحترفين تضمن لك استجابة في أجزاء من الثانية.',
+                desc: 'أولوية الاستخدام وسرعة استجابة فائقة لضمان سير عملك بدون انقطاع.',
                 bgClass: 'bg-blue-500/10',
                 textClass: 'text-blue-400',
                 hoverClass: 'hover:border-blue-500/30'
@@ -597,7 +594,7 @@ export default function PricingPage() {
               { 
                 icon: <Zap className="w-6 h-6" />, 
                 title: '630+ أداة ذكية', 
-                desc: 'مكتبة شاملة تغطي كل تخصصاتك من الكتابة وتوليد الصور إلى البرمجة وتحليل البيانات.',
+                desc: 'مكتبة أدوات متكاملة تشمل الكتابة، توليد الصور، البرمجة، وتحليل البيانات.',
                 bgClass: 'bg-cyan-500/10',
                 textClass: 'text-cyan-400',
                 hoverClass: 'hover:border-cyan-500/30'
@@ -618,10 +615,10 @@ export default function PricingPage() {
             <h2 className="text-3xl font-black text-center mb-16">الأسئلة الشائعة</h2>
             <div className="space-y-4">
               {[
-                { q: 'لماذا تدفع 219 جنيهاً في TOLZY Pro؟', a: <span>اقرأ القصة الكاملة خلف الكواليس وتعرف على سبب القيمة. <a href="https://zdhjnbsjkglumsakpmoj.supabase.co/storage/v1/object/public/article-pdfs/gklfkgflgkfgkfgf.pdf" target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:text-cyan-300 font-semibold underline">فتح الملف الكامل</a></span> },
-                { q: 'ما هي مدة تفعيل الاشتراك؟', a: 'يتم تفعيل الاشتراك عادةً خلال فترة تتراوح من 15 دقيقة إلى ساعتين كحد أقصى بعد إرسال الإيصال.' },
-                { q: 'هل يمكنني الإلغاء في أي وقت؟', a: 'نعم، الاشتراك شهري ويمكنك تجديده أو التوقف عن التجديد متى شئت دون أي التزامات.' },
-                { q: 'هل تتوفر طرق دفع دولية؟', a: 'حالياً نعتمد فودافون كاش وإنستا باي للمستخدمين داخل مصر، وقريباً تتوفر حلول الدفع الدولية.' },
+                { q: 'ما هي مميزات باقة TOLZY Pro؟', a: <span>تعرف على جميع المميزات والفوائد التي نقدمها في باقة المحترفين. <a href="https://zdhjnbsjkglumsakpmoj.supabase.co/storage/v1/object/public/article-pdfs/gklfkgflgkfgkfgf.pdf" target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:text-cyan-300 font-semibold underline">فتح الملف الكامل</a></span> },
+                { q: 'ما هي مدة تفعيل الاشتراك؟', a: 'يتم تفعيل الاشتراك خلال فترة تتراوح بين 15 دقيقة وساعتين بعد إرسال الإيصال.' },
+                { q: 'هل يمكنني الإلغاء في أي وقت؟', a: 'نعم، يمكنك إلغاء أو إيقاف التجديد في أي وقت بدون التزامات.' },
+                { q: 'هل تتوفر طرق دفع دولية؟', a: 'ندعم حالياً فودافون كاش وإنستا باي داخل مصر، وقريباً سنوفر طرق دفع دولية.' },
               ].map((faq, i) => (
                 <div key={i} className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
                   <details className="group">
