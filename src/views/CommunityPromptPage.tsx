@@ -331,16 +331,16 @@ const CommunityPromptPage: React.FC = () => {
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-indigo-500/20 group-hover:shadow-indigo-500/40 transition-all">
                 T
               </div>
-              <span className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight hidden sm:block">
+              <span className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight hidden lg:block">
                 Tolzy <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-violet-500">Community</span>
               </span>
             </Link>
 
-            {/* Center Nav Icons — hidden on mobile (replaced by bottom nav) */}
-            <div className="hidden sm:flex items-center gap-1 bg-slate-100/50 dark:bg-white/[0.03] rounded-full p-1 border border-slate-200/50 dark:border-white/5">
+            {/* Center Nav Icons */}
+            <div className="flex items-center gap-1 bg-slate-100/50 dark:bg-white/[0.03] rounded-full p-1 border border-slate-200/50 dark:border-white/5">
               <button
                 onClick={() => setActiveSection('posts')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all ${
+                className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full text-sm font-bold transition-all ${
                   activeSection === 'posts'
                     ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
@@ -351,7 +351,7 @@ const CommunityPromptPage: React.FC = () => {
               </button>
               <button
                 onClick={() => setActiveSection('creators')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all ${
+                className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full text-sm font-bold transition-all ${
                   activeSection === 'creators'
                     ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
@@ -362,7 +362,7 @@ const CommunityPromptPage: React.FC = () => {
               </button>
               <button
                 onClick={() => setActiveSection('about')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all ${
+                className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full text-sm font-bold transition-all ${
                   activeSection === 'about'
                     ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
@@ -633,35 +633,7 @@ const CommunityPromptPage: React.FC = () => {
           </div>
         )}
 
-        {/* ─── Mobile Bottom Navigation ─── */}
-        <div className="sm:hidden fixed bottom-0 inset-x-0 z-50 bg-white/90 dark:bg-[#050505]/90 backdrop-blur-xl border-t border-slate-200/50 dark:border-white/5 flex items-center justify-around py-2.5 px-4 safe-b shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
-          <button
-            onClick={() => setActiveSection('posts')}
-            className={`flex flex-col items-center gap-1 px-4 py-1 rounded-xl transition-all ${
-              activeSection === 'posts' ? 'text-indigo-600 dark:text-indigo-400 scale-105' : 'text-slate-400 hover:text-slate-600'
-            }`}
-          >
-            <Home size={22} className={activeSection === 'posts' ? 'fill-indigo-100 dark:fill-indigo-500/20' : ''} />
-            <span className="text-[10px] font-bold">الرئيسية</span>
-          </button>
-          
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 active:scale-95 transition-transform -translate-y-4 border-4 border-white dark:border-[#050505]"
-          >
-            <Plus size={26} strokeWidth={2.5} />
-          </button>
-          
-          <button
-            onClick={() => setActiveSection('creators')}
-            className={`flex flex-col items-center gap-1 px-4 py-1 rounded-xl transition-all ${
-              activeSection === 'creators' ? 'text-indigo-600 dark:text-indigo-400 scale-105' : 'text-slate-400 hover:text-slate-600'
-            }`}
-          >
-            <Users size={22} className={activeSection === 'creators' ? 'fill-indigo-100 dark:fill-indigo-500/20' : ''} />
-            <span className="text-[10px] font-bold">المبدعون</span>
-          </button>
-        </div>
+
 
         {/* ─── Mobile Search Modal ─── */}
         <AnimatePresence>

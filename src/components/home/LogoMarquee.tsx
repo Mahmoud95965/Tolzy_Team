@@ -129,15 +129,15 @@ const LogoMarquee: React.FC = () => {
       <div className="max-w-5xl mx-auto space-y-1 px-4">
         {/* Row 1 — left to right */}
         <div className="relative overflow-hidden">
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-20 z-10 bg-gradient-to-r from-white dark:from-[#050505] to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-20 z-10 bg-gradient-to-l from-white dark:from-[#050505] to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-8 sm:w-20 z-10 bg-gradient-to-r from-white dark:from-[#050505] to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-8 sm:w-20 z-10 bg-gradient-to-l from-white dark:from-[#050505] to-transparent" />
           <MarqueeRow direction="ltr" speed={28} />
         </div>
 
         {/* Row 2 — right to left */}
         <div className="relative overflow-hidden">
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-20 z-10 bg-gradient-to-r from-white dark:from-[#050505] to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-20 z-10 bg-gradient-to-l from-white dark:from-[#050505] to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-8 sm:w-20 z-10 bg-gradient-to-r from-white dark:from-[#050505] to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-8 sm:w-20 z-10 bg-gradient-to-l from-white dark:from-[#050505] to-transparent" />
           <MarqueeRow direction="rtl" speed={22} />
         </div>
       </div>

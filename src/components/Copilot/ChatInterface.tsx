@@ -1153,7 +1153,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                     </header>
 
                     {/* Messages Area */}
-                    <div className="flex-1 overflow-y-auto px-2.5 sm:px-4 pb-48 pt-16 scrollbar-hide">
+                    <div className="flex-1 overflow-y-auto px-3 sm:px-4 pb-40 sm:pb-48 pt-16 scrollbar-hide">
                         {messages.length === 0 ? (
                             <div className="flex-1 flex flex-col lg:items-center lg:justify-center max-w-4xl mx-auto px-4 py-10 lg:py-20 animate-in fade-in duration-700">
                                 {/* Welcome Header */}
@@ -1173,7 +1173,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                 </div>
 
                                 {/* Vertical/Scattered Suggestions — Mode-aware */}
-                                <div className="flex flex-col lg:flex-row lg:flex-wrap items-end lg:justify-center gap-4 lg:gap-6 w-full max-w-4xl mx-auto px-4">
+                                <div className="flex flex-col lg:flex-row lg:flex-wrap items-stretch lg:justify-center gap-3 lg:gap-6 w-full max-w-4xl mx-auto px-4">
                                     {MODE_SUGGESTIONS[mode].map((s, i) => (
                                         <motion.button
                                             key={`${mode}-${i}`}
@@ -1181,9 +1181,9 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: i * 0.05 }}
                                             onClick={() => handleSendMessage(s.prompt)}
-                                            className="inline-flex items-center gap-3 px-8 py-3.5 bg-white/50 dark:bg-[#1A1A1A]/50 backdrop-blur-sm hover:bg-slate-50 dark:hover:bg-[#222] border border-slate-200/50 dark:border-white/10 rounded-full transition-all shadow-sm hover:shadow-lg hover:-translate-y-1 group whitespace-nowrap"
+                                            className="inline-flex items-center justify-between lg:justify-start gap-3 px-4 sm:px-8 py-3.5 bg-white/50 dark:bg-[#1A1A1A]/50 backdrop-blur-sm hover:bg-slate-50 dark:hover:bg-[#222] border border-slate-200/50 dark:border-white/10 rounded-2xl sm:rounded-full transition-all shadow-sm hover:shadow-lg hover:-translate-y-1 group w-full lg:w-auto"
                                         >
-                                            <span className="text-slate-700 dark:text-slate-200 text-sm font-bold tracking-tight">{s.text}</span>
+                                            <span className="text-slate-700 dark:text-slate-200 text-sm font-bold tracking-tight text-right flex-1">{s.text}</span>
                                             <div className="w-5 h-5 flex items-center justify-center shrink-0 group-hover:scale-125 transition-transform duration-300">
                                                 {s.icon}
                                             </div>
@@ -1215,9 +1215,9 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                     </div>
 
                     {/* Input Area - Gemini Style (Unified) */}
-                    <div className={`absolute bottom-0 left-0 right-0 z-30 px-4 pb-4 sm:pb-6 pt-12 transition-all duration-500 ${
+                    <div className={`absolute bottom-0 left-0 right-0 z-30 px-2 sm:px-4 pb-4 sm:pb-6 pt-12 transition-all duration-500 ${
                         messages.length === 0 
-                            ? 'bg-transparent pb-8 lg:pb-20' 
+                            ? 'bg-transparent pb-6 sm:pb-8 lg:pb-20' 
                             : 'bg-gradient-to-t from-[#F9F9F9] via-[#F9F9F9]/80 to-transparent dark:from-[#111] dark:via-[#111]/80'
                     }`}>
                         <div className="max-w-3xl mx-auto relative">
@@ -1248,7 +1248,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                     )}
 
                                     {/* TOLZY Copilot V2.5 Static Badge */}
-                                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 flex-shrink-0">
+                                    <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 flex-shrink-0">
                                         <Sparkles size={12} className="text-indigo-500" />
                                         <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 whitespace-nowrap">TOLZY Copilot V2.5</span>
                                     </div>
