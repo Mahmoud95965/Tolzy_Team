@@ -159,22 +159,14 @@ const nextConfig: NextConfig = {
 
     async rewrites() {
         return {
-            beforeFiles: [
-                // These routes are handled by Next.js API routes, not the Express server
-            ],
+            beforeFiles: [],
             afterFiles: [],
-            fallback: [
-                // Courses API still goes to Express server (if running)
-                {
-                    source: '/api/courses/:path*',
-                    destination: 'http://127.0.0.1:5000/api/courses/:path*',
-                },
-            ],
+            fallback: [],
         };
     },
 
-    // Output configuration for Vercel
-    output: 'standalone',
+    // NOTE: Do NOT use output: 'standalone' on Vercel — Vercel manages its own output format.
+    // output: 'standalone', // Only for self-hosted Node.js deployments
 
     // Server Components External Packages (Stable in Next.js 16)
     serverExternalPackages: ['sharp'],
