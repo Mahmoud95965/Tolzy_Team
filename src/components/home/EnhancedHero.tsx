@@ -72,27 +72,26 @@ const features = [
 ];
 
 export default function EnhancedHero() {
-  const { user, userProfile } = useAuth();
+  const { user } = useAuth();
   const [prompt, setPrompt] = useState('');
   const [showTour, setShowTour] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   
-  const normalizedPlan = String(userProfile?.plan || 'free').toLowerCase();
-  const isProPlan = normalizedPlan.includes('pro') || normalizedPlan.includes('ultra');
   const isLoggedIn = !!user;
 
-  const goToAi = () => {
+  const goToCopilot = () => {
     const trimmed = prompt.trim();
-    const url = trimmed
-      ? `https://ai.tolzy.me?prompt=${encodeURIComponent(trimmed)}`
-      : 'https://ai.tolzy.me';
-    window.location.href = url;
+    if (trimmed) {
+      window.location.href = `/copilot?q=${encodeURIComponent(trimmed)}`;
+    } else {
+      window.location.href = '/copilot';
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      goToAi();
+      goToCopilot();
     }
   };
 
@@ -208,7 +207,7 @@ export default function EnhancedHero() {
                 onKeyDown={handleKeyDown}
               />
               <button
-                onClick={goToAi}
+                onClick={goToCopilot}
                 className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all"
               >
                 <span>ابحث</span>

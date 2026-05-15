@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
-import CommunityPage from '@/src/views/CommunityPage';
+import CommunityPromptPage from '@/src/views/CommunityPromptPage';
 
 export const metadata: Metadata = {
-    title: 'مجتمع تولزي: شارك أكوادك، تعلّم من الأفضل، وتطوّر',
-    description: 'انضم لمجتمع المبدعين والمطورين العرب. شارك أفكارك، أكوادك، وPrompts عبقرية — واكتشف ما يشاركه الآخرون!',
+    title: 'مجتمع TOLZY — شارك أفكارك مع المجتمع',
+    description: 'انضم لمجتمع TOLZY! شارك أفكارك، أكوادك، ومقالاتك مع مجتمع المطورين والمبدعين العرب.',
 };
 
 export default function Page() {
-    return <CommunityPage />;
+    return <CommunityPromptPage />;
 }

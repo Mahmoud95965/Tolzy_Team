@@ -12,74 +12,66 @@ export async function GET(req: NextRequest) {
 
     console.log(`🔍 Fetching plan for user: ${uid}`);
 
-    // Try Supabase first
-    if (hasSupabaseAdminConfig) {
-      try {
-        const { data, error } = await supabaseAdmin
-          .from('user_limits')
-          .select('plan, user_id, updated_at')
-          .eq('user_id', uid)
-          .maybeSingle();
+    let firestorePlan = 'free';
+    let supabasePlan = 'free';
 
-        if (error) {
-          const errorMsg = error.message || '';
-          // Check for quota exceeded - don't return free, try Firestore
-          if (errorMsg.includes('exceed_cached_egress_quota') || errorMsg.includes('restricted')) {
-            console.warn(`⚠️ Supabase quota exceeded for ${uid}, trying Firestore fallback`);
-            // Continue to Firestore fallback
-          } else if (errorMsg.includes('user_limits') || errorMsg.includes('not found')) {
-            console.warn(`⚠️ Supabase table error for ${uid}: ${errorMsg}, trying Firestore`);
-            // Continue to Firestore fallback
-          } else {
-            console.error(`❌ Supabase query error for ${uid}:`, errorMsg);
-            // Continue to Firestore fallback
-          }
-        } else if (data) {
-          // Supabase returned data - use it
-          const rawPlan = String(data.plan || 'free').toLowerCase();
-          const normalizedPlan = rawPlan.includes('pro')
-            ? 'pro'
-            : rawPlan.includes('plus')
-              ? 'pro'
-              : rawPlan.includes('ultra')
-                ? 'ultra'
-                : 'free';
-
-          console.log(`✅ Plan from Supabase for ${uid}: "${normalizedPlan}"`);
-          return NextResponse.json({ plan: normalizedPlan, source: 'supabase' }, { status: 200 });
-        }
-      } catch (supabaseError: any) {
-        console.warn(`⚠️ Supabase error for ${uid}: ${supabaseError?.message}, trying Firestore`);
-        // Continue to Firestore fallback
-      }
-    }
-
-    // Fallback to Firestore
-    if (adminDb) {
-      try {
+    // Fetch from both sources concurrently for speed
+    const [firestoreTask, supabaseTask] = await Promise.allSettled([
+      // Firestore task
+      (async () => {
+        if (!adminDb) return 'free';
         const userDoc = await adminDb.collection('users').doc(uid).get();
         if (userDoc.exists) {
-          const userData = userDoc.data();
-          const rawPlan = String(userData?.plan || 'free').toLowerCase();
-          const normalizedPlan = rawPlan.includes('pro')
-            ? 'pro'
-            : rawPlan.includes('plus')
-              ? 'pro'
-              : rawPlan.includes('ultra')
-                ? 'ultra'
-                : 'free';
-
-          console.log(`✅ Plan from Firestore for ${uid}: "${normalizedPlan}"`);
-          return NextResponse.json({ plan: normalizedPlan, source: 'firebase' }, { status: 200 });
+          return String(userDoc.data()?.plan || 'free').toLowerCase();
         }
-      } catch (firestoreError: any) {
-        console.error(`❌ Firestore error for ${uid}:`, firestoreError?.message);
-      }
+        return 'free';
+      })(),
+
+      // Supabase task
+      (async () => {
+        if (!hasSupabaseAdminConfig) return 'free';
+        const { data, error } = await supabaseAdmin
+          .from('user_limits')
+          .select('plan')
+          .eq('user_id', uid)
+          .maybeSingle();
+        if (!error && data) {
+          return String(data.plan || 'free').toLowerCase();
+        }
+        return 'free';
+      })()
+    ]);
+
+    if (firestoreTask.status === 'fulfilled') firestorePlan = firestoreTask.value;
+    if (supabaseTask.status === 'fulfilled') supabasePlan = supabaseTask.value;
+
+    const normalize = (rawPlan: string) => {
+      if (rawPlan.includes('ultra')) return 'ultra';
+      if (rawPlan.includes('pro') || rawPlan.includes('plus')) return 'pro';
+      return 'free';
+    };
+
+    const normalizedFirestore = normalize(firestorePlan);
+    const normalizedSupabase = normalize(supabasePlan);
+
+    // Determine highest plan
+    let finalPlan = 'free';
+    let source = 'none';
+
+    if (normalizedFirestore === 'ultra' || normalizedSupabase === 'ultra') {
+      finalPlan = 'ultra';
+      source = normalizedFirestore === 'ultra' ? 'firebase' : 'supabase';
+    } else if (normalizedFirestore === 'pro' || normalizedSupabase === 'pro') {
+      finalPlan = 'pro';
+      source = normalizedFirestore === 'pro' ? 'firebase' : 'supabase';
+    } else {
+      source = (firestoreTask.status === 'fulfilled' && firestorePlan !== 'free') ? 'firebase' 
+             : (supabaseTask.status === 'fulfilled' && supabasePlan !== 'free') ? 'supabase' : 'firebase';
     }
 
-    // No data found anywhere
-    console.warn(`⚠️ No plan found for ${uid} in any database, returning free`);
-    return NextResponse.json({ plan: 'free', warning: 'No plan record found' }, { status: 200 });
+    console.log(`✅ Final plan for ${uid}: "${finalPlan}" (via ${source})`);
+    return NextResponse.json({ plan: finalPlan, source }, { status: 200 });
+
   } catch (error: any) {
     console.error(`❌ Unexpected error in plan API:`, error?.message);
     return NextResponse.json({ plan: 'free', error: error?.message || 'Unexpected error' }, { status: 200 });

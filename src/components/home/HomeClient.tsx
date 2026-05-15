@@ -6,6 +6,7 @@ import { useTools } from '@/src/hooks/useTools';
 import { useAuth } from '@/src/context/AuthContext';
 import SEO from '@/src/components/SEO';
 
+
 // For Guests - Full Landing Experience
 const EnhancedHero = dynamic(() => import('@/src/components/home/EnhancedHero'));
 const WhatIsTolzy = dynamic(() => import('@/src/components/home/WhatIsTolzy'));
@@ -25,10 +26,9 @@ const LoggedInHome = dynamic(() => import('@/src/components/home/LoggedInHome'),
 const BentoHomeSection = dynamic(() => import('@/src/components/home/BentoHomeSection'), {
     loading: () => <div className="min-h-[600px] w-full animate-pulse bg-slate-50 dark:bg-[#050505]" />
 });
+const NewsPanelSection = dynamic(() => import('@/src/components/home/NewsPanelSection'), { ssr: false });
 
-const DemoSection = dynamic(() => import('@/src/components/home/DemoSection'), {
-    loading: () => <div className="min-h-[420px] w-full animate-pulse bg-slate-50 dark:bg-[#050505]" />
-});
+
 
 export default function HomeClient() {
     const { isLoading: toolsLoading, error: toolsError, featuredTools, newTools } = useTools();
@@ -67,7 +67,12 @@ export default function HomeClient() {
 
             {/* Below-the-fold content - Lazy Loaded */}
             <LogoMarquee />
-            <DemoSection />
+
+            {/* News Panel — between logo marquee and bento */}
+            <div className="max-w-2xl mx-auto px-4 py-6">
+                <NewsPanelSection />
+            </div>
+
             <BentoHomeSection
                 popularTools={featuredTools || []}
                 newTools={newTools || []}

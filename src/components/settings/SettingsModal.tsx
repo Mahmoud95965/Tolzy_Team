@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Sparkles, Info, Shield, FileText, LogOut, Sun, Moon } from 'lucide-react';
+import { X, Sparkles, Shield, FileText, LogOut, Sun, Moon } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -80,10 +80,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                 <span>ما الجديد؟</span>
                             </Link>
 
-                            <Link href="/tolzy-ai" onClick={onClose} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-gray-200 text-sm transition-colors">
-                                <Info size={18} className="text-blue-500" />
-                                <span>مميزات Tolzy</span>
-                            </Link>
+
 
                             <div className="my-1 border-t border-gray-100 dark:border-white/5" />
 

@@ -27,6 +27,9 @@ import { Tool } from '../../types';
 import UserProfile from '../auth/UserProfile';
 import NotificationBell from './NotificationBell';
 
+
+
+
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobileResourcesOpen, setIsMobileResourcesOpen] = useState(false);
@@ -41,6 +44,9 @@ const Navbar: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<Tool[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const normalizedPlan = String(userProfile?.plan || 'free').toLowerCase();
+  const isPro = normalizedPlan.includes('pro') || normalizedPlan.includes('ultra');
 
   // Combine all available tools for search
   const allTools = React.useMemo(() => {
@@ -136,19 +142,22 @@ const Navbar: React.FC = () => {
                 </button>
                 <div className="absolute top-full right-[-80px] w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-xl shadow-indigo-500/10 border border-slate-100 dark:border-white/5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 translate-y-2 group-hover:translate-y-0 p-3 z-50">
                   <div className="flex flex-col gap-1">
-                    <a href="https://ai.tolzy.me" target="_blank" rel="noopener noreferrer" className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group/link relative overflow-hidden">
+                    <Link 
+                      href={isPro ? "/build" : "/pricing"} 
+                      className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group/link relative overflow-hidden"
+                    >
                       <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 to-transparent opacity-0 group-hover/link:opacity-100 transition-opacity"></div>
                       <div className="w-10 h-10 rounded-lg bg-violet-50 dark:bg-violet-500/10 flex items-center justify-center text-violet-600 dark:text-violet-400 shrink-0 group-hover/link:scale-110 transition-transform relative z-10">
                         <Wand2 className="w-5 h-5" />
                       </div>
                       <div className="text-right flex-1 relative z-10">
                         <div className="flex items-center gap-2 mb-0.5">
-                          <span className="font-bold text-slate-800 dark:text-white text-sm">T O L Z Y AI</span>
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 uppercase tracking-wider animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.3)]">New</span>
+                          <span className="font-bold text-slate-800 dark:text-white text-sm">TOLZY Build</span>
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 uppercase tracking-wider shadow-[0_0_10px_rgba(16,185,129,0.3)]">PRO</span>
                         </div>
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">ابنِ نظامك بأكمله بشكل أسرع وأذكى. اكتشف، تعلم، وابدأ الإنجاز الآن مع أدوات T O L Z Y AI المتكاملة.</div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">ابنِ فكرة مشروعك بالكامل باستخدام الذكاء الاصطناعي في ثوانٍ.</div>
                       </div>
-                    </a>
+                    </Link>
                     <Link href="/copilot" className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group/link relative">
                       <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 group-hover/link:scale-110 transition-transform">
                         <BrainCircuit className="w-5 h-5" />
@@ -410,13 +419,13 @@ const Navbar: React.FC = () => {
                 
                 {isMobileProductsOpen && (
                   <div className="pr-4 space-y-2 animate-fade-in-down flex flex-col gap-2">
-                    <a href="https://ai.tolzy.me" target="_blank" rel="noopener noreferrer" onClick={() => setIsOpen(false)} className="flex items-center justify-between p-3 rounded-xl bg-violet-50 dark:bg-violet-900/20 hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-colors">
+                    <Link href={isPro ? "/build" : "/pricing"} onClick={() => setIsOpen(false)} className="flex items-center justify-between p-3 rounded-xl bg-violet-50 dark:bg-violet-900/20 hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-colors">
                       <div className="flex items-center gap-3">
                         <Wand2 className="w-4 h-4 text-violet-500" />
-                        <span className="text-sm font-bold text-violet-700 dark:text-violet-300">T O L Z Y AI</span>
+                        <span className="text-sm font-bold text-violet-700 dark:text-violet-300">TOLZY Build</span>
                       </div>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">NEW</span>
-                    </a>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">PRO</span>
+                    </Link>
                     <Link href="/copilot" onClick={() => setIsOpen(false)} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
                       <BrainCircuit className="w-4 h-4 text-indigo-500" />
                       <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Tolzy Copilot</span>

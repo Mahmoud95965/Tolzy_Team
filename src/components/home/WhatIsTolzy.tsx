@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/src/context/AuthContext';
 import { 
   Wrench, 
   BookOpen, 
@@ -67,6 +68,24 @@ const mainFeatures = [
     link: '/copilot',
     linkText: 'تحدث مع Copilot',
     stats: 'ذكاء اصطناعي'
+  },
+  {
+    icon: <Sparkles className="w-10 h-10" />,
+    title: 'Tolzy Prompts',
+    subtitle: 'أكبر مجتمع مطالبات عربي',
+    description: 'شارك، ابحث، واكتشف أفضل المطالبات (Prompts) للأدوات المختلفة. انضم لمجتمع تفاعلي يتبادل الخبرات والأفكار لإنشاء محتوى وبرمجيات أفضل.',
+    color: 'from-orange-500 to-rose-600',
+    bgColor: 'bg-orange-50 dark:bg-orange-900/20',
+    borderColor: 'border-orange-200 dark:border-orange-800',
+    features: [
+      'آلاف المطالبات الجاهزة',
+      'مجتمع تفاعلي للمبدعين',
+      'نسخ واستخدام بضغطة زر',
+      'ريمكس وتعديل الأفكار'
+    ],
+    link: '/community',
+    linkText: 'اكتشف المجتمع',
+    stats: 'مجتمع نشط'
   }
 ];
 
@@ -94,6 +113,7 @@ const secondaryFeatures = [
 ];
 
 export default function WhatIsTolzy() {
+  const { user } = useAuth();
   return (
     <section className="py-20 bg-white dark:bg-[#0a0f1c]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -109,7 +129,7 @@ export default function WhatIsTolzy() {
         </div>
 
         {/* Main Feature Cards */}
-        <div className="grid md:grid-cols-3 gap-8 mb-20">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20">
           {mainFeatures.map((feature, index) => (
             <div 
               key={index}
@@ -197,12 +217,14 @@ export default function WhatIsTolzy() {
               ابدأ الاستكشاف
               <ArrowLeft className="w-5 h-5" />
             </Link>
-            <Link
-              href="/auth"
-              className="inline-flex items-center justify-center gap-2 border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 px-8 py-4 rounded-xl font-bold text-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-            >
-              أنشئ حساب مجاني
-            </Link>
+            {!user && (
+              <Link
+                href="/auth"
+                className="inline-flex items-center justify-center gap-2 border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 px-8 py-4 rounded-xl font-bold text-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              >
+                أنشئ حساب مجاني
+              </Link>
+            )}
           </div>
         </div>
       </div>

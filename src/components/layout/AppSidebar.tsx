@@ -25,7 +25,7 @@ const AppSidebar: React.FC = () => {
   const navItems = [
     { name: 'سجل التغييرات', href: '/changelog', icon: History },
     { name: 'التحديثات القادمة', href: '/upcoming', icon: Sparkles },
-    { name: 'خارطة الطريق', href: '/roadmap', icon: Map },
+
     { name: 'المجتمع', href: '/community', icon: Users },
   ];
 

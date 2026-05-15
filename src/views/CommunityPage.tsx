@@ -31,6 +31,7 @@ interface Post {
   code_snippet: string | null;
   tags: string[];
   author_uid: string;
+  author_username: string;
   author_name: string;
   author_avatar: string | null;
   votes_count: number;
@@ -43,6 +44,7 @@ interface Comment {
   id: string;
   content: string;
   author_uid: string;
+  author_username: string;
   author_name: string;
   created_at: string;
 }
@@ -117,9 +119,31 @@ const CommunityPage: React.FC = () => {
         console.error("Supabase Error fetching posts:", error);
         toast.error("حدث خطأ أثناء جلب المنشورات. الرجاء مراجعة الكونسول (F12).");
       } else if (data) {
-        setPosts(data);
-        computeTrendingTags(data);
-        computeTopContributors(data);
+        // Enrich with username from Firestore
+        const uids = Array.from(new Set(data.map((p: any) => p.author_uid).filter(Boolean)));
+        let userMap: Record<string, { username: string; displayName: string; photoURL: string | null }> = {};
+        if (uids.length > 0) {
+          try {
+            const res = await fetch('/api/community/batch-usernames', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ uids }),
+            });
+            if (res.ok) {
+              const json = await res.json();
+              userMap = json.users || {};
+            }
+          } catch (e) { /* silent */ }
+        }
+        const enriched = data.map((p: any) => ({
+          ...p,
+          author_username: userMap[p.author_uid]?.username || '',
+          author_name: userMap[p.author_uid]?.displayName || p.author_name || 'مستخدم',
+          author_avatar: userMap[p.author_uid]?.photoURL || p.author_avatar || null,
+        }));
+        setPosts(enriched);
+        computeTrendingTags(enriched);
+        computeTopContributors(enriched);
       }
     } catch (err) {
       console.error("Unexpected error in fetchPosts:", err);
@@ -758,15 +782,17 @@ const CommunityPage: React.FC = () => {
                         {/* ─── Header ─── */}
                         <div className="flex items-center justify-between p-4">
                           <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-full shrink-0 ${getAvatarColor(post.author_name)} flex items-center justify-center text-white font-black text-lg`}>
+                            <Link href={`/profile?username=${post.author_username || ''}`} className={`w-10 h-10 rounded-full shrink-0 ${getAvatarColor(post.author_name)} flex items-center justify-center text-white font-black text-lg hover:opacity-90 transition-opacity`}>
                               {post.author_avatar && post.author_avatar.length > 1 ? (
                                 <img src={post.author_avatar} alt="Avatar" className="w-full h-full rounded-full object-cover" />
                               ) : (
                                 post.author_name[0]
                               )}
-                            </div>
+                            </Link>
                             <div>
-                              <h3 className="font-bold text-slate-900 dark:text-white text-sm">{post.author_name}</h3>
+                              <Link href={`/profile?username=${post.author_username || ''}`}>
+                                <h3 className="font-bold text-slate-900 dark:text-white text-sm hover:underline cursor-pointer">{post.author_name}</h3>
+                              </Link>
                               <div className="flex items-center gap-1 text-slate-400 text-[11px] mt-0.5">
                                 <span>{timeAgo(post.created_at)}</span>
                                 <span>•</span>

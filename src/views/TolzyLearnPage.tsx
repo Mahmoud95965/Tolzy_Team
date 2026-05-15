@@ -123,96 +123,93 @@ const TolzyLearnPage: React.FC = () => {
     };
 
     return (
-        <PageLayout>
+        <PageLayout navbarOffset={false}>
         <div className="relative min-h-screen bg-slate-50 dark:bg-[#050505] transition-colors duration-300 overflow-x-hidden w-full">
 
-                {/* Background blobs */}
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    <div className="absolute top-[-5%] right-[-5%] w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-emerald-500/8 rounded-full blur-[100px] md:blur-[130px]" />
-                    <div className="absolute bottom-[-10%] left-[-5%] w-[250px] md:w-[400px] h-[250px] md:h-[400px] bg-teal-500/8 rounded-full blur-[80px] md:blur-[100px]" />
-                </div>
+                {/* === PREMIUM HERO SECTION === */}
+                <div className="relative overflow-hidden bg-gradient-to-bl from-emerald-600 via-teal-600 to-cyan-600 dark:from-emerald-900 dark:via-teal-900 dark:to-slate-900 pt-28 pb-12 md:pt-32 md:pb-16">
+                    {/* Background decorations */}
+                    <div className="absolute inset-0 opacity-10">
+                        <div className="absolute top-10 right-20 w-72 h-72 bg-white rounded-full blur-3xl" />
+                        <div className="absolute bottom-10 left-10 w-96 h-96 bg-teal-300 rounded-full blur-3xl" />
+                        <div className="absolute top-1/2 left-1/3 w-[500px] h-[500px] bg-emerald-400 rounded-full blur-3xl" />
+                    </div>
+                    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] opacity-40" />
 
-                {/* === HERO SECTION === */}
-                <section className="relative z-10 pt-24 md:pt-36 pb-10 md:pb-16 px-4">
-                    <div className="max-w-4xl mx-auto text-center">
-                        <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5 }}
+                    <div className="max-w-4xl mx-auto px-4 relative z-10 text-center">
+                        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.15, type: 'spring', stiffness: 200 }}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md text-white/90 text-xs md:text-sm font-bold mb-6 border border-white/10"
                         >
-                            <div className="inline-flex items-center gap-2 px-3 py-1 md:px-4 md:py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs md:text-sm font-bold mb-4 md:mb-6">
-                                <Zap className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                                أكثر من {courses.length > 0 ? courses.length : 150}+ كورس تقني مجاني
-                            </div>
+                            <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
+                            أكثر من {courses.length > 0 ? courses.length : 150}+ كورس تقني مجاني
                         </motion.div>
 
                         <motion.h1
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: 0.1 }}
-                            className="text-3xl md:text-6xl font-black text-slate-900 dark:text-white mb-4 md:mb-5 tracking-tighter leading-tight"
+                            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
+                            className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-4 leading-tight tracking-tight"
                         >
                             اكتشف{' '}
-                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-teal-400">
-                                مهارتك التالية
+                            <span className="relative">
+                                <span className="bg-gradient-to-l from-amber-300 via-yellow-200 to-amber-400 bg-clip-text text-transparent">مهارتك التالية</span>
+                                <motion.span
+                                    initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ delay: 0.8, duration: 0.5 }}
+                                    className="absolute -bottom-1 right-0 h-1 bg-gradient-to-l from-amber-300 to-yellow-400 rounded-full"
+                                />
                             </span>
-                            {' '}على Tolzy Learn
                         </motion.h1>
 
-                        <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.2 }}
-                            className="text-base md:text-lg text-slate-500 dark:text-slate-400 mb-8 md:mb-10 max-w-xl mx-auto"
+                        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
+                            className="text-lg md:text-xl text-white/70 font-medium mb-8 max-w-xl mx-auto leading-relaxed"
                         >
                             مكتبة متكاملة من الدورات المجانية في البرمجة، الذكاء الاصطناعي، والتصميم.
                         </motion.p>
 
                         {/* Big Search Bar */}
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.97 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.25 }}
+                        <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.25 }}
                             className="max-w-2xl mx-auto"
                         >
                             <div
                                 onClick={() => setIsCommandPaletteOpen(true)}
-                                className="group flex items-center gap-3 md:gap-4 px-4 py-3 md:px-6 md:py-4 bg-white dark:bg-white/5 border-2 border-slate-200 dark:border-white/10 rounded-xl md:rounded-2xl cursor-pointer hover:border-emerald-500/50 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)] dark:hover:shadow-[0_0_30px_rgba(16,185,129,0.1)] transition-all duration-300"
+                                className="group flex items-center gap-3 md:gap-4 px-4 py-3 md:px-6 md:py-4 bg-white/10 backdrop-blur-md border-2 border-white/20 rounded-xl md:rounded-2xl cursor-pointer hover:bg-white/20 hover:border-white/40 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] transition-all duration-300"
                             >
-                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
-                                    <Search className="w-4 h-4 md:w-5 md:h-5 text-emerald-500" />
+                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                                    <Search className="w-4 h-4 md:w-5 md:h-5 text-white" />
                                 </div>
-                                <span className="text-slate-400 dark:text-slate-500 text-sm md:text-base font-medium flex-1 text-right truncate">
+                                <span className="text-white/50 text-sm md:text-base font-medium flex-1 text-right truncate">
                                     ابحث في أكثر من {courses.length > 0 ? courses.length : 150} كورس...
                                 </span>
                                 <div className="hidden sm:flex items-center gap-1 shrink-0">
-                                    <kbd className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 text-[11px] font-mono text-slate-500">CTRL</kbd>
-                                    <span className="text-slate-400 text-xs">+</span>
-                                    <kbd className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 text-[11px] font-mono text-slate-500">K</kbd>
+                                    <kbd className="px-2 py-1 rounded-lg bg-white/10 border border-white/20 text-[11px] font-mono text-white/60">CTRL</kbd>
+                                    <span className="text-white/40 text-xs">+</span>
+                                    <kbd className="px-2 py-1 rounded-lg bg-white/10 border border-white/20 text-[11px] font-mono text-white/60">K</kbd>
                                 </div>
                             </div>
                         </motion.div>
 
                         {/* Quick stats */}
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.4 }}
-                            className="flex flex-wrap items-center justify-center gap-4 md:gap-8 mt-6 md:mt-8"
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
+                            className="flex flex-wrap items-center justify-center gap-5 md:gap-10 mt-6 md:mt-8 text-white/60 text-sm font-medium"
                         >
                             {[
-                                { icon: BookOpen, label: '150+ كورس' },
-                                { icon: Star, label: 'مجاني 100%' },
-                                { icon: TrendingUp, label: 'محدّث باستمرار' },
+                                { icon: BookOpen, label: `${courses.length > 0 ? courses.length : '150'}+ كورس`, emoji: '📚' },
+                                { icon: Star, label: 'مجاني 100%', emoji: '⭐' },
+                                { icon: TrendingUp, label: 'محدّث باستمرار', emoji: '🔄' },
                             ].map((stat) => (
-                                <div key={stat.label} className="flex items-center gap-1.5 md:gap-2 text-slate-500 dark:text-slate-400 text-[13px] md:text-sm">
-                                    <stat.icon className="w-3.5 h-3.5 md:w-4 md:h-4 text-emerald-500" />
+                                <div key={stat.label} className="flex items-center gap-2">
+                                    <span className="text-lg">{stat.emoji}</span>
                                     <span className="font-semibold">{stat.label}</span>
                                 </div>
                             ))}
                         </motion.div>
                     </div>
-                </section>
+
+                    {/* Bottom wave */}
+                    <div className="absolute bottom-0 left-0 right-0">
+                        <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
+                            <path d="M0 60V20C240 0 480 40 720 30C960 20 1200 50 1440 20V60H0Z" className="fill-slate-50 dark:fill-[#050505]" />
+                        </svg>
+                    </div>
+                </div>
 
                 {/* === CATEGORY PILLS === */}
                 <div className="sticky top-[64px] md:top-20 z-30 bg-slate-50/90 dark:bg-[#050505]/90 backdrop-blur-xl border-b border-slate-200/50 dark:border-white/5 py-3 md:py-4">

@@ -101,11 +101,7 @@ const Footer: React.FC = () => {
           <div className="col-span-1">
             <h3 className="font-bold text-slate-900 dark:text-white mb-6">الشركة</h3>
             <ul className="space-y-4">
-              <li>
-                <Link href="/roadmap" className="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                  خارطة الطريق (Roadmap)
-                </Link>
-              </li>
+
               <li>
                 <Link href="/about" className="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                   عن منصة Tolzy

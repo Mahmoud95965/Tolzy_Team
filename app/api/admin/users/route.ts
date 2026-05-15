@@ -87,8 +87,30 @@ export async function GET(request: NextRequest) {
                     console.log(`✅ Fetched plans for ${plansRows?.length || 0} users from Supabase`);
                 }
             } catch (e: any) {
-                console.error(`❌ Error fetching user plans: ${e?.message}`);
+                console.error(`❌ Error fetching user plans from Supabase: ${e?.message}`);
                 // Continue without plan data
+            }
+        }
+
+        // Also fetch from Firestore to merge plans
+        if (adminDb) {
+            try {
+                const usersSnap = await adminDb.collection('users').get();
+                usersSnap.docs.forEach(doc => {
+                    const data = doc.data();
+                    const firestorePlan = String(data.plan || 'free').toLowerCase();
+                    const existingPlan = plansByUserId.get(doc.id) || 'free';
+                    
+                    // Priority: ultra > pro > free
+                    let finalPlan = existingPlan;
+                    if (firestorePlan.includes('ultra') || existingPlan.includes('ultra')) finalPlan = 'ultra';
+                    else if (firestorePlan.includes('pro') || existingPlan.includes('pro') || firestorePlan.includes('plus')) finalPlan = 'pro';
+                    
+                    plansByUserId.set(doc.id, finalPlan);
+                });
+                console.log(`✅ Fetched and merged plans from Firestore`);
+            } catch (e: any) {
+                console.error(`❌ Error fetching user plans from Firestore: ${e?.message}`);
             }
         }
 

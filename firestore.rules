@@ -70,11 +70,7 @@ service cloud.firestore {
       allow delete: if request.auth != null && (request.auth.uid == resource.data.userId || isAdmin());
     }
 
-    // Roadmap
-    match /roadmap/{itemId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
+
 
     // Changelog
     match /changelog/{itemId} {

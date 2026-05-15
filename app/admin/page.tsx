@@ -130,7 +130,7 @@ const AdminDashboard = () => {
             title: 'إدارة خارطة الطريق',
             description: 'إضافة ومتابعة الميزات وآخر التحديثات',
             icon: Map,
-            href: '/admin/roadmap',
+            href: '/admin/changelog',
             color: 'bg-indigo-600',
             stat: null,
             statLabel: 'سجل/تحديث'

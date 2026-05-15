@@ -9,6 +9,7 @@ export interface UserData {
   lastName: string;
   displayName: string;
   photoURL: string | null;
+  coverURL?: string | null;
   createdAt: string;
   role: string;
   copilotRequestCount?: number;

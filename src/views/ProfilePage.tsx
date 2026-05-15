@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import { useTools } from '../hooks/useTools';
 import { useUserData } from '../hooks/useUserData';
@@ -11,16 +12,34 @@ import { updateProfile } from 'firebase/auth';
 import { 
   User, Camera, Loader, Mail, Calendar, Shield, Settings, 
   Edit2, Check, X, Award, Heart, Bookmark, Activity, 
-  Upload, BookOpen, FileText, Zap, ChevronRight, LogOut, Bell, Lock, Phone, MapPin, Globe, AlertCircle 
+  Upload, BookOpen, FileText, Zap, ChevronRight, LogOut, Bell, Lock, Phone, MapPin, Globe, AlertCircle, MessageSquare 
 } from 'lucide-react';
 import { auth, db } from '../config/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
-import { supabase } from '../config/supabaseClient';
+// supabase client not needed here — uploads go through /api/user/upload-avatar
+
+interface ViewedUser {
+  uid: string;
+  username: string;
+  displayName: string;
+  firstName: string;
+  lastName: string;
+  photoURL: string | null;
+  coverURL: string | null;
+  email: string;
+  createdAt: string;
+  role: string;
+  plan: string;
+}
 
 const ProfilePage: React.FC = () => {
+  const searchParams = useSearchParams();
+  const profileUsername = searchParams.get('username')?.trim().toLowerCase();
+
   const { user, userProfile } = useAuth();
   const { userData } = useUserData();
   const { tools: globalTools } = useTools();
+
   const [isEditing, setIsEditing] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -29,16 +48,91 @@ const ProfilePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const normalizedPlan = String(userProfile?.plan || 'free').toLowerCase();
+
+  const [viewedUser, setViewedUser] = useState<ViewedUser | null>(null);
+  const [viewedLoading, setViewedLoading] = useState(false);
+  const [userPosts, setUserPosts] = useState<any[]>([]);
+  const [loadingUserPosts, setLoadingUserPosts] = useState(false);
+
+  const normalizedPlan = String(viewedUser?.plan || userProfile?.plan || 'free').toLowerCase();
   const isProPlan = normalizedPlan.includes('pro') || normalizedPlan.includes('ultra');
 
-  // Check admin privileges
-  const isAdmin = userData?.role === 'admin' || user?.email?.toLowerCase() === 'mahmoud.m.moussa5310@gmail.com';
+  // Determine if viewing own profile or someone else's
+  const isOwnProfile = !profileUsername || (viewedUser?.uid === user?.uid) || (userData?.displayName && profileUsername === userData.displayName.trim().toLowerCase().replace(/[^a-zA-Z0-9]/g, ''));
+  const activeUser = viewedUser || {
+    uid: user?.uid || '',
+    username: '',
+    displayName: userData?.displayName || user?.displayName || 'مستخدم',
+    firstName: userData?.firstName || '',
+    lastName: userData?.lastName || '',
+    photoURL: user?.photoURL || userData?.photoURL || null,
+    coverURL: userData?.coverURL || null,
+    email: user?.email || '',
+    createdAt: userData?.createdAt || '',
+    role: userData?.role || 'user',
+    plan: userProfile?.plan || 'free',
+  };
+
+  // Check admin privileges (only for own profile)
+  const isAdmin = isOwnProfile && (userData?.role === 'admin' || user?.email?.toLowerCase() === 'mahmoud.m.moussa5310@gmail.com');
+
+  // Fetch viewed user profile when username is in URL
+  useEffect(() => {
+    if (!profileUsername) {
+      setViewedUser(null);
+      return;
+    }
+    const fetchViewedUser = async () => {
+      setViewedLoading(true);
+      try {
+        const res = await fetch(`/api/community/user-profile?username=${encodeURIComponent(profileUsername)}`, { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          setViewedUser(data);
+        } else {
+          setViewedUser(null);
+          setError('المستخدم غير موجود');
+        }
+      } catch (e) {
+        setViewedUser(null);
+        setError('فشل تحميل الملف الشخصي');
+      } finally {
+        setViewedLoading(false);
+      }
+    };
+    fetchViewedUser();
+  }, [profileUsername]);
+
+  // Fetch community posts when viewing another user's profile
+  useEffect(() => {
+    if (!profileUsername || isOwnProfile) {
+      setUserPosts([]);
+      return;
+    }
+    const fetchPosts = async () => {
+      setLoadingUserPosts(true);
+      try {
+        const res = await fetch(`/api/community/user-posts?username=${encodeURIComponent(profileUsername)}`, { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          setUserPosts(data.posts || []);
+        } else {
+          setUserPosts([]);
+        }
+      } catch (e) {
+        setUserPosts([]);
+      } finally {
+        setLoadingUserPosts(false);
+      }
+    };
+    fetchPosts();
+  }, [profileUsername, isOwnProfile]);
 
   useEffect(() => {
     if (userData) {
       setFirstName(userData.firstName || '');
       setLastName(userData.lastName || '');
+      setCoverURL(userData.coverURL || null);
     }
     if (user?.email) {
       setEmail(user.email);
@@ -55,8 +149,43 @@ const ProfilePage: React.FC = () => {
   const [savedTools, setSavedTools] = useState<any[]>([]);
   const [addedTools, setAddedTools] = useState<any[]>([]);
   const [isLoadingTools, setIsLoadingTools] = useState(true);
+  const [coverURL, setCoverURL] = useState<string | null>(userData?.coverURL || null);
 
   // ... (edit state) ...
+
+  const compressImage = (file: File, maxSize = 1200, quality = 0.8): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new window.Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let { width, height } = img;
+          if (width > height && width > maxSize) {
+            height *= maxSize / width;
+            width = maxSize;
+          } else if (height > maxSize) {
+            width *= maxSize / height;
+            height = maxSize;
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webp", { type: 'image/webp' });
+              resolve(newFile);
+            } else reject(new Error('Compression failed'));
+          }, 'image/webp', quality);
+        };
+        img.onerror = reject;
+      };
+      reader.onerror = reject;
+    });
+  };
 
   // Fetch tools directly for reliability
   useEffect(() => {
@@ -91,10 +220,15 @@ const ProfilePage: React.FC = () => {
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    // ⛔ Security: only the owner can upload their own photo
     if (!file || !user) return;
+    if (!isOwnProfile) {
+      setError('ليس لديك صلاحية تعديل ملف هذا المستخدم');
+      return;
+    }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setError('حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
+    if (file.size > 10 * 1024 * 1024) {
+      setError('حجم الصورة يجب أن يكون أقل من 10 ميجابايت');
       return;
     }
 
@@ -108,39 +242,33 @@ const ProfilePage: React.FC = () => {
       setError(null);
       setUploadProgress(10);
 
-      const timestamp = Date.now();
-      const fileExtension = file.name.split('.').pop();
-      const safeFileName = `profile_${user.uid}_${timestamp}.${fileExtension}`;
-      const filePath = `${user.uid}/${safeFileName}`;
+      const compressed = await compressImage(file);
+      setUploadProgress(30);
 
-      console.log('📤 Uploading to Supabase bucket: profile-images', filePath);
-
-      // Upload to Supabase
-      const { data, error: uploadError } = await supabase.storage
-        .from('profile-images')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true
-        });
-
-      if (uploadError) throw uploadError;
+      // ✔️ Secure upload via server-side API (token verified on server)
+      const idToken = await user.getIdToken();
+      const formData = new FormData();
+      formData.append('file', compressed);
+      formData.append('type', 'avatar');
 
       setUploadProgress(50);
 
-      // Get Public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('profile-images')
-        .getPublicUrl(filePath);
-
-      console.log('🔗 Public URL:', publicUrl);
-      setUploadProgress(70);
-
-      // Update Firebase Auth
-      await updateProfile(auth.currentUser!, {
-        photoURL: publicUrl
+      const res = await fetch('/api/user/upload-avatar', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${idToken}` },
+        body: formData,
       });
 
-      // Update Firestore
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error || 'فشل الرفع');
+      }
+
+      const { publicUrl } = await res.json();
+      setUploadProgress(80);
+
+      await updateProfile(auth.currentUser!, { photoURL: publicUrl });
+
       const userDocRef = doc(db, 'users', user.uid);
       await updateDoc(userDocRef, {
         photoURL: publicUrl,
@@ -148,7 +276,7 @@ const ProfilePage: React.FC = () => {
       });
 
       setUploadProgress(100);
-      setSuccess('تم تحديث الصورة بنجاح!');
+      setSuccess('تم تحديث الصورة الشخصية بنجاح!');
       setTimeout(() => window.location.reload(), 1000);
 
     } catch (err: any) {
@@ -160,9 +288,83 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  const handleCoverUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    // ⛔ Security: only the owner can upload their own cover
+    if (!file || !user) return;
+    if (!isOwnProfile) {
+      setError('ليس لديك صلاحية تعديل ملف هذا المستخدم');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setError('حجم صورة الغلاف يجب أن يكون أقل من 10 ميجابايت');
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setError('يرجى اختيار صورة صالحة');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      setUploadProgress(10);
+
+      const compressed = await compressImage(file, 1600, 0.8);
+      setUploadProgress(30);
+
+      // ✔️ Secure upload via server-side API (token verified on server)
+      const idToken = await user.getIdToken();
+      const formData = new FormData();
+      formData.append('file', compressed);
+      formData.append('type', 'cover');
+
+      setUploadProgress(50);
+
+      const res = await fetch('/api/user/upload-avatar', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${idToken}` },
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error || 'فشل الرفع');
+      }
+
+      const { publicUrl } = await res.json();
+      setUploadProgress(80);
+
+      const userDocRef = doc(db, 'users', user.uid);
+      await updateDoc(userDocRef, {
+        coverURL: publicUrl,
+        updatedAt: new Date().toISOString()
+      });
+
+      setCoverURL(publicUrl);
+      setUploadProgress(100);
+      setSuccess('تم تحديث صورة الغلاف بنجاح!');
+      setTimeout(() => window.location.reload(), 1000);
+
+    } catch (err: any) {
+      console.error('❌ Cover Upload Error:', err);
+      setError('فشل رفع صورة الغلاف: ' + (err.message || 'خطأ غير معروف'));
+    } finally {
+      setIsLoading(false);
+      setUploadProgress(0);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // ⛔ Security: only the owner can submit profile changes
     if (!user) return;
+    if (!isOwnProfile) {
+      setError('ليس لديك صلاحية تعديل ملف هذا المستخدم');
+      return;
+    }
 
     if (!firstName.trim() || !lastName.trim()) {
       setError('يرجى إدخال الاسم الأول والأخير');
@@ -197,7 +399,15 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  if (!user) return null;
+  if (!isOwnProfile && viewedLoading) {
+    return (
+      <PageLayout>
+        <div className="flex justify-center py-20">
+          <Loader className="w-10 h-10 animate-spin text-indigo-500" />
+        </div>
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout>
@@ -218,27 +428,57 @@ const ProfilePage: React.FC = () => {
         )}
 
         {/* Central Profile Card */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] p-6 sm:p-10 shadow-sm sm:shadow-xl text-center flex flex-col items-center relative overflow-hidden">
-          {/* Subtle Background Glow */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[150%] max-w-2xl h-32 bg-indigo-500/10 dark:bg-indigo-500/5 blur-[80px] rounded-full pointer-events-none"></div>
-          
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] shadow-sm sm:shadow-xl text-center flex flex-col items-center relative overflow-hidden">
+          {/* Cover Photo */}
+          <div className="relative w-full h-40 sm:h-52 group">
+            {(activeUser.coverURL || coverURL || userData?.coverURL) ? (
+              <img
+                src={activeUser.coverURL || coverURL || userData?.coverURL || ''}
+                alt="Cover"
+                className="w-full h-full object-cover rounded-t-[2rem]"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-indigo-400 to-purple-500 rounded-t-[2rem] flex items-center justify-center">
+                <div className="text-white/30 font-black text-4xl sm:text-5xl tracking-widest">TOLZY</div>
+              </div>
+            )}
+
+            {/* Cover Upload Overlay — only for own profile */}
+            {isOwnProfile && (
+              <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center cursor-pointer text-white rounded-t-[2rem]">
+                <Camera className="w-7 h-7 mb-1.5" />
+                <span className="text-xs font-bold">تغيير الغلاف</span>
+                <input type="file" className="hidden" accept="image/*" onChange={handleCoverUpload} disabled={isLoading} />
+              </label>
+            )}
+
+            {uploadProgress > 0 && (
+              <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-10 rounded-t-[2rem]">
+                <Loader className="w-6 h-6 text-white animate-spin mb-1" />
+                <span className="text-white text-[10px] font-bold">{uploadProgress}%</span>
+              </div>
+            )}
+          </div>
+
           {/* Profile Picture */}
-          <div className="relative group mb-6 z-10">
-            <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-md border-4 border-white dark:border-slate-800 relative">
-              {user?.photoURL ? (
-                <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+          <div className="relative group -mt-14 sm:-mt-16 mb-4 z-10">
+            <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-lg border-4 border-white dark:border-slate-800 relative">
+              {activeUser.photoURL ? (
+                <img src={activeUser.photoURL} alt="Profile" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <User className="w-12 h-12 text-slate-400" />
                 </div>
               )}
 
-              {/* Upload Overlay */}
-              <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center cursor-pointer text-white">
-                <Camera className="w-6 h-6 mb-1.5" />
-                <span className="text-[10px] sm:text-xs font-bold">تغيير الصورة</span>
-                <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isLoading} />
-              </label>
+              {/* Upload Overlay — only for own profile */}
+              {isOwnProfile && (
+                <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center cursor-pointer text-white">
+                  <Camera className="w-6 h-6 mb-1.5" />
+                  <span className="text-[10px] sm:text-xs font-bold">تغيير الصورة</span>
+                  <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isLoading} />
+                </label>
+              )}
 
               {uploadProgress > 0 && (
                 <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center z-10">
@@ -249,21 +489,23 @@ const ProfilePage: React.FC = () => {
             </div>
           </div>
 
+          <div className="px-6 pb-6 sm:px-10 sm:pb-10 w-full">
+
           {/* Basic Info */}
           <div className="z-10 w-full">
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white flex items-center justify-center gap-2 mb-3">
-              {userData?.displayName || user.displayName || 'مستخدم جديد'}
-              {userData?.role === 'admin' && <Award className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500 fill-yellow-500/20" />}
+              {activeUser.displayName}
+              {activeUser.role === 'admin' && <Award className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500 fill-yellow-500/20" />}
             </h1>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 mb-8">
               <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-full border border-slate-100 dark:border-slate-700/50">
                 <Mail className="w-3.5 h-3.5 text-indigo-500" />
-                <span className="truncate max-w-[200px] sm:max-w-none">{user.email}</span>
+                <span className="truncate max-w-[200px] sm:max-w-none">{activeUser.email || 'غير متوفر'}</span>
               </div>
               <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-full border border-slate-100 dark:border-slate-700/50">
                 <Calendar className="w-3.5 h-3.5 text-purple-500" />
-                <span>عضو منذ {userData?.createdAt ? new Date(userData.createdAt).toLocaleDateString('ar-EG') : 'غير محدد'}</span>
+                <span>عضو منذ {activeUser.createdAt ? new Date(activeUser.createdAt).toLocaleDateString('ar-EG') : 'غير محدد'}</span>
               </div>
               <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-full border border-slate-100 dark:border-slate-700/50">
                 <Shield className="w-3.5 h-3.5 text-amber-500" />
@@ -273,15 +515,9 @@ const ProfilePage: React.FC = () => {
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row w-full sm:w-auto items-center justify-center gap-3">
-              {!isProPlan && (
-                <Link
-                  href="/pricing"
-                  className="flex items-center justify-center gap-2 w-full sm:w-auto mx-auto px-6 py-2.5 sm:py-3 rounded-xl transition-all font-bold text-sm sm:text-base bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/20"
-                >
-                  رفع الخطة إلى Pro
-                  <ChevronRight className="w-4 h-4 rtl:rotate-180" />
-                </Link>
-              )}
+
+              {isOwnProfile && (
+              <>
               <button
                 onClick={() => setIsEditing(!isEditing)}
                 className={`flex items-center justify-center gap-2 w-full sm:w-auto mx-auto px-6 py-2.5 sm:py-3 rounded-xl transition-all font-bold text-sm sm:text-base ${
@@ -305,12 +541,15 @@ const ProfilePage: React.FC = () => {
                 <LogOut className="w-4 h-4 rtl:-scale-x-100" />
                 تسجيل الخروج
               </button>
+              </>
+              )}
             </div>
+          </div>
           </div>
         </div>
 
         {/* Edit Form */}
-        {isEditing && (
+        {isOwnProfile && isEditing && (
           <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-[2rem] border border-indigo-100 dark:border-indigo-900/30 animate-fade-in-up shadow-sm">
             <form onSubmit={handleSubmit} className="space-y-6 max-w-xl mx-auto">
               <div className="text-center mb-6 sm:mb-8">
@@ -366,6 +605,7 @@ const ProfilePage: React.FC = () => {
         )}
 
         {/* Stats Grid */}
+        {isOwnProfile && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-2xl sm:rounded-[1.5rem] flex flex-col items-center justify-center text-center group shadow-sm transition-all hover:border-indigo-500/30">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-2 sm:mb-3 group-hover:scale-110 group-hover:-rotate-6 transition-transform">
@@ -398,9 +638,10 @@ const ProfilePage: React.FC = () => {
             <p className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">الحالة</p>
           </div>
         </div>
+        )}
 
         {/* Admin Section */}
-        {isAdmin && (
+        {isOwnProfile && isAdmin && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-8">
             {[
               { title: 'رفع الأدوات', icon: Upload, href: '/admin/upload-tools', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20', hover: 'hover:border-blue-500/30' },
@@ -423,7 +664,7 @@ const ProfilePage: React.FC = () => {
         )}
 
         {/* Added Tools List */}
-        {addedTools.length > 0 && (
+        {isOwnProfile && addedTools.length > 0 && (
           <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
             <div className="flex items-center gap-3 mb-6 sm:mb-8">
               <div className="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center">
@@ -442,6 +683,7 @@ const ProfilePage: React.FC = () => {
         )}
 
         {/* Saved Tools List */}
+        {isOwnProfile && (
         <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm mb-6">
           <div className="flex items-center gap-3 mb-6 sm:mb-8">
             <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center">
@@ -457,6 +699,51 @@ const ProfilePage: React.FC = () => {
              <SavedTools tools={savedTools} />
           )}
         </div>
+        )}
+
+        {/* Community Posts for Other Users */}
+        {!isOwnProfile && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+                <MessageSquare className="w-5 h-5 text-emerald-500" />
+              </div>
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">منشورات المجتمع</h3>
+            </div>
+            {loadingUserPosts ? (
+              <div className="flex justify-center py-12">
+                <Loader className="w-8 h-8 text-indigo-500 animate-spin" />
+              </div>
+            ) : userPosts.length === 0 ? (
+              <div className="text-center py-10 text-slate-500 bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800">
+                لا توجد منشورات عامة بعد
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {userPosts.map((post: any) => (
+                  <div key={post.id} className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm p-5 sm:p-6 hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <span className="font-bold text-slate-900 dark:text-white">{post.author_name}</span>
+                        <span className="text-xs text-slate-400">@{post.author_username || activeUser.username}</span>
+                      </div>
+                      <span className="text-xs text-slate-400">{new Date(post.created_at).toLocaleDateString('ar-EG')}</span>
+                    </div>
+                    <h4 className="font-bold text-slate-800 dark:text-slate-200 mb-2">{post.title}</h4>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-3 whitespace-pre-wrap">{post.prompt_text || post.content}</p>
+                    {post.tags && post.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-3">
+                        {post.tags.map((tag: string) => (
+                          <span key={tag} className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold px-2.5 py-1 rounded-full">{tag}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
       </div>
     </PageLayout>

@@ -33,7 +33,15 @@ import {
     SlidersHorizontal,
     Sun,
     Moon,
-    Shield
+    Shield,
+    Rocket,
+    Image as ImageIcon,
+    TerminalSquare,
+    Zap,
+    Layers,
+    MessageSquare,
+    GraduationCap,
+    RotateCcw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
@@ -45,6 +53,7 @@ import ToolCard from './ToolCard';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useUserData } from '../../hooks/useUserData';
+import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
 import Link from 'next/link';
 import Image from 'next/image';
 import { toast } from 'react-hot-toast';
@@ -72,28 +81,102 @@ interface Conversation {
     updated_at: string;
 }
 
-interface ModelOption {
-    id: string;
-    name: string;
-    description: string;
+const TOOLS = [
+    { id: 'programming', name: 'الأكواد', icon: <Code size={16} /> },
+    { id: 'build', name: 'ابنِ مشروعك', icon: <Rocket size={16} /> }
+];
+
+// @ mention commands
+const AT_COMMANDS = [
+    { id: 'code', label: 'برمجة', description: 'وضع تحليل وكتابة الأكواد', icon: <Code size={15} />, color: 'text-blue-500', comingSoon: true },
+    { id: 'tools', label: 'أدوات', description: 'اكتشف أدوات AI المناسبة', icon: <Layers size={15} />, color: 'text-emerald-500', comingSoon: false },
+    { id: 'learn', label: 'تعلم', description: 'مسارات التعلم والكورسات', icon: <GraduationCap size={15} />, color: 'text-amber-500', comingSoon: false },
+    { id: 'general', label: 'عام', description: 'محادثة عامة مع Copilot', icon: <MessageSquare size={15} />, color: 'text-indigo-500', comingSoon: false },
+];
+
+// ─── Mode System ───────────────────────────────────────────
+type CopilotMode = 'general' | 'code' | 'tools' | 'learn';
+
+interface ModeConfig {
+    id: CopilotMode;
+    label: string;
+    icon: React.ReactNode;
+    placeholder: string;
+    color: string;
+    bg: string;
+    border: string;
+    glow: string;
 }
 
-const MODELS: ModelOption[] = [
-    { id: 'fast', name: 'السريع', description: 'استجابة فورية للبحث والأسئلة المباشرة.' },
-    { id: 'pro', name: 'البرو', description: 'الأداء المتوازن والمثالي لمهامك اليومية.' },
-    { id: 'thinking', name: 'المفكر', description: 'تحليل عميق بخطوات منطقية للمسائل المعقدة.' }
+const MODES: ModeConfig[] = [
+    {
+        id: 'general',
+        label: 'عام',
+        icon: <MessageSquare size={16} />,
+        placeholder: 'اسأل Tolzy Copilot...',
+        color: 'text-indigo-600 dark:text-indigo-400',
+        bg: 'bg-indigo-50 dark:bg-indigo-500/10',
+        border: 'border-indigo-200 dark:border-indigo-500/20',
+        glow: 'shadow-indigo-500/20',
+    },
+    {
+        id: 'code',
+        label: 'برمجة',
+        icon: <Code size={16} />,
+        placeholder: 'اكتب وصف الكود أو الصق الكود المراد شرحه أو تصحيحه...',
+        color: 'text-blue-600 dark:text-blue-400',
+        bg: 'bg-blue-50 dark:bg-blue-500/10',
+        border: 'border-blue-200 dark:border-blue-500/20',
+        glow: 'shadow-blue-500/20',
+    },
+    {
+        id: 'tools',
+        label: 'أدوات',
+        icon: <Layers size={16} />,
+        placeholder: 'صِف ما تحتاجه وسأقترح عليك أدوات Tolzy المناسبة...',
+        color: 'text-emerald-600 dark:text-emerald-400',
+        bg: 'bg-emerald-50 dark:bg-emerald-500/10',
+        border: 'border-emerald-200 dark:border-emerald-500/20',
+        glow: 'shadow-emerald-500/20',
+    },
+    {
+        id: 'learn',
+        label: 'تعلم',
+        icon: <GraduationCap size={16} />,
+        placeholder: 'ماذا تريد أن تتعلم اليوم؟ اكتب الموضوع أو المسار...',
+        color: 'text-amber-600 dark:text-amber-400',
+        bg: 'bg-amber-50 dark:bg-amber-500/10',
+        border: 'border-amber-200 dark:border-amber-500/20',
+        glow: 'shadow-amber-500/20',
+    },
 ];
 
-const TOOLS = [
-    { id: 'programming', name: 'الأكواد', icon: <Code size={16} /> }
-];
-
-const SUGGESTIONS = [
-    { icon: <Sparkles size={20} className="text-[#fea619]" />, text: 'هندسة الأوامر', prompt: 'ممكن تساعدني في صياغة Prompt احترافي لإنشاء صورة بالذكاء الاصطناعي عن...' },
-    { icon: <Lightbulb size={20} className="text-yellow-500" />, text: 'بناء مسار عمل (Workflow)', prompt: 'كيف أبدأ بودكاست؟ أريد مسار عمل كامل يوضح الأدوات المطلوبة لكل خطوة.' },
-    { icon: <Code size={20} className="text-blue-500" />, text: 'برمجة ذكية', prompt: 'ما هي أفضل أدوات الذكاء الاصطناعي للمبرمجين المتقدمين؟' },
-    { icon: <PenTool size={20} className="text-orange-500" />, text: 'كتابة المحتوى', prompt: 'رشح لي أدوات تساعدني في كتابة مقالات متوافقة مع SEO.' },
-];
+const MODE_SUGGESTIONS: Record<CopilotMode, { icon: React.ReactNode; text: string; prompt: string }[]> = {
+    general: [
+        { icon: <Sparkles size={20} className="text-[#fea619]" />, text: 'هندسة الأوامر', prompt: 'ممكن تساعدني في صياغة Prompt احترافي لإنشاء صورة بالذكاء الاصطناعي عن...' },
+        { icon: <Lightbulb size={20} className="text-yellow-500" />, text: 'بناء مسار عمل', prompt: 'كيف أبدأ بودكاست؟ أريد مسار عمل كامل يوضح الأدوات المطلوبة لكل خطوة.' },
+        { icon: <PenTool size={20} className="text-orange-500" />, text: 'كتابة المحتوى', prompt: 'رشح لي أدوات تساعدني في كتابة مقالات متوافقة مع SEO.' },
+        { icon: <Globe size={20} className="text-sky-500" />, text: 'معلومات عامة', prompt: 'اشرح لي الفرق بين الذكاء الاصطناعي التوليدي والذكاء الاصطناعي التقليدي بشكل مبسط.' },
+    ],
+    code: [
+        { icon: <Code size={20} className="text-blue-500" />, text: 'إنشاء دالة', prompt: 'اكتب لي دالة بلغة JavaScript تقوم بترتيب مصفوفة من الأعداد تصاعدياً مع شرح تفصيلي.' },
+        { icon: <TerminalSquare size={20} className="text-emerald-500" />, text: 'تصحيح كود', prompt: 'هذا الكود يعطيني خطأ: `const x = null; console.log(x.toString());` ما المشكلة وكيف أصلحها؟' },
+        { icon: <Layers size={20} className="text-violet-500" />, text: 'شرح خوارزمية', prompt: 'اشرح لي خوارزمية البحث الثنائي (Binary Search) بلغة Python مع أمثلة.' },
+        { icon: <Rocket size={20} className="text-rose-500" />, text: 'بناء API', prompt: 'اكتب لي REST API بسيط باستخدام Next.js App Router يتعامل مع CRUD operations.' },
+    ],
+    tools: [
+        { icon: <Sparkles size={20} className="text-[#fea619]" />, text: 'أدوات الكتابة', prompt: 'أحتاج أدوات ذكاء اصطناعي لكتابة محتوى عربي احترافي. اقترح علي من Tolzy.' },
+        { icon: <ImageIcon size={20} className="text-pink-500" />, text: 'أدوات التصميم', prompt: 'ابحث لي عن أدوات AI لتصميم الصور والشعارات والبوستات الاحترافية في Tolzy.' },
+        { icon: <Code size={20} className="text-blue-500" />, text: 'أدوات البرمجة', prompt: 'أريد أفضل أدوات الذكاء الاصطناعي للمبرمجين من Tolzy مع روابطها.' },
+        { icon: <Zap size={20} className="text-amber-500" />, text: 'أتمتة العمل', prompt: 'اقترح لي أدوات لأتمتة المهام المتكررة في العمل وزيادة الإنتاجية.' },
+    ],
+    learn: [
+        { icon: <GraduationCap size={20} className="text-emerald-500" />, text: 'مسار React', prompt: 'أريد مسار تعلم React.js كامل من الصفر حتى الاحتراف. ارسم لي خطة دراسية.' },
+        { icon: <BookOpen size={20} className="text-indigo-500" />, text: 'Prompt Engineering', prompt: 'اشرح لي أساسيات هندسة الأوامر (Prompt Engineering) مع أمثلة عملية.' },
+        { icon: <Lightbulb size={20} className="text-yellow-500" />, text: 'تعلم No-Code', prompt: 'ما هي أفضل الأدوات لبناء مشاريع بدون كود؟ اقترح مسار تعلم منظم.' },
+        { icon: <Globe size={20} className="text-sky-500" />, text: 'تعلم الذكاء الاصطناعي', prompt: 'أريد فهم أساسيات الذكاء الاصطناعي والتعلم الآلي. ارسم لي خطة تعلم مبسطة.' },
+    ],
+};
 
 const generateId = () => {
     if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -108,9 +191,10 @@ const generateId = () => {
 const getApiBase = () => '';
 
 
-const MessageItem = React.memo(({ msg, user }: {
+const MessageItem = React.memo(({ msg, user, onResend }: {
     msg: Message,
-    user: any
+    user: any,
+    onResend?: (content: string) => void
 }) => {
     const [displayedContent, setDisplayedContent] = useState(msg.isStreaming ? '' : msg.content);
     const lastContentRef = useRef(msg.content);
@@ -133,11 +217,6 @@ const MessageItem = React.memo(({ msg, user }: {
         return () => clearTimeout(timer);
     }, [msg.content, msg.isStreaming, displayedContent]);
 
-    const [isThinkingExpanded, setIsThinkingExpanded] = useState(false);
-
-    const isFast = msg.modelId === 'fast';
-    const isThinkingModel = msg.modelId === 'thinking';
-    const thinkingDuration = isFast ? 0.6 : 1.5;
 
     return (
         <motion.div
@@ -152,56 +231,13 @@ const MessageItem = React.memo(({ msg, user }: {
                     user?.photoURL ? <Image src={user.photoURL} alt="User" width={32} height={32} sizes="32px" /> : <User size={16} className="text-slate-500" />
                 ) : (
                     <>
-                        {(!msg.thinkingProcess && msg.status === 'thinking') && (
-                            <motion.div
-                                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-                                transition={{ repeat: Infinity, duration: thinkingDuration }}
-                                className="absolute inset-0 bg-white/20"
-                            />
-                        )}
-                        <Bot size={18} className={`text-white relative z-10 ${(!msg.thinkingProcess && msg.status === 'thinking') ? 'animate-pulse' : ''}`} />
+                        <Bot size={18} className="text-white relative z-10" />
                     </>
                 )}
             </div>
 
             <div className={`flex flex-col flex-1 max-w-[calc(100%-40px)] sm:max-w-[85%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                {/* Thinking Process Header (For Thinker Model) */}
-                {msg.role === 'assistant' && isThinkingModel && (msg.status === 'streaming' || msg.status === 'complete') && (
-                    <div className="w-full mb-3 animate-in fade-in slide-in-from-top-2 duration-500">
-                        <div className="flex items-center justify-between mb-2">
-                             <div className="flex items-center gap-2">
-                                <Sparkles size={16} className="text-blue-500 animate-pulse" />
-                                <button 
-                                    onClick={() => setIsThinkingExpanded(!isThinkingExpanded)}
-                                    className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors bg-slate-50 dark:bg-white/5 px-3 py-1.5 rounded-full border border-slate-200/50 dark:border-white/10 shadow-sm"
-                                >
-                                    <span>عرض طريقة التفكير</span>
-                                    <ChevronDown size={14} className={`transition-transform duration-300 ${isThinkingExpanded ? 'rotate-180' : ''}`} />
-                                </button>
-                             </div>
-                             {msg.thinkingDuration !== undefined && (
-                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded-md">
-                                    تم التفكير في {msg.thinkingDuration} ثانية
-                                </span>
-                             )}
-                        </div>
-                        
-                        <AnimatePresence>
-                            {isThinkingExpanded && (
-                                <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    className="overflow-hidden"
-                                >
-                                    <div className="mr-3 pl-4 border-l-2 border-slate-200 dark:border-white/10 py-2 text-[14px] font-medium text-slate-700 dark:text-slate-300 italic whitespace-pre-wrap leading-relaxed">
-                                        {msg.thinkingProcess || "جاري التفكير وجمع المعلومات..."}
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
-                )}
+
 
                 <div className={`w-full px-4 py-3 sm:px-6 sm:py-5 rounded-2xl sm:rounded-[24px] text-[14px] sm:text-[16px] leading-relaxed relative transition-all duration-300
                     ${msg.role === 'user'
@@ -209,31 +245,37 @@ const MessageItem = React.memo(({ msg, user }: {
                         : 'bg-white dark:bg-[#1A1A1A] border border-slate-200/60 dark:border-white/10 text-slate-800 dark:text-slate-200 rounded-tl-none shadow-md sm:shadow-xl shadow-indigo-500/5 dark:shadow-black/20'
                     }
                 `}>
-                    {/* Bot Badge - Assistant only */}
+                    {/* Bot Badge */}
                     {msg.role === 'assistant' && (
                         <div className="flex items-center gap-1.5 mb-2.5">
-                            <Sparkles size={12} className={`text-indigo-500 ${msg.status === 'thinking' ? 'animate-spin-slow' : ''}`} />
+                            <Sparkles size={12} className="text-indigo-500" />
                             <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
-                                {msg.status === 'thinking' ? 'جاري التفكير...' : 'Tolzy AI'}
+                                Tolzy Copilot V2.5
                             </span>
                         </div>
                     )}
 
-                    {(!msg.thinkingProcess && msg.status === 'thinking') ? (
-                        <div className="flex flex-col gap-2 min-w-[100px]">
-                            <div className="h-2 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden relative">
-                                <motion.div 
-                                    animate={{ left: ['-100%', '100%'] }}
-                                    transition={{ repeat: Infinity, duration: thinkingDuration, ease: "linear" }}
-                                    className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent"
-                                />
-                            </div>
-                            <div className="h-2 w-2/3 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden relative">
-                                <motion.div 
-                                    animate={{ left: ['-100%', '100%'] }}
-                                    transition={{ repeat: Infinity, duration: thinkingDuration, ease: "linear", delay: isFast ? 0.2 : 0.5 }}
-                                    className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent"
-                                />
+                    {(msg.status === 'thinking') ? (
+                        /* ── Modern Thinking Indicator ─────────────────────── */
+                        <div className="flex flex-col gap-3 py-1">
+                            {/* Dots */}
+                            <div className="flex items-center gap-1.5">
+                                {[0, 1, 2].map(i => (
+                                    <motion.span
+                                        key={i}
+                                        className="w-2 h-2 rounded-full bg-indigo-400 dark:bg-indigo-500"
+                                        animate={{ y: [0, -6, 0], opacity: [0.4, 1, 0.4] }}
+                                        transition={{
+                                            repeat: Infinity,
+                                            duration: 0.9,
+                                            delay: i * 0.18,
+                                            ease: 'easeInOut'
+                                        }}
+                                    />
+                                ))}
+                                <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 mr-1 select-none">
+                                    جاري التحليل...
+                                </span>
                             </div>
                         </div>
                     ) : (
@@ -462,19 +504,41 @@ const MessageItem = React.memo(({ msg, user }: {
                     )}
                 </div>
 
-                {/* Message Actions */}
+                {/* Message Actions — Assistant */}
                 {msg.role === 'assistant' && !msg.isStreaming && (
-                    <div className="flex items-center gap-1.5 mt-3 px-1 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-2 group-hover:translate-y-0">
+                    <div className="flex items-center gap-1.5 mt-2.5 px-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
                         <button
-                            onClick={() => {
-                                navigator.clipboard.writeText(msg.content);
-                                toast.success('تم النسخ');
-                            }}
-                            className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all rounded-xl hover:bg-white dark:hover:bg-white/10 shadow-sm border border-transparent hover:border-slate-200 dark:hover:border-white/5"
-                            title="نسخ"
+                            onClick={() => { navigator.clipboard.writeText(msg.content); toast.success('تم النسخ'); }}
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-[11px] font-bold transition-all rounded-xl hover:bg-white dark:hover:bg-white/10 border border-transparent hover:border-slate-200 dark:hover:border-white/10"
+                            title="نسخ الرد"
                         >
-                            <Copy size={15} />
+                            <Copy size={13} />
+                            <span>نسخ</span>
                         </button>
+                    </div>
+                )}
+
+                {/* Message Actions — User */}
+                {msg.role === 'user' && (
+                    <div className="flex items-center gap-1.5 mt-2 px-1 justify-end opacity-0 group-hover:opacity-100 transition-all duration-300">
+                        <button
+                            onClick={() => { navigator.clipboard.writeText(msg.content); toast.success('تم النسخ'); }}
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-[11px] font-bold transition-all rounded-xl hover:bg-white dark:hover:bg-white/10 border border-transparent hover:border-slate-200 dark:hover:border-white/10"
+                            title="نسخ الرسالة"
+                        >
+                            <Copy size={13} />
+                            <span>نسخ</span>
+                        </button>
+                        {onResend && (
+                            <button
+                                onClick={() => onResend(msg.content)}
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-[11px] font-bold transition-all rounded-xl hover:bg-white dark:hover:bg-white/10 border border-transparent hover:border-slate-200 dark:hover:border-white/10"
+                                title="إعادة الإرسال"
+                            >
+                                <RotateCcw size={13} />
+                                <span>إعادة الإرسال</span>
+                            </button>
+                        )}
                     </div>
                 )}
             </div>
@@ -494,19 +558,28 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
+    const [showAtMenu, setShowAtMenu] = useState(false);
+    const [atMenuFilter, setAtMenuFilter] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+    const { isListening, transcript, toggleListening, hasSupport } = useSpeechRecognition();
+
+    useEffect(() => {
+        if (isListening && transcript) {
+            setInput(transcript);
+        }
+    }, [transcript, isListening]);
     const [isMounted, setIsMounted] = useState(false);
     const [lastMessageId, setLastMessageId] = useState<string | null>(null);
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [currentConversationId, setCurrentConversationId] = useState<string | null>(initialChatId || null);
-    const [selectedModel, setSelectedModel] = useState<ModelOption>(MODELS[0]);
     const [selectedTool, setSelectedTool] = useState(TOOLS[0]);
-    const [isSearchEnabled, setIsSearchEnabled] = useState(false);
-    const [isModelSelectorOpen, setIsModelSelectorOpen] = useState(false);
+    const [mode, setMode] = useState<CopilotMode>('general');
     const [isToolSelectorOpen, setIsToolSelectorOpen] = useState(false);
     const [isAccountPopoverOpen, setIsAccountPopoverOpen] = useState(false);
     const [isSettingsPopoverOpen, setIsSettingsPopoverOpen] = useState(false);
+    const [isSearchEnabled, setIsSearchEnabled] = useState(false);
     // Auto-start chat from URL query parameter
     const [hasHandledInitialQuery, setHasHandledInitialQuery] = useState(false);
 
@@ -636,7 +709,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
             content: '',
             isStreaming: false,
             status: 'thinking',
-            modelId: selectedModel.id,
+            modelId: 'tolzy-v2.5',
             tools: []
         };
         setMessages(prev => [...prev, assistantMessage]);
@@ -649,13 +722,12 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                 body: JSON.stringify({
                     message: promptText,
                     history: messages.map(m => ({ role: m.role, content: m.content })),
-                    model: 'google/gemini-2.0-flash-001', // Keep using high-performance model backend
                     userId: user?.uid,
-                    userPlan: userData?.role === 'pro' ? 'pro' : 'free',
+                    userPlan: isProPlan ? 'pro' : 'free',
                     userName: userData?.displayName || user?.displayName || user?.email || 'مستخدم',
                     enableSearch: isSearchEnabled,
                     selectedTool: selectedTool.id,
-                    thinking: selectedModel.id === 'thinking'
+                    mode: mode
                 })
             });
 
@@ -669,8 +741,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
             let hasStartedStreaming = false;
             let thinkingDuration = 0;
 
-            const isThinkingModel = selectedModel.id === 'thinking';
-
             while (!done) {
                 const { value, done: doneReading } = await reader.read();
                 done = doneReading;
@@ -683,38 +753,14 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                     }
                     accumulatedContent += chunkValue;
 
-                    let displayContent = accumulatedContent;
-                    let displayThinking = '';
-
-                    if (isThinkingModel) {
-                        const thinkStartIdx = accumulatedContent.indexOf('<think>');
-                        const thinkEndIdx = accumulatedContent.indexOf('</think>');
-                        
-                        if (thinkStartIdx !== -1) {
-                            if (thinkEndIdx !== -1) {
-                                // Both tags present
-                                displayThinking = accumulatedContent.substring(thinkStartIdx + 7, thinkEndIdx).trim();
-                                displayContent = accumulatedContent.substring(thinkEndIdx + 8).trim();
-                            } else {
-                                // Only start tag present, currently streaming thoughts
-                                displayThinking = accumulatedContent.substring(thinkStartIdx + 7).trim();
-                                displayContent = ''; // Wait until thinking is done
-                            }
-                        } else {
-                            // No tags found yet, or model didn't use them (fallback)
-                            displayContent = accumulatedContent;
-                        }
-                    }
-
                     setMessages(prev => prev.map(m =>
                         m.id === assistantMessageId
-                            ? { 
-                                ...m, 
-                                content: displayContent, 
-                                thinkingProcess: displayThinking || undefined,
-                                isStreaming: true, 
-                                status: 'streaming', 
-                                thinkingDuration 
+                            ? {
+                                ...m,
+                                content: accumulatedContent,
+                                isStreaming: true,
+                                status: 'streaming',
+                                thinkingDuration
                               }
                             : m
                     ));
@@ -728,21 +774,9 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                     : m
             ));
 
-            // Determine final content for saving
-            let finalContentToSave = accumulatedContent;
-            let finalThinkingToSave = undefined;
-
-            if (isThinkingModel) {
-                const thinkStartIdx = accumulatedContent.indexOf('<think>');
-                const thinkEndIdx = accumulatedContent.indexOf('</think>');
-                
-                if (thinkStartIdx !== -1 && thinkEndIdx !== -1) {
-                    finalThinkingToSave = accumulatedContent.substring(thinkStartIdx + 7, thinkEndIdx).trim();
-                    finalContentToSave = accumulatedContent.substring(thinkEndIdx + 8).trim();
-                } else {
-                    finalContentToSave = accumulatedContent;
-                }
-            }
+            // Final content to save
+            const finalContentToSave = accumulatedContent;
+            const finalThinkingToSave = undefined;
 
             // Update Conversation Logic (Simplified)
             if (!currentConversationId) {
@@ -808,14 +842,38 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setInput(e.target.value);
-        if (e.target.value.trim() === '') {
+        const val = e.target.value;
+        setInput(val);
+        // Detect @ trigger
+        const lastAtIdx = val.lastIndexOf('@');
+        if (lastAtIdx !== -1) {
+            const afterAt = val.slice(lastAtIdx + 1);
+            if (!afterAt.includes(' ')) {
+                setAtMenuFilter(afterAt);
+                setShowAtMenu(true);
+            } else {
+                setShowAtMenu(false);
+            }
+        } else {
+            setShowAtMenu(false);
+        }
+        if (val.trim() === '') {
             e.target.style.height = '48px';
         } else {
             e.target.style.height = 'auto';
-            const newHeight = Math.min(e.target.scrollHeight, 192); // Max height 192px (48px * 4 lines roughly)
+            const newHeight = Math.min(e.target.scrollHeight, 192);
             e.target.style.height = `${newHeight}px`;
         }
+    };
+
+    const handleAtSelect = (cmdId: string) => {
+        // Replace @... in input with nothing, and switch mode
+        const lastAtIdx = input.lastIndexOf('@');
+        const cleaned = lastAtIdx !== -1 ? input.slice(0, lastAtIdx) : input;
+        setInput(cleaned);
+        setMode(cmdId as CopilotMode);
+        setShowAtMenu(false);
+        textareaRef.current?.focus();
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -896,104 +954,32 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
 
             <div className="flex h-[100dvh] bg-[#F9F9F9] dark:bg-[#111] overflow-hidden dir-rtl" dir="rtl">
 
-                {/* Slim Sidebar (Gemini Style) */}
-                <div className="hidden lg:flex flex-col items-center py-4 w-[68px] bg-white dark:bg-[#111111] border-l border-slate-200 dark:border-white/5 z-[60]">
-                    <button
-                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                        className="p-3 mb-4 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all"
-                        title={isSidebarOpen ? "إغلاق القائمة" : "فتح القائمة"}
-                    >
-                        <Menu size={20} />
-                    </button>
-                    
-                    <button
-                        onClick={startNewChat}
-                        className="p-3 mb-auto rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 hover:text-indigo-600 transition-all border border-slate-200/50 dark:border-white/10"
-                        title="محادثة جديدة"
-                    >
-                        <Plus size={20} />
-                    </button>
+                {/* Sidebar has been consolidated below */}
 
-                    <div className="relative">
-                        <button
-                            onClick={() => setIsSettingsPopoverOpen(!isSettingsPopoverOpen)}
-                            className={`p-3 rounded-xl transition-all ${isSettingsPopoverOpen ? 'bg-slate-900 text-white' : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10'}`}
-                            title="الإعدادات"
-                        >
-                            <Settings size={20} />
-                        </button>
-                        
-                        <AnimatePresence>
-                            {isSettingsPopoverOpen && (
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0.95, x: 10 }}
-                                    animate={{ opacity: 1, scale: 1, x: 0 }}
-                                    exit={{ opacity: 0, scale: 0.95, x: 10 }}
-                                    className="fixed right-[68px] bottom-6 w-64 bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl p-1.5 z-[100] overflow-hidden"
-                                >
-                                    <div className="space-y-0.5">
-                                        <button onClick={() => toggleDarkMode()} className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300 text-sm transition-colors group">
-                                            {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
-                                            <span className="font-bold flex-1 text-right">المظهر</span>
-                                            <span className="text-[10px] text-slate-400">{isDarkMode ? 'داكن' : 'فاتح'}</span>
-                                        </button>
-                                        
-                                        <Link href="/changelog" className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300 text-sm transition-colors group">
-                                            <Sparkles size={16} />
-                                            <span className="font-bold flex-1 text-right">ما الجديد؟</span>
-                                        </Link>
-                                        
-                                        <Link href="/privacy" className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300 text-sm transition-colors group">
-                                            <Shield size={16} />
-                                            <span className="font-bold flex-1 text-right">سياسة الخصوصية</span>
-                                        </Link>
-
-                                        <div className="h-px bg-slate-100 dark:bg-white/5 my-1" />
-
-                                        <button onClick={() => deleteAllConversations()} className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10 text-red-600 text-sm transition-colors group">
-                                            <Trash2 size={16} />
-                                            <span className="font-bold flex-1 text-right">حذف كل المحادثات</span>
-                                        </button>
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
-                </div>
-
-                {/* Sidebar */}
-                <AnimatePresence mode="wait">
+                {/* Unified Sidebar */}
+                <AnimatePresence initial={false}>
                     {isSidebarOpen && (
                         <motion.div
                             initial={{ x: 300, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: 300, opacity: 0 }}
-                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                            className={`fixed lg:relative z-50 
-                                h-full w-[280px] lg:w-[300px] 
-                                bg-white dark:bg-[#111111] 
-                                border-l border-slate-200 dark:border-white/5 flex flex-col
-                                shadow-xl lg:shadow-none
-                            `}
+                            transition={{ type: "spring", stiffness: 400, damping: 40 }}
+                            className="fixed lg:relative z-50 h-full w-[280px] bg-white dark:bg-[#0A0A0A] border-l border-gray-100 dark:border-white/5 flex flex-col shadow-2xl lg:shadow-none"
                         >
-                            {/* Header: Menu & Search */}
-                            <div className="p-4 flex items-center justify-between gap-3 border-b border-slate-50 dark:border-white/5">
-                                <div className="flex items-center gap-3">
-                                    <button
-                                        onClick={() => setIsSidebarOpen(false)}
-                                        className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl transition-all text-slate-400 hover:text-slate-600"
-                                    >
-                                        <Menu size={20} />
-                                    </button>
-                                    <h2 className="text-xl font-black tracking-tighter text-slate-900 dark:text-white">TOLZY</h2>
-                                </div>
+                            {/* Header: Toggle & New Chat */}
+                            <div className="p-4 flex items-center justify-between gap-3 border-b border-transparent">
+                                <button
+                                    onClick={() => setIsSidebarOpen(false)}
+                                    className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-xl transition-colors text-gray-500 hover:text-gray-900 dark:hover:text-white"
+                                >
+                                    <Menu size={20} />
+                                </button>
                                 <button
                                     onClick={startNewChat}
-                                    className="p-2.5 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-900 dark:text-white rounded-xl transition-all flex items-center gap-2 text-xs font-bold"
-                                    title="محادثة جديدة"
+                                    className="flex-1 p-2 bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-xl transition-all flex items-center justify-center gap-2 text-sm font-bold"
                                 >
                                     <Plus size={18} />
-                                    <span className="hidden sm:inline">جديدة</span>
+                                    محادثة جديدة
                                 </button>
                             </div>
 
@@ -1004,8 +990,8 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                     if (!items || items.length === 0) return null;
                                     return (
                                         <div key={label} className="mb-6">
-                                            <h3 className="text-xs font-semibold text-slate-400 dark:text-slate-500 px-3 mb-3">{label}</h3>
-                                            <div className="space-y-1">
+                                            <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 px-3 mb-2">{label}</h3>
+                                            <div className="space-y-0.5">
                                                 {items.map(conv => (
                                                     <div
                                                         key={conv.id}
@@ -1013,14 +999,14 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                                             loadConversation(conv);
                                                             if (window.innerWidth < 1024) setIsSidebarOpen(false);
                                                         }}
-                                                        className={`group relative flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-all
+                                                        className={`group relative flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-colors
                                                             ${currentConversationId === conv.id
-                                                                ? 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white font-bold'
-                                                                : 'hover:bg-slate-50 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                                                                ? 'bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white font-bold'
+                                                                : 'hover:bg-gray-50 dark:hover:bg-white/5 text-gray-600 dark:text-gray-400'
                                                             }
                                                         `}
                                                     >
-                                                        <span className="truncate text-[13px] flex-1 ml-2">{conv.title}</span>
+                                                        <span className="truncate text-sm flex-1 ml-2">{conv.title}</span>
                                                         
                                                         {/* Delete Button */}
                                                         <button
@@ -1030,7 +1016,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                                                     deleteConversation(conv.id);
                                                                 }
                                                             }}
-                                                            className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 rounded-lg transition-all"
+                                                            className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-50 dark:hover:bg-red-500/10 text-gray-400 hover:text-red-500 rounded-lg transition-all"
                                                         >
                                                             <Trash2 size={14} />
                                                         </button>
@@ -1042,29 +1028,23 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                 })}
                             </div>
 
-                            {/* User Info & Settings */}
-                            <div className="p-4 mt-auto border-t border-slate-50 dark:border-white/5 space-y-3">
+                            {/* User Info & Settings Footer */}
+                            <div className="p-3 mt-auto border-t border-gray-100 dark:border-white/5">
                                 {user && (
-                                    <div className="flex items-center justify-between px-1">
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 overflow-hidden relative border border-slate-200 dark:border-white/10">
-                                                {user?.photoURL ? (
-                                                    <Image src={user.photoURL} alt="User" fill className="object-cover" />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-slate-500">
-                                                        {getUserInitials()}
-                                                    </div>
-                                                )}
+                                    <div className="flex items-center justify-between">
+                                        <Link href="/profile" className="flex items-center gap-3 min-w-0 hover:bg-gray-50 dark:hover:bg-white/5 p-2 rounded-xl transition-colors flex-1 cursor-pointer">
+                                            <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden relative">
+                                                {user?.photoURL ? <Image src={user.photoURL} alt="User" fill className="object-cover" sizes="32px" /> : getUserInitials()}
                                             </div>
                                             <div className="flex flex-col min-w-0">
-                                                <span className="text-xs font-bold text-slate-900 dark:text-white truncate">{userData?.displayName || 'مستخدم'}</span>
-                                                <span className="text-[10px] text-slate-500 truncate">{user?.email}</span>
+                                                <span className="text-xs font-bold text-gray-900 dark:text-white truncate">{userData?.displayName || 'مستخدم'}</span>
+                                                <span className="text-[10px] text-gray-500 truncate">{user?.email}</span>
                                             </div>
-                                        </div>
-                                        <div className="relative">
+                                        </Link>
+                                        <div className="relative shrink-0">
                                             <button 
                                                 onClick={() => setIsSettingsPopoverOpen(!isSettingsPopoverOpen)}
-                                                className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-600 rounded-lg transition-all"
+                                                className={`p-2 rounded-xl transition-colors ${isSettingsPopoverOpen ? 'bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'}`}
                                             >
                                                 <Settings size={18} />
                                             </button>
@@ -1074,28 +1054,15 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                                         initial={{ opacity: 0, scale: 0.95, y: 10 }}
                                                         animate={{ opacity: 1, scale: 1, y: 0 }}
                                                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                                                        className="absolute bottom-full left-0 mb-3 w-56 bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl p-1.5 z-[100] overflow-hidden"
+                                                        className="absolute bottom-full left-0 mb-2 w-56 bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-2xl shadow-xl p-1.5 z-[100] overflow-hidden"
                                                     >
                                                         <div className="space-y-0.5">
-                                                            <button onClick={() => toggleDarkMode()} className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300 text-sm transition-colors group">
+                                                            <button onClick={() => toggleDarkMode()} className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300 text-sm transition-colors">
                                                                 {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
                                                                 <span className="font-bold flex-1 text-right">المظهر</span>
-                                                                <span className="text-[10px] text-slate-400">{isDarkMode ? 'داكن' : 'فاتح'}</span>
                                                             </button>
-                                                            
-                                                            <Link href="/changelog" className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300 text-sm transition-colors group">
-                                                                <Sparkles size={16} />
-                                                                <span className="font-bold flex-1 text-right">ما الجديد؟</span>
-                                                            </Link>
-                                                            
-                                                            <Link href="/privacy" className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300 text-sm transition-colors group">
-                                                                <Shield size={16} />
-                                                                <span className="font-bold flex-1 text-right">سياسة الخصوصية</span>
-                                                            </Link>
-
-                                                            <div className="h-px bg-slate-100 dark:bg-white/5 my-1" />
-
-                                                            <button onClick={() => deleteAllConversations()} className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10 text-red-600 text-sm transition-colors group">
+                                                            <div className="h-px bg-gray-100 dark:bg-white/5 my-1" />
+                                                            <button onClick={() => deleteAllConversations()} className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 text-red-600 text-sm transition-colors">
                                                                 <Trash2 size={16} />
                                                                 <span className="font-bold flex-1 text-right">حذف كل المحادثات</span>
                                                             </button>
@@ -1119,14 +1086,16 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                     <header className="absolute top-0 left-0 right-0 h-16 z-[40] flex items-center justify-between px-4 sm:px-6 bg-transparent pointer-events-none transition-all duration-500">
                         {/* Right Side: Toggle & Logo */}
                         <div className="flex items-center gap-3 pointer-events-auto">
-                            <button
-                                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                                className="p-2.5 hover:bg-white dark:hover:bg-white/10 rounded-xl transition-all text-slate-600 dark:text-slate-300 shadow-sm border border-slate-200 dark:border-white/10 lg:hidden"
-                                title="فتح القائمة"
-                            >
-                                <Menu size={20} />
-                            </button>
-                            <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tighter uppercase mr-1">TOLZY</span>
+                            {!isSidebarOpen && (
+                                <button
+                                    onClick={() => setIsSidebarOpen(true)}
+                                    className="p-2.5 hover:bg-white dark:hover:bg-white/10 rounded-xl transition-colors text-gray-500 hover:text-gray-900 dark:hover:text-white"
+                                    title="فتح القائمة"
+                                >
+                                    <Menu size={20} />
+                                </button>
+                            )}
+                            <span className="text-xl sm:text-2xl font-black text-indigo-600 dark:text-indigo-500 tracking-tighter uppercase mr-1">TOLZY</span>
                         </div>
 
                         {/* Left Side: Account ONLY */}
@@ -1142,9 +1111,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                                 {getUserInitials()}
                                             </div>
                                         )}
-                                    </div>
-                                    <div className="px-2 py-0.5 bg-slate-900 dark:bg-white text-white dark:text-black rounded-lg shadow-sm">
-                                        <span className="text-[10px] font-bold tracking-wider uppercase">{isProPlan ? 'PRO' : 'FREE'}</span>
                                     </div>
                                 </div>
                                 
@@ -1168,35 +1134,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                                 <p className="text-xs text-slate-500 mb-4">{user?.email}</p>
                                                 
                                                 <div className="w-full border-t border-slate-100 dark:border-white/5 pt-4 space-y-2">
-                                                    <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/10 mb-2">
-                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">الخطة الحالية</span>
-                                                        <span className="text-[10px] font-black text-slate-900 dark:text-white uppercase">{isProPlan ? 'PRO PLAN' : 'FREE PLAN'}</span>
-                                                    </div>
-                                                    
-                                                    {isFree && (
-                                                        <div className="px-3 py-3 bg-indigo-50/30 dark:bg-indigo-500/5 rounded-xl border border-indigo-100 dark:border-indigo-500/10 mb-2">
-                                                            <div className="flex items-center justify-between mb-2">
-                                                                <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">محاولات اليوم</span>
-                                                                <span className="text-[10px] font-black text-slate-900 dark:text-white">{userData?.copilotRequestCount || 0} / 10</span>
-                                                            </div>
-                                                            <div className="h-1.5 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
-                                                                <motion.div 
-                                                                    initial={{ width: 0 }}
-                                                                    animate={{ width: `${Math.min(((userData?.copilotRequestCount || 0) / 10) * 100, 100)}%` }}
-                                                                    className={`h-full ${((userData?.copilotRequestCount || 0) >= 10) ? 'bg-red-500' : 'bg-indigo-500'}`}
-                                                                />
-                                                            </div>
-                                                            <p className="text-[9px] text-slate-500 dark:text-slate-400 mt-2 text-right">سيتم تصفير العداد تلقائياً كل 24 ساعة.</p>
-                                                        </div>
-                                                    )}
-                                                    {isFree && (
-                                                        <Link
-                                                            href="/pricing"
-                                                            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 text-indigo-600 dark:text-indigo-400 text-xs font-bold rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all border border-indigo-200 dark:border-indigo-500/20"
-                                                        >
-                                                            <span>ترقية إلى Pro</span>
-                                                        </Link>
-                                                    )}
                                                     
                                                     <button onClick={() => deleteAllConversations()} className="w-full flex items-center justify-center gap-2 py-2.5 px-4 text-red-600 text-xs font-bold rounded-xl hover:bg-red-50 dark:hover:bg-red-900/10 transition-all border border-transparent hover:border-red-100 dark:hover:border-red-900/20">
                                                         <Trash2 size={14} />
@@ -1235,19 +1172,22 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                 <div className="hidden lg:block w-full max-w-3xl mb-6">
                                 </div>
 
-                                {/* Vertical/Scattered Suggestions */}
+                                {/* Vertical/Scattered Suggestions — Mode-aware */}
                                 <div className="flex flex-col lg:flex-row lg:flex-wrap items-end lg:justify-center gap-4 lg:gap-6 w-full max-w-4xl mx-auto px-4">
-                                    {SUGGESTIONS.map((s, i) => (
-                                        <button
-                                            key={i}
+                                    {MODE_SUGGESTIONS[mode].map((s, i) => (
+                                        <motion.button
+                                            key={`${mode}-${i}`}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: i * 0.05 }}
                                             onClick={() => handleSendMessage(s.prompt)}
                                             className="inline-flex items-center gap-3 px-8 py-3.5 bg-white/50 dark:bg-[#1A1A1A]/50 backdrop-blur-sm hover:bg-slate-50 dark:hover:bg-[#222] border border-slate-200/50 dark:border-white/10 rounded-full transition-all shadow-sm hover:shadow-lg hover:-translate-y-1 group whitespace-nowrap"
                                         >
                                             <span className="text-slate-700 dark:text-slate-200 text-sm font-bold tracking-tight">{s.text}</span>
-                                            <div className="w-5 h-5 flex items-center justify-center text-[#fea619] shrink-0 group-hover:scale-125 transition-transform duration-300">
+                                            <div className="w-5 h-5 flex items-center justify-center shrink-0 group-hover:scale-125 transition-transform duration-300">
                                                 {s.icon}
                                             </div>
-                                        </button>
+                                        </motion.button>
                                     ))}
                                 </div>
 
@@ -1265,6 +1205,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                         key={msg.id}
                                         msg={msg}
                                         user={user}
+                                        onResend={(content) => handleSendMessage(content)}
                                     />
                                 ))}
 
@@ -1281,11 +1222,10 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                     }`}>
                         <div className="max-w-3xl mx-auto relative">
                             {/* Backdrop for closing dropdowns when clicking outside */}
-                            {(isModelSelectorOpen || isToolSelectorOpen || isAccountPopoverOpen || isSettingsPopoverOpen) && (
+                            {(isToolSelectorOpen || isAccountPopoverOpen || isSettingsPopoverOpen) && (
                                 <div 
                                     className="fixed inset-0 z-40 bg-transparent" 
                                     onClick={() => {
-                                        setIsModelSelectorOpen(false);
                                         setIsToolSelectorOpen(false);
                                         setIsAccountPopoverOpen(false);
                                         setIsSettingsPopoverOpen(false);
@@ -1293,185 +1233,170 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                 />
                             )}
 
-                            {/* Model Selector Dropdown - Redesigned (Capsule Style) */}
-                            <AnimatePresence>
-                                {isModelSelectorOpen && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        className="absolute bottom-full left-4 mb-3 w-64 bg-[#F8FAFC] dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/10 rounded-[28px] shadow-2xl p-2.5 z-50 backdrop-blur-xl"
-                                    >
-                                        <div className="p-2 text-sm font-bold text-slate-400 dark:text-slate-500 mb-2 px-4 text-right">
-                                            TOLZY Copilot V2.5 - جديد الآن 🆕
-                                        </div>
-                                        <div className="space-y-1">
-                                            {MODELS.map((m) => {
-                                                const isLocked = isFree && m.id !== 'fast';
-                                                return (
-                                                <button
-                                                    key={m.id}
-                                                    onClick={() => {
-                                                        if (isLocked) {
-                                                            toast.error('أخويا المجاني.. هذه الميزة للمشتركين في PRO وأعلى فقط 💎');
-                                                            return;
-                                                        }
-                                                        setSelectedModel(m);
-                                                        setIsModelSelectorOpen(false);
-                                                    }}
-                                                    className={`w-full text-right p-4 rounded-[20px] transition-all flex items-center justify-between group ${selectedModel.id === m.id ? 'bg-white dark:bg-white/5 shadow-sm' : 'hover:bg-white/50 dark:hover:bg-white/5'} ${isLocked ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
-                                                >
-                                                    <div className="flex items-center gap-3">
-                                                        {selectedModel.id === m.id && (
-                                                            <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center">
-                                                                <Check size={12} className="text-white" />
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex flex-col items-end flex-1">
-                                                        <span className={`font-bold text-base ${selectedModel.id === m.id ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
-                                                            {m.name} {isLocked && '🔒'}
-                                                        </span>
-                                                        <p className="text-xs text-slate-500 dark:text-slate-500 font-medium">
-                                                            {m.description}
-                                                        </p>
-                                                    </div>
-                                                </button>
-                                                )
-                                            })}
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+                            {/* Gemini-Style Pill Input Bar */}
+                            <div className="relative bg-white dark:bg-[#1A1A1A] rounded-full border border-slate-200/80 dark:border-white/10 shadow-[0_1px_6px_rgba(0,0,0,0.08)] dark:shadow-none focus-within:shadow-[0_2px_12px_rgba(0,0,0,0.12)] dark:focus-within:shadow-[0_2px_12px_rgba(255,255,255,0.04)] focus-within:border-slate-300 dark:focus-within:border-white/20 transition-all duration-300">
+                                <div className="flex items-center px-2 sm:px-4 py-2 sm:py-2.5 gap-1 sm:gap-2">
+                                    {/* Left: Mic */}
+                                    {hasSupport && (
+                                        <button
+                                            onClick={toggleListening}
+                                            title={isListening ? "إيقاف التسجيل" : "تحدث"}
+                                            className={`flex-shrink-0 p-2 rounded-full transition-all ${isListening ? 'text-red-500 bg-red-50 dark:bg-red-500/10 animate-pulse' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5'}`}
+                                        >
+                                            <Mic size={20} />
+                                        </button>
+                                    )}
 
-                            {/* Tool Selector Dropdown - Redesigned */}
-                            <AnimatePresence>
-                                {isToolSelectorOpen && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        className="absolute bottom-full right-4 mb-3 w-64 bg-[#F8FAFC] dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/10 rounded-[28px] shadow-2xl p-2.5 z-50 backdrop-blur-xl"
-                                    >
-                                        <div className="p-2 text-sm font-bold text-slate-400 dark:text-slate-500 mb-2 px-4 text-right">
-                                            الأدوات
-                                        </div>
-                                        <div className="space-y-1">
-                                            {TOOLS.map((t) => {
-                                                const isLocked = isFree; // Block all programming/codes for free
-                                                return (
-                                                <button
-                                                    key={t.id}
-                                                    onClick={() => {
-                                                        if (isLocked) {
-                                                            toast.error('الأكواد مغلقة للخطة المجانية، ارتق للـ PRO 💎');
-                                                            return;
-                                                        }
-                                                        setSelectedTool(t);
-                                                        setIsToolSelectorOpen(false);
-                                                    }}
-                                                    className={`w-full text-right p-4 rounded-[20px] transition-all flex items-center justify-between ${selectedTool.id === t.id ? 'bg-white dark:bg-white/5 shadow-sm' : 'hover:bg-white/50 dark:hover:bg-white/5'} ${isLocked ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
-                                                >
-                                                    <div className="flex items-center gap-3">
-                                                        {selectedTool.id === t.id && (
-                                                            <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center">
-                                                                <Check size={12} className="text-white" />
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex items-center gap-3">
-                                                        <span className={`font-bold text-sm ${selectedTool.id === t.id ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
-                                                            {t.name} {isLocked && '🔒'}
-                                                        </span>
-                                                        <div className={`p-1.5 rounded-lg ${selectedTool.id === t.id ? 'bg-indigo-500 text-white' : 'text-slate-400'}`}>
-                                                            {t.icon}
-                                                        </div>
-                                                    </div>
-                                                </button>
-                                                )
-                                            })}
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+                                    {/* TOLZY Copilot V2.5 Static Badge */}
+                                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 flex-shrink-0">
+                                        <Sparkles size={12} className="text-indigo-500" />
+                                        <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 whitespace-nowrap">TOLZY Copilot V2.5</span>
+                                    </div>
 
-                            {/* Standard Bottom Input - Redesigned for Mobile (Capsule Style) */}
-                            <div className="relative bg-white/95 dark:bg-[#1A1A1A] backdrop-blur-2xl rounded-[32px] sm:rounded-full border border-slate-200 dark:border-white/10 shadow-xl shadow-indigo-500/5 focus-within:ring-4 focus-within:ring-indigo-500/10 transition-all overflow-hidden p-1 sm:p-1.5">
-                                <div className="flex flex-col sm:flex-row items-stretch sm:items-center px-1 sm:px-4 py-1 sm:py-2">
-                                    {/* Textarea Area */}
-                                    <div className="flex-1 flex items-start">
+                                    {/* Text Input + @ Menu */}
+                                    <div className="relative flex-1">
                                         <textarea
                                             ref={textareaRef}
                                             value={input}
                                             onChange={handleInputChange}
-                                            onKeyDown={handleKeyDown}
-                                            placeholder="اسأل Tolzy Copilot..."
+                                            onKeyDown={(e) => {
+                                                if (showAtMenu && (e.key === 'Escape')) {
+                                                    setShowAtMenu(false);
+                                                    e.preventDefault();
+                                                    return;
+                                                }
+                                                handleKeyDown(e);
+                                            }}
+                                            placeholder={MODES.find(m => m.id === mode)?.placeholder || 'اسأل Tolzy Copilot... (اكتب @ لاختيار الوضع)'}
                                             rows={1}
                                             disabled={isLoading}
-                                            className="flex-1 bg-transparent border-none focus:ring-0 resize-none py-3 px-4 text-sm sm:text-base text-slate-800 dark:text-slate-100 placeholder:text-slate-400 font-medium max-h-48 min-h-[48px] scrollbar-hide text-right"
-                                            style={{ height: '48px' }}
+                                            className="w-full bg-transparent border-none focus:ring-0 resize-none py-2 px-1 text-[15px] text-slate-800 dark:text-slate-100 placeholder:text-slate-400 max-h-40 min-h-[40px] scrollbar-hide text-right leading-5"
+                                            style={{ height: '40px' }}
                                             dir="rtl"
                                         />
-                                    </div>
 
-                                    {/* Controls Area - Row on desktop, Bottom row on mobile */}
-                                    <div className="flex items-center justify-between sm:justify-end gap-2 px-3 pb-2 sm:p-0 border-t sm:border-t-0 border-slate-100 dark:border-white/5 mt-1 sm:mt-0 pt-2 sm:pt-0">
-                                        {/* Left Side (on mobile) / Middle (on desktop) */}
-                                        <div className="flex items-center gap-1 sm:gap-2">
-                                            <button className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-white/10 rounded-full transition-all">
-                                                <Mic size={20} />
-                                            </button>
-                                            
-                                            {/* Model Selector Tag */}
-                                            <div 
-                                                onClick={() => setIsModelSelectorOpen(!isModelSelectorOpen)}
-                                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl cursor-pointer transition-all border-2 ${isModelSelectorOpen ? 'bg-indigo-500/10 border-indigo-500/30' : 'bg-slate-50 dark:bg-white/5 border-transparent hover:border-slate-200 dark:hover:border-white/10'}`}
-                                            >
-                                                <ChevronDown size={14} className={`opacity-50 transition-transform duration-300 ${isModelSelectorOpen ? 'rotate-180' : ''}`} />
-                                                <span className="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                                                    {selectedModel.name}
-                                                </span>
-                                            </div>
-                                            {isFree && (
-                                                <div className="hidden sm:flex items-center gap-3">
-                                                    <div className="flex flex-col items-end">
-                                                        <div className="flex items-center gap-1.5 min-w-[60px] justify-end">
-                                                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">{userData?.copilotRequestCount || 0}/10</span>
-                                                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                                                        </div>
-                                                        <Link href="/pricing" className="text-[9px] font-bold text-indigo-500 hover:underline uppercase tracking-tight">Upgrade</Link>
+                                        {/* @ Mention Dropdown */}
+                                        <AnimatePresence>
+                                            {showAtMenu && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                                                    transition={{ duration: 0.15 }}
+                                                    className="absolute bottom-full mb-2 right-0 w-64 bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl shadow-black/10 dark:shadow-black/40 overflow-hidden z-50"
+                                                >
+                                                    <div className="px-3 pt-2.5 pb-1.5 border-b border-slate-100 dark:border-white/5">
+                                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">اختر وضع الاستخدام</span>
                                                     </div>
-                                                </div>
+                                                    <div className="p-1.5 space-y-0.5">
+                                                        {AT_COMMANDS
+                                                            .filter(cmd => !atMenuFilter || cmd.label.includes(atMenuFilter) || cmd.id.includes(atMenuFilter.toLowerCase()))
+                                                            .map((cmd) => (
+                                                                <button
+                                                                    key={cmd.id}
+                                                                    onClick={() => !cmd.comingSoon && handleAtSelect(cmd.id)}
+                                                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-right transition-all group ${
+                                                                        cmd.comingSoon
+                                                                            ? 'opacity-60 cursor-not-allowed'
+                                                                            : 'hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer'
+                                                                    }`}
+                                                                >
+                                                                    <span className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-slate-100 dark:bg-white/5 ${cmd.color} group-hover:scale-110 transition-transform`}>
+                                                                        {cmd.icon}
+                                                                    </span>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <span className="text-[13px] font-bold text-slate-800 dark:text-slate-200">@{cmd.label}</span>
+                                                                            {cmd.comingSoon && (
+                                                                                <span className="text-[8px] font-black bg-gradient-to-r from-violet-500 to-purple-600 text-white px-1.5 py-0.5 rounded-full">قريباً</span>
+                                                                            )}
+                                                                        </div>
+                                                                        <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate">{cmd.description}</p>
+                                                                    </div>
+                                                                </button>
+                                                            ))
+                                                        }
+                                                    </div>
+                                                </motion.div>
                                             )}
-                                        </div>
-
-                                        {/* Right Side Icons */}
-                                        <div className="flex items-center gap-2">
-                                            <button className="hidden sm:flex p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-white/10 rounded-full transition-all">
-                                                <Plus size={20} />
-                                            </button>
-                                            
-                                            {/* Tool Selector Icon (Mobile/Desktop) */}
-                                            <button 
-                                                onClick={() => setIsToolSelectorOpen(!isToolSelectorOpen)}
-                                                className={`p-2 rounded-full transition-all ${isToolSelectorOpen ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-white/10'}`}
-                                            >
-                                                <SlidersHorizontal size={18} className={selectedTool ? 'text-pink-500' : ''} />
-                                            </button>
-
-                                            <button className="flex sm:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-white/10 rounded-full transition-all">
-                                                <Plus size={18} />
-                                            </button>
-
-                                            <button
-                                                onClick={() => handleSendMessage()}
-                                                disabled={!input.trim() || isLoading}
-                                                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all ${input.trim() ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-100 dark:bg-white/5 text-slate-300'}`}
-                                            >
-                                                <Send size={18} />
-                                            </button>
-                                        </div>
+                                        </AnimatePresence>
                                     </div>
+
+                                    {/* Right: Mode Selector */}
+                                    <div className="relative flex-shrink-0">
+                                        <button
+                                            onClick={() => setIsToolSelectorOpen(prev => !prev)}
+                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all text-xs font-bold ${
+                                                isToolSelectorOpen
+                                                    ? 'bg-slate-100 dark:bg-white/15 text-slate-900 dark:text-white'
+                                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'
+                                            }`}
+                                        >
+                                            <span className="flex items-center justify-center">
+                                                {MODES.find(m => m.id === mode)?.icon}
+                                            </span>
+                                            <span className="hidden sm:inline">الأدوات</span>
+                                            <ChevronDown size={13} className={`text-slate-400 transition-transform duration-200 ${isToolSelectorOpen ? 'rotate-180' : ''}`} />
+                                        </button>
+
+                                        {/* Mode Dropdown */}
+                                        <AnimatePresence>
+                                            {isToolSelectorOpen && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: 6, scale: 0.96 }}
+                                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                    exit={{ opacity: 0, y: 6, scale: 0.96 }}
+                                                    transition={{ duration: 0.12 }}
+                                                    className="absolute bottom-full right-0 mb-1.5 w-44 bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/10 rounded-xl shadow-lg p-1 z-50"
+                                                >
+                                                    {MODES.map((m) => {
+                                                        const isActive = mode === m.id;
+                                                        const isCodeMode = m.id === 'code';
+                                                        return (
+                                                            <button
+                                                                key={m.id}
+                                                                onClick={() => {
+                                                                    if (isCodeMode) {
+                                                                        toast('ميزة البرمجة قادمة قريباً! 🚀', { icon: '⏳' });
+                                                                        setIsToolSelectorOpen(false);
+                                                                        return;
+                                                                    }
+                                                                    setMode(m.id);
+                                                                    setIsToolSelectorOpen(false);
+                                                                }}
+                                                                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-right text-xs font-bold transition-all ${
+                                                                    isActive
+                                                                        ? `${m.bg} ${m.color}`
+                                                                        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'
+                                                                } ${isCodeMode ? 'opacity-70' : ''}`}
+                                                            >
+                                                                <span className={`flex items-center justify-center w-5 h-5 rounded-full ${isActive ? 'bg-white/60 dark:bg-white/10' : 'bg-slate-100 dark:bg-white/5'}`}>
+                                                                    {m.icon}
+                                                                </span>
+                                                                <span className="flex-1">{m.label}</span>
+                                                                {isCodeMode && (
+                                                                    <span className="text-[8px] font-black bg-gradient-to-r from-violet-500 to-purple-600 text-white px-1.5 py-0.5 rounded-full">قريباً</span>
+                                                                )}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+
+                                    {/* Send Button */}
+                                    <button
+                                        onClick={() => handleSendMessage()}
+                                        disabled={!input.trim() || isLoading}
+                                        className={`flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all ${
+                                            input.trim()
+                                                ? 'bg-indigo-600 text-white shadow-md hover:bg-indigo-700'
+                                                : 'bg-slate-100 dark:bg-white/5 text-slate-300'
+                                        }`}
+                                    >
+                                        <Send size={18} />
+                                    </button>
                                 </div>
                             </div>
 

@@ -11,7 +11,12 @@ import {
   Unsubscribe
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { ChatMessage } from './tolzy-ai.service';
+
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
 
 export interface ChatHistoryMessage extends ChatMessage {
   id?: string;
