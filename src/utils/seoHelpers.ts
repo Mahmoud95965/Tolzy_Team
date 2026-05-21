@@ -193,6 +193,51 @@ const getArticleTexts = (article: ArticleData): { title: string; description: st
 };
 
 // ==========================================
+// Google Standard Software Application Category Mapper
+// ==========================================
+
+export const mapToStandardCategory = (category: string | string[]): string => {
+  const cat = Array.isArray(category) ? category[0] : category;
+  if (!cat) return 'UtilitiesApplication';
+  
+  const mapping: Record<string, string> = {
+    'Writing': 'BusinessApplication',
+    'Design': 'GraphicDesignApplication',
+    'Programming': 'DeveloperApplication',
+    'Research': 'ReferenceApplication',
+    'Productivity': 'UtilitiesApplication',
+    'Language Learning': 'EducationalApplication',
+    'Studying': 'EducationalApplication',
+    'Teaching': 'EducationalApplication',
+    'Test Prep': 'EducationalApplication',
+    'Education': 'EducationalApplication',
+    'Business': 'BusinessApplication',
+    'Data Science': 'DeveloperApplication',
+    'Creativity': 'MultimediaApplication',
+    'Communication': 'UtilitiesApplication',
+    'Collaboration': 'BusinessApplication',
+    'Project Management': 'BusinessApplication',
+    'Automation': 'UtilitiesApplication',
+    '3D': 'GraphicDesignApplication',
+    'Video': 'MultimediaApplication',
+    'Math': 'EducationalApplication',
+    'Science': 'EducationalApplication',
+    'Reading': 'ReferenceApplication',
+    'Memory': 'UtilitiesApplication',
+    'Games': 'GameApplication',
+    'Gamification': 'EducationalApplication',
+    'Lifestyle': 'EntertainmentApplication',
+    'Technology': 'UtilitiesApplication',
+    'Electronics': 'DeveloperApplication',
+    'Freelancing': 'BusinessApplication',
+    'Library': 'ReferenceApplication',
+    'Online Learning': 'EducationalApplication'
+  };
+
+  return mapping[cat] || 'UtilitiesApplication';
+};
+
+// ==========================================
 // Legacy Structured Data Generators (Pages Router / Schema.org)
 // ==========================================
 
@@ -202,6 +247,7 @@ const getArticleTexts = (article: ArticleData): { title: string; description: st
 export const generateToolSEO = (tool: ToolData): ToolSEO => {
   const { title, description } = getToolTexts(tool);
   const categoryStr = Array.isArray(tool.category) ? tool.category[0] : tool.category;
+  const standardCategory = mapToStandardCategory(tool.category);
 
   const keywords = [
     tool.name,
@@ -217,7 +263,7 @@ export const generateToolSEO = (tool: ToolData): ToolSEO => {
     "@type": "SoftwareApplication",
     "name": tool.name,
     "description": tool.description,
-    "applicationCategory": categoryStr,
+    "applicationCategory": standardCategory,
     "operatingSystem": "Web",
     "offers": {
       "@type": "Offer",
@@ -225,13 +271,15 @@ export const generateToolSEO = (tool: ToolData): ToolSEO => {
       "priceCurrency": "USD",
       "availability": "https://schema.org/InStock"
     },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": tool.rating,
-      "reviewCount": tool.reviewCount,
-      "bestRating": "5",
-      "worstRating": "1"
-    },
+    ...(tool.rating && tool.rating > 0 ? {
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": tool.rating,
+        "reviewCount": tool.reviewCount && tool.reviewCount > 0 ? tool.reviewCount : 1,
+        "bestRating": "5",
+        "worstRating": "1"
+      }
+    } : {}),
     "url": tool.url,
     "image": tool.imageUrl,
     "featureList": tool.features?.join(', ') || '',
@@ -637,5 +685,104 @@ export const generateCopilotMetadata = (): Metadata => {
     },
     alternates: { canonical: getCanonicalUrl('/copilot') },
     robots: { index: true, follow: true },
+  };
+};
+
+/**
+ * Generate ContactPage structured data
+ */
+export const generateContactPageSchema = () => {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "name": "اتصل بنا | Tolzy",
+    "description": "اتصل بفريق منصة تولزي (Tolzy) للاستفسارات، الاقتراحات، أو طلبات الشراكة. نحن هنا لمساعدتك دائماً.",
+    "url": "https://tolzy.me/contact",
+    "mainEntity": {
+      "@type": "Organization",
+      "name": "Tolzy",
+      "url": "https://tolzy.me",
+      "logo": "https://tolzy.me/image/tools/Logo.png",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "email": "support@tolzy.me",
+        "url": "https://tolzy.me/contact",
+        "availableLanguage": ["Arabic", "English"]
+      }
+    }
+  };
+};
+
+/**
+ * Generate DiscussionForumPosting structured data for Community page
+ */
+export const generateDiscussionForumSchema = (posts: Array<{ id: string; title: string; content: string; author: string; createdAt: string; repliesCount?: number }>) => {
+  return {
+    "@context": "https://schema.org",
+    "@type": "DiscussionForumPosting",
+    "@id": "https://tolzy.me/community",
+    "headline": "مجتمع تولزي التقني - نقاشات حول الذكاء الاصطناعي والبرمجة",
+    "description": "انضم إلى مجتمع تولزي التقني، وشارك في نقاشات مثيرة حول أدوات الذكاء الاصطناعي، البرمجة، التقنيات الحديثة، والفرص التعليمية.",
+    "url": "https://tolzy.me/community",
+    "mainEntityOfPage": "https://tolzy.me/community",
+    "author": {
+      "@type": "Organization",
+      "name": "Tolzy"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Tolzy",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://tolzy.me/image/tools/Logo.png"
+      }
+    },
+    "sharedContent": posts.map(post => ({
+      "@type": "DiscussionForumPosting",
+      "headline": post.title,
+      "text": post.content?.substring(0, 200),
+      "url": `https://tolzy.me/community/post/${post.id}`,
+      "author": {
+        "@type": "Person",
+        "name": post.author || "عضو تولزي"
+      },
+      "datePublished": post.createdAt,
+      "interactionStatistic": {
+        "@type": "InteractionCounter",
+        "interactionType": "https://schema.org/CommentAction",
+        "userInteractionCount": post.repliesCount || 0
+      }
+    }))
+  };
+};
+
+/**
+ * Generate CollectionPage structured data for Tools or Courses indexing pages
+ */
+export const generateCollectionPageSchema = (
+  name: string,
+  description: string,
+  url: string,
+  items: Array<{ name: string; description: string; url: string; imageUrl?: string }>
+) => {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": name,
+    "description": description,
+    "url": url,
+    "mainEntity": {
+      "@type": "ItemList",
+      "numberOfItems": items.length,
+      "itemListElement": items.map((item, index) => ({
+        "@type": "ListItem",
+        "position": index + 1,
+        "name": item.name,
+        "url": item.url,
+        ...(item.imageUrl && { "image": item.imageUrl }),
+        "description": item.description?.substring(0, 150)
+      }))
+    }
   };
 };

@@ -7,7 +7,10 @@ export const metadata: Metadata = {
     openGraph: {
         title: 'أخبار وشروحات الذكاء الاصطناعي: آخر التطورات + دروس عملية',
         description: 'أخبار AI لحظة بلحظة + شروحات عملية بالعربي',
-        url: 'https://www.tolzy.me/news',
+        url: 'https://tolzy.me/news',
+    },
+    alternates: {
+        canonical: 'https://tolzy.me/news',
     },
 };
 

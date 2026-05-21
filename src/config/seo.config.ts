@@ -5,7 +5,7 @@ import { Metadata } from 'next';
 export const SITE_CONFIG = {
     name: 'Tolzy',
     nameAr: 'تولزي',
-    domain: 'https://www.tolzy.me',
+    domain: 'https://tolzy.me',
     description: 'Tolzy - المنصة العربية الأولى لأدوات الذكاء الاصطناعي والتعليم التقني 2026. اكتشف أكثر من 630 أداة AI مجانية، كورسات برمجة، ChatGPT، Gemini، Claude، DeepSeek. ابدأ مجاناً!',
     descriptionEn: 'Tolzy - The first Arabic platform for AI tools and technical education 2026. Discover 630+ free AI tools, programming courses, and open source projects.',
     keywords: [
@@ -100,7 +100,7 @@ export const DEFAULT_METADATA: Metadata = {
 // Canonical URL Generator
 export const getCanonicalUrl = (path: string) => {
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-  return `https://www.tolzy.me/${cleanPath}`;
+  return `https://tolzy.me/${cleanPath}`;
 };
 
 // Merge metadata helper

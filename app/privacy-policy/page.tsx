@@ -7,7 +7,10 @@ export const metadata: Metadata = {
     openGraph: {
         title: 'سياسة الخصوصية - Tolzy',
         description: 'سياسة الخصوصية وحماية البيانات في Tolzy',
-        url: 'https://www.tolzy.me/privacy-policy',
+        url: 'https://tolzy.me/privacy-policy',
+    },
+    alternates: {
+        canonical: 'https://tolzy.me/privacy-policy',
     },
 };
 

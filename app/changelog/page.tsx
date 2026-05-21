@@ -7,7 +7,10 @@ export const metadata: Metadata = {
     openGraph: {
         title: 'ما الجديد في Tolzy؟ آخر التحديثات والميزات الثورية',
         description: 'تابع كل جديد في Tolzy AI — ميزات وتحديثات مبتكرة',
-        url: 'https://www.tolzy.me/changelog',
+        url: 'https://tolzy.me/changelog',
+    },
+    alternates: {
+        canonical: 'https://tolzy.me/changelog',
     },
 };
 

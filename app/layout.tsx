@@ -13,7 +13,7 @@ import '@/src/index.css';
 // Removed Almarai config to bypass build-time fetch. Using standard <link> in <head> instead.
 
 export const metadata: Metadata = {
-    metadataBase: new URL('https://www.tolzy.me'),
+    metadataBase: new URL('https://tolzy.me'),
     title: {
         default: 'Tolzy - اكتشف 630+ أداة ذكاء اصطناعي مجانية وكورسات برمجة 2026',
         template: '%s | Tolzy - منصة أدوات الذكاء الاصطناعي',
@@ -74,7 +74,7 @@ export const metadata: Metadata = {
     openGraph: {
         type: 'website',
         locale: 'ar_AR',
-        url: 'https://www.tolzy.me/',
+        url: 'https://tolzy.me/',
         siteName: 'Tolzy',
         title: 'Tolzy - اكتشف 630+ أداة ذكاء اصطناعي مجانية | كورسات برمجة 2026',
         description: 'منصة Tolzy العربية الأولى: 630+ أداة AI مجانية، كورسات برمجة، ChatGPT، Gemini، Claude، DeepSeek. ابدأ التعلم والإنجاز الآن!',
@@ -97,15 +97,18 @@ export const metadata: Metadata = {
     },
     verification: {
         google: 'CvfgfNzJGq2YOnvINe7ljJLpIgW4pDugHzdpbWaPvWY',
+        yandex: 'yandex_placeholder_verification_key',
         other: {
             'msvalidate.01': 'EC6C9467B5FC8847928544F2987ABE66',
+            'baidu-site-verification': 'baidu_placeholder_verification_key',
+            'p:domain_verify': 'pinterest_placeholder_verification_key',
         },
     },
     alternates: {
         canonical: './',
         languages: {
-            ar: 'https://www.tolzy.me/',
-            'x-default': 'https://www.tolzy.me/',
+            ar: 'https://tolzy.me/',
+            'x-default': 'https://tolzy.me/',
         },
     },
 };

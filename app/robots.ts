@@ -21,6 +21,6 @@ export default function robots(): MetadataRoute.Robots {
                 disallow: '/',
             },
         ],
-        sitemap: 'https://www.tolzy.me/sitemap.xml',
+        sitemap: 'https://tolzy.me/sitemap.xml',
     };
 }

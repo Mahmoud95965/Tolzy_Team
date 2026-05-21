@@ -7,7 +7,10 @@ export const metadata: Metadata = {
     openGraph: {
         title: 'مسارات تعلّم البرمجة والذكاء الاصطناعي: خطة واضحة نحو الاحتراف',
         description: 'مسارات تعليمية منظمة من الصفر حتى الاحتراف',
-        url: 'https://www.tolzy.me/paths',
+        url: 'https://tolzy.me/paths',
+    },
+    alternates: {
+        canonical: 'https://tolzy.me/paths',
     },
 };
 

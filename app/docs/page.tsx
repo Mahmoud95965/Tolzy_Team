@@ -7,7 +7,10 @@ export const metadata: Metadata = {
     openGraph: {
         title: 'توثيق Tolzy: دليلك الشامل',
         description: 'دليل الاستخدام والمساعدة لمنصة Tolzy AI',
-        url: 'https://www.tolzy.me/docs',
+        url: 'https://tolzy.me/docs',
+    },
+    alternates: {
+        canonical: 'https://tolzy.me/docs',
     },
 };
 

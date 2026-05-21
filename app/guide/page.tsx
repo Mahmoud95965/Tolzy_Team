@@ -7,7 +7,10 @@ export const metadata: Metadata = {
     openGraph: {
         title: 'من أين أبدأ؟ دليل المبتدئين الشامل لأدوات AI',
         description: 'دليل مبسّط خطوة بخطوة لاستخدام أقوى أدوات الذكاء الاصطناعي',
-        url: 'https://www.tolzy.me/guide',
+        url: 'https://tolzy.me/guide',
+    },
+    alternates: {
+        canonical: 'https://tolzy.me/guide',
     },
 };
 
