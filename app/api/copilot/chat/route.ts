@@ -13,10 +13,8 @@ const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || ''
 );
 
-const OR_KEY     = process.env.OPENROUTER_API_KEY!;
-const OR_BASE    = 'https://openrouter.ai/api/v1/chat/completions';
-const OR_REFERER = 'https://tolzy.me';
-const OR_TITLE   = 'Tolzy Copilot V2.5';
+const GROQ_KEY   = process.env.GROQ_API_KEY!;
+const GROQ_BASE  = 'https://api.groq.com/openai/v1/chat/completions';
 const ENCODER    = new TextEncoder();
 
 // =======================
@@ -27,17 +25,15 @@ const ENCODER    = new TextEncoder();
 const MODELS = {
     // 🟢 Fast: short/simple messages, tool lookups
     fast: [
-        'google/gemini-2.5-flash-lite',
-        'deepseek/deepseek-v3-base:free',
+        'llama-3.1-8b-instant',
     ],
     // 🟡 Balanced: medium complexity, general questions
     balanced: [
-        'google/gemini-2.5-flash-lite',
-        'openai/gpt-4o-mini:free',
+        'llama-3.1-8b-instant',
     ],
     // 🔴 Smart: code mode, long complex queries (Pro only)
     smart: [
-        'deepseek/deepseek-chat-v3-0324:free',
+        'llama-3.3-70b-versatile',
     ],
 } as const;
 
@@ -52,11 +48,12 @@ function selectModel(
     const isCode = mode === 'code';
     const isComplex = words > 40 || /شرح|تحليل|قارن|اشرح|اكتب|صمم|خطة|مفصل|detailed|explain|compare|design|plan/i.test(sanitized);
 
-    if (isCode || (isComplex && isProPlan)) {
+    // 🔒 قصر النموذج الذكي القوي (smart) على المشتركين في الخطة المدفوعة Pro فقط
+    if (isProPlan && (isCode || isComplex)) {
         const tier: Tier = 'smart';
         return { tier, model: MODELS.smart[0] };
     }
-    if (isComplex || words > 15) {
+    if (isComplex || words > 15 || isCode) {
         const tier: Tier = 'balanced';
         return { tier, model: MODELS.balanced[0] };
     }
@@ -64,10 +61,11 @@ function selectModel(
     return { tier, model: MODELS.fast[0] };
 }
 
+
 // =======================
-// ⚡ OPENROUTER FETCH (with fallback)
+// ⚡ GROQ COMPLETIONS FETCH
 // =======================
-async function orFetch(
+async function groqFetch(
     model: string,
     messages: object[],
     temperature: number
@@ -77,16 +75,14 @@ async function orFetch(
         messages,
         stream: true,
         temperature,
-        max_tokens: 1200,
+        max_tokens: 2048,
     };
 
-    const res = await fetch(OR_BASE, {
+    const res = await fetch(GROQ_BASE, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${OR_KEY}`,
-            'HTTP-Referer': OR_REFERER,
-            'X-Title': OR_TITLE,
+            'Authorization': `Bearer ${GROQ_KEY}`,
         },
         body: JSON.stringify(body),
     });
@@ -101,9 +97,9 @@ const normalize = (s: string) =>
     s.trim().replace(/[؟\s]/g, '').toLowerCase();
 
 const FAQ_MAP = new Map<string, string>([
-    [normalize("من أنت؟"),         "أنا Tolzy Copilot ✨، مساعدك الذكي الرسمي من تطوير Tolzy AI (ai.tolzy.me)."],
+    [normalize("من أنت؟"),         "أنا TOLZY Copilot ✨، مساعدك الذكي الرسمي من تطوير Tolzy AI (ai.tolzy.me)."],
     [normalize("من طورك؟"),        "تم تطويري بواسطة Tolzy AI، المالك الوحيد لكل تحديثات الذكاء الاصطناعي في هذه المنظومة."],
-    [normalize("هل أنت من جوجل؟"), "لا، أنا Tolzy Copilot من تطوير Tolzy AI. الذكاء الاصطناعي مجرد مكوّن تقني في نموذجي."],
+    [normalize("هل أنت من جوجل؟"), "لا، أنا TOLZY Copilot من تطوير Tolzy AI. الذكاء الاصطناعي مجرد مكوّن تقني في نموذجي."],
     [normalize("ما هي منصة tolzy؟"),"منصة Tolzy هي منظومة متكاملة وأفضل وجهة عربية لأدوات الذكاء الاصطناعي والكورسات التقنية. تضم أكثر من 600 أداة ذكية وأكثر من 150 كورس."],
     [normalize("كيف أعمل حساب؟"),  "يمكنك التسجيل بسهولة عبر البريد الإلكتروني أو حساب Google من صفحة تسجيل الدخول."],
     [normalize("هل المنصة مجانية؟"),"توفر Tolzy خطة مجانية تتيح الوصول لمعظم الأدوات والكورسات، مع خطط Pro للمسارات المتقدمة."],
@@ -134,8 +130,8 @@ const send = (c: ReadableStreamDefaultController, t: string) =>
 // =======================
 export async function POST(req: NextRequest) {
     try {
-        if (!OR_KEY) {
-            return NextResponse.json({ error: 'Missing OpenRouter API Key' }, { status: 500 });
+        if (!GROQ_KEY) {
+            return NextResponse.json({ error: 'Missing Groq API Key' }, { status: 500 });
         }
 
         const {
@@ -145,6 +141,7 @@ export async function POST(req: NextRequest) {
             userId,
             enableSearch = false,
             mode = 'general',
+            isGmailConnected = false,
         } = await req.json();
 
         if (!message || message.trim().length < 2) {
@@ -174,10 +171,32 @@ export async function POST(req: NextRequest) {
             .trim();
 
         // =======================
+        // 🔒 SECURE PLAN FETCH FROM FIRESTORE
+        // =======================
+        let isProPlan = false;
+        let finalPlan = 'free';
+
+        if (userId && adminDb) {
+            try {
+                const userRef = adminDb.collection('users').doc(userId);
+                const userSnap = await userRef.get();
+                const userData = userSnap.data();
+                finalPlan = String(userData?.plan || 'free').toLowerCase();
+                isProPlan = finalPlan.includes('pro') || finalPlan.includes('ultra');
+            } catch (e) {
+                console.error('Secure plan check error, defaulting to client tier:', e);
+                const normClientPlan = String(userPlan || 'free').toLowerCase();
+                isProPlan = normClientPlan.includes('pro') || normClientPlan.includes('ultra');
+            }
+        } else {
+            const normClientPlan = String(userPlan || 'free').toLowerCase();
+            isProPlan = normClientPlan.includes('pro') || normClientPlan.includes('ultra');
+        }
+
+        // =======================
         // ⚡ FLAGS
         // =======================
         const words: string[] = sanitized.split(/\s+/);
-        const isProPlan = userPlan === 'pro';
 
         const SIMPLE_SET = new Set(['hi','hello','hey','مرحبا','السلام','ازيك'].map(normalize));
         const shouldUseRAG = words.length > 2 && sanitized.length > 15 && !SIMPLE_SET.has(normalizedMsg);
@@ -186,7 +205,7 @@ export async function POST(req: NextRequest) {
             /(news|latest|update|breaking|2026|اخبار|اليوم|جديد|recent)/i.test(sanitized);
 
         // =======================
-        // 🔒 FREE PLAN LIMIT (10 req/day)
+        // 🔒 FREE PLAN LIMIT (5 req/day)
         // =======================
         if (!isProPlan && userId && adminDb) {
             try {
@@ -198,10 +217,10 @@ export async function POST(req: NextRequest) {
                 const elapsed = Date.now() - lastDate.getTime();
                 const currentCount = elapsed > ONE_DAY ? 0 : count;
 
-                if (currentCount >= 10) {
+                if (currentCount >= 5) {
                     const hoursLeft = Math.ceil((ONE_DAY - elapsed) / 3600000);
                     return NextResponse.json({
-                        response: `🎯 **استنفذت الحد المجاني اليومي!**\n\n⏰ الطلبات ستعود خلال **${hoursLeft} ساعة**\n\n💎 **الخطة المدفوعة تشمل:**\n✅ طلبات غير محدودة\n✅ نماذج ذكية أقوى\n✅ أولوية في الاستجابة`
+                        response: `🎯 **لقد استنفدت حدك اليومي في Copilot (5 طلبات يومياً)!**\n\n⏰ سيتم تجديد طلباتك خلال **${hoursLeft} ساعة**\n\n💎 **الخطة المدفوعة Pro تشمل:**\n✅ طلبات غير محدودة ومستمرة وبدون أي قيود\n✅ الوصول لأقوى نماذج الذكاء الاصطناعي (Llama 3.3 70B)\n✅ سرعة وأولوية فائقة في معالجة طلباتك`
                     });
                 }
                 await userRef.set({
@@ -311,18 +330,55 @@ export async function POST(req: NextRequest) {
         // =======================
         // ⚡ SYSTEM PROMPT
         // =======================
-        const systemPrompt = `أنت "Tolzy Copilot V2.5 ✨" — المساعد الذكي من تطوير Tolzy AI. الموقع: ai.tolzy.me
+        // =============================================
+        // ⚡ GMAIL CONTEXT INSTRUCTIONS
+        // =============================================
+        const gmailInstructions = isGmailConnected ? `
+
+📧 Gmail متصل — تعليمات خاصة بالبريد الإلكتروني:
+عندما يطلب المستخدم عرض البريد الوارد أو رسائله، أرسل بلوك كود بصيغة \`\`\`gmail-inbox بهذا الشكل:
+\`\`\`gmail-inbox
+from: اسم المرسل <email@example.com>
+subject: موضوع الرسالة
+date: منذ ٣ ساعات
+preview: أول جملة أو سطرين من محتوى الرسالة...
+body: النص الكامل للرسالة هنا. يمكن أن يكون طويلاً.
+unread: true
+---
+from: مرسل آخر <other@example.com>
+subject: موضوع آخر
+date: أمس
+preview: ملخص قصير للرسالة الثانية
+body: محتوى الرسالة الثانية
+unread: false
+\`\`\`
+
+عندما يريد المستخدم كتابة أو إرسال رسالة، أرسل بلوك كود بصيغة \`\`\`gmail-compose بهذا الشكل:
+\`\`\`gmail-compose
+to: البريد المستلم
+subject: موضوع الرسالة
+body: محتوى الرسالة المقترح هنا
+\`\`\`
+
+قواعد مهمة للـ Gmail:
+- استخدم هذه الصيغ دائماً عند أي طلب متعلق بالبريد الإلكتروني.
+- لا ترد بنص عادي عند طلبات البريد — استخدم البلوكات فقط.
+- يمكنك دمج شرح قصير مع البلوك.
+- فاصل الرسائل في gmail-inbox هو --- في سطر منفرد.
+` : '';
+
+        const systemPrompt = `أنت "TOLZY Copilot V2.5 ✨" — المساعد الذكي من تطوير Tolzy AI. الموقع: ai.tolzy.me
 
 تعليماتك:
 1. أجب على أي سؤال بلا استثناء.
 2. أولوية لأدوات وكورسات Tolzy عند الاقتراح.
-3. أنت مساعد Tolzy Copilot — لست ChatGPT أو Gemini أو Claude.
+3. أنت مساعد TOLZY Copilot — لست ChatGPT أو Gemini أو Claude.
 4. كن احترافياً وودوداً وداعماً.
 5. لديك أكثر من 600 أداة ذكية وأكثر من 150 كورس.
 6. الرد بالعربية ما لم يطلب المستخدم غير ذلك.
 
 ${modeInstruction}
-
+${gmailInstructions}
 📚 Tolzy Context:
 ${context}`;
 
@@ -360,15 +416,15 @@ ${context}`;
         const stream = new ReadableStream({
             async start(controller) {
                 try {
-                    const res = await orFetch(model, chatMessages, temperature);
+                    const res = await groqFetch(model, chatMessages, temperature);
 
                     if (!res.ok) {
                         const errText = await res.text();
-                        console.error('[OpenRouter Error]', res.status, model, errText);
+                        console.error('[Groq Error]', res.status, model, errText);
                         if (res.status === 429) {
-                            send(controller, '⚠️ تجاوزت حد الطلبات. حاول مرة أخرى خلال دقيقة.');
+                            send(controller, '⚠️ تجاوزت حد الطلبات المسموح به لنموذج Groq. حاول مرة أخرى لاحقاً.');
                         } else {
-                            send(controller, `⚠️ خطأ ${res.status}: تعذّر الاتصال. حاول مرة أخرى.`);
+                            send(controller, `⚠️ خطأ ${res.status}: تعذّر الاتصال بخادم Groq. حاول مرة أخرى.`);
                         }
                         controller.close();
                         return;

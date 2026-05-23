@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft, Sparkles, GraduationCap, Bot } from 'lucide-react';
 import { Tool } from '../../types/tool';
 import ToolImage from '../common/ToolImage';
+import { useTheme } from '../../context/ThemeContext';
 
 interface BentoHomeSectionProps {
   newTools: Tool[];
@@ -11,49 +12,121 @@ interface BentoHomeSectionProps {
 }
 
 const BentoCard = ({ tool }: { tool: Tool }) => {
+  const { isDarkMode } = useTheme();
   const primaryCategory = Array.isArray(tool.category) ? tool.category[0] : tool.category;
   
+  const getPricingBadge = () => {
+    switch (tool.pricing) {
+      case 'Free':
+        return (
+          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md border transition-all duration-300 ${
+            isDarkMode 
+              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+              : 'bg-emerald-50 border-emerald-100 text-emerald-600'
+          }`}>
+            مجاني
+          </span>
+        );
+      case 'Freemium':
+        return (
+          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md border transition-all duration-300 ${
+            isDarkMode 
+              ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' 
+              : 'bg-amber-55/70 border-amber-100 text-amber-600'
+          }`}>
+            مجاني/مدفوع
+          </span>
+        );
+      default:
+        return (
+          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md border transition-all duration-300 ${
+            isDarkMode 
+              ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' 
+              : 'bg-rose-50 border-rose-100 text-rose-600'
+          }`}>
+            مدفوع
+          </span>
+        );
+    }
+  };
+
   return (
-    <div className="group bg-white dark:bg-[#111] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 hover:border-indigo-500/50 transition-colors flex flex-col h-full">
-      <div className="flex justify-between items-start mb-4">
-        <ToolImage 
-          imageUrl={tool.imageUrl} 
-          name={tool.name} 
-          categoryName={primaryCategory} 
-          size="md" 
-          className="rounded-xl border border-slate-100 dark:border-slate-800" 
-        />
-        <span className="text-[10px] font-bold px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-          {tool.pricing === 'Free' ? 'مجاني' : tool.pricing === 'Freemium' ? 'مجاني/مدفوع' : 'مدفوع'}
-        </span>
+    <div className={`group rounded-2xl border p-5 transition-all duration-300 flex flex-col h-full relative overflow-hidden ${
+      isDarkMode 
+        ? 'bg-slate-950/45 border-white/5 hover:border-indigo-500/30 shadow-2xl hover:shadow-indigo-500/5' 
+        : 'bg-white border-slate-200/80 hover:border-indigo-500/40 shadow-sm hover:shadow-lg shadow-slate-100/50'
+    }`}>
+      {/* Decorative hover gradient overlay */}
+      <div className={`absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none ${
+        isDarkMode 
+          ? 'bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-transparent' 
+          : 'bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-transparent'
+      }`} />
+
+      <div className="relative z-10 flex flex-col h-full">
+        <div className="flex justify-between items-start mb-4">
+          <ToolImage 
+            imageUrl={tool.imageUrl} 
+            name={tool.name} 
+            categoryName={primaryCategory} 
+            size="md" 
+            className={`rounded-xl border transition-colors duration-300 ${
+              isDarkMode ? 'border-slate-800' : 'border-slate-100'
+            }`} 
+          />
+          {getPricingBadge()}
+        </div>
+        
+        <h3 className={`text-lg font-bold mb-2 line-clamp-1 transition-colors duration-300 ${
+          isDarkMode ? 'text-white group-hover:text-indigo-400' : 'text-slate-900 group-hover:text-indigo-600'
+        }`}>
+          {tool.name}
+        </h3>
+        
+        <p className={`text-sm line-clamp-2 mb-4 flex-grow transition-colors duration-300 ${
+          isDarkMode ? 'text-slate-400' : 'text-slate-500'
+        }`}>
+          {tool.description}
+        </p>
+        
+        <Link 
+          href={`/tools/${tool.id}`} 
+          className={`mt-auto inline-flex items-center gap-2 text-sm font-bold transition-all duration-300 group-hover:gap-3 w-fit ${
+            isDarkMode 
+              ? 'text-slate-300 group-hover:text-indigo-400' 
+              : 'text-slate-700 group-hover:text-indigo-600'
+          }`}
+        >
+          <span>زيارة الأداة</span>
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+        </Link>
       </div>
-      
-      <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 line-clamp-1">{tool.name}</h3>
-      <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-4 flex-grow">
-        {tool.description}
-      </p>
-      
-      <Link href={`/tools/${tool.id}`} className="mt-auto inline-flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors w-fit">
-        <span>زيارة الأداة</span>
-        <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-      </Link>
     </div>
   );
 };
 
 const BentoHomeSection: React.FC<BentoHomeSectionProps> = ({ newTools, popularTools }) => {
+  const { isDarkMode } = useTheme();
+
   return (
-    <section className="py-12 w-full">
+    <section className="py-12 w-full transition-colors duration-500">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-24">
         
         {/* Latest Additions */}
         <div>
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl font-black text-slate-900 dark:text-white flex items-center gap-3">
-              <Sparkles className="w-8 h-8 text-amber-500" />
+          <div className="flex items-center justify-between mb-8 border-b pb-4 transition-colors duration-300" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
+            <h2 className={`text-2xl md:text-3xl font-black flex items-center gap-3 transition-colors duration-300 ${
+              isDarkMode ? 'text-white' : 'text-slate-900'
+            }`}>
+              <Sparkles className="w-7 h-7 text-amber-500 animate-pulse" />
               أحدث الإضافات
             </h2>
-            <Link href="/tools?tab=recent" className="text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors">
+            <Link 
+              href="/tools?tab=recent" 
+              className={`text-sm font-bold transition-colors duration-300 ${
+                isDarkMode ? 'text-slate-400 hover:text-indigo-400' : 'text-slate-500 hover:text-indigo-600'
+              }`}
+            >
               عرض الكل &larr;
             </Link>
           </div>
@@ -67,11 +140,18 @@ const BentoHomeSection: React.FC<BentoHomeSectionProps> = ({ newTools, popularTo
 
         {/* Trending & Banner */}
         <div>
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl font-black text-slate-900 dark:text-white">
+          <div className="flex items-center justify-between mb-8 border-b pb-4 transition-colors duration-300" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
+            <h2 className={`text-2xl md:text-3xl font-black transition-colors duration-300 ${
+              isDarkMode ? 'text-white' : 'text-slate-900'
+            }`}>
               أكثر رواجاً
             </h2>
-            <Link href="/tools?tab=popular" className="text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors">
+            <Link 
+              href="/tools?tab=popular" 
+              className={`text-sm font-bold transition-colors duration-300 ${
+                isDarkMode ? 'text-slate-400 hover:text-indigo-400' : 'text-slate-500 hover:text-indigo-600'
+              }`}
+            >
               عرض الكل &larr;
             </Link>
           </div>
@@ -79,8 +159,12 @@ const BentoHomeSection: React.FC<BentoHomeSectionProps> = ({ newTools, popularTo
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch">
             
             {/* Academy Banner (Right Side RTL - الثلث الأول) */}
-            <div className="xl:col-span-4 bg-gradient-to-br from-slate-950 to-violet-950 rounded-3xl p-8 flex flex-col justify-between relative overflow-hidden group h-[400px] xl:h-[450px] shadow-2xl shadow-violet-900/10">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-violet-600/20 rounded-full blur-3xl -mr-20 -mt-20"></div>
+            <div className={`xl:col-span-4 rounded-3xl p-8 flex flex-col justify-between relative overflow-hidden group h-[400px] xl:h-[450px] shadow-2xl transition-all duration-500 ${
+              isDarkMode 
+                ? 'bg-gradient-to-br from-slate-950 via-[#191535] to-slate-950 shadow-violet-950/20 border border-white/5' 
+                : 'bg-gradient-to-br from-indigo-900 via-indigo-950 to-purple-950 shadow-indigo-950/15 border border-indigo-950'
+            }`}>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-violet-600/25 rounded-full blur-3xl -mr-20 -mt-20 group-hover:scale-110 transition-transform duration-700" />
               
               <div className="relative z-10">
                 <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-sm border border-white/5">
@@ -89,7 +173,7 @@ const BentoHomeSection: React.FC<BentoHomeSectionProps> = ({ newTools, popularTo
                 <h3 className="text-3xl lg:text-4xl font-black text-white mb-4 leading-tight">
                   طوّر مهاراتك<br/>للمستقبل
                 </h3>
-                <p className="text-violet-200/80 font-medium mb-8 text-sm leading-relaxed">
+                <p className="text-indigo-200/80 font-medium mb-8 text-sm leading-relaxed">
                   تعلم أهم التقنيات ومسارات البرمجة من الصفر. محتوى عربي تفاعلي مجاني بالكامل لإعدادك لسوق العمل.
                 </p>
               </div>

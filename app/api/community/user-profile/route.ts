@@ -20,28 +20,53 @@ export async function GET(req: NextRequest) {
 
     let userDoc: any = null;
     let userId = '';
+    let isFallback = false;
+    let fallbackData: any = null;
 
-    // Try lookup by username first
-    if (username) {
-      const snap = await adminDb.collection('users').where('username', '==', username).limit(1).get();
-      if (!snap.empty) {
-        userDoc = snap.docs[0];
-        userId = userDoc.id;
+    try {
+      // Try lookup by username first
+      if (username) {
+        const snap = await adminDb.collection('users').where('username', '==', username).limit(1).get();
+        if (!snap.empty) {
+          userDoc = snap.docs[0];
+          userId = userDoc.id;
+        }
       }
+
+      // Fallback to uid if username not found
+      if (!userDoc && uid) {
+        const docRef = adminDb.collection('users').doc(uid);
+        const docSnap = await docRef.get();
+        if (docSnap.exists) {
+          userDoc = docSnap;
+          userId = docSnap.id;
+        }
+      }
+    } catch (fsErr) {
+      console.error('⚠️ [Firestore Admin] Error fetching user profile (quota exceeded or offline):', fsErr);
+      isFallback = true;
+      userId = uid || 'fallback_uid';
+      fallbackData = {
+        uid: userId,
+        username: username || `user_${userId.substring(0, 5)}`,
+        displayName: 'مستخدم',
+        firstName: '',
+        lastName: '',
+        photoURL: null,
+        coverURL: null,
+        email: '',
+        createdAt: new Date().toISOString(),
+        role: 'user',
+        plan: 'free',
+      };
     }
 
-    // Fallback to uid if username not found
-    if (!userDoc && uid) {
-      const docRef = adminDb.collection('users').doc(uid);
-      const docSnap = await docRef.get();
-      if (docSnap.exists) {
-        userDoc = docSnap;
-        userId = docSnap.id;
-      }
-    }
-
-    if (!userDoc) {
+    if (!userDoc && !isFallback) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    if (isFallback && fallbackData) {
+      return NextResponse.json(fallbackData);
     }
 
     const data = userDoc.data();

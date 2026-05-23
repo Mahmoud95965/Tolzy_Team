@@ -25,10 +25,10 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onClick }) => {
     return (
         <div
             onClick={handleClick}
-            className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col h-full"
+            className="group bg-[#0f1322]/40 backdrop-blur-xl rounded-2xl border border-white/5 overflow-hidden hover:border-emerald-500/30 hover:shadow-[0_0_30px_rgba(16,185,129,0.08)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer flex flex-col h-full"
         >
             {/* Cover Image */}
-            <div className="relative aspect-video bg-gray-100 overflow-hidden">
+            <div className="relative aspect-video bg-[#090a0f] overflow-hidden">
                 <Image
                     src={course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60'}
                     alt={course.title}
@@ -39,8 +39,8 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onClick }) => {
 
                 {/* Provider Badge */}
                 <div className="absolute top-3 left-3">
-                    <span className="px-2.5 py-1 bg-white/90 backdrop-blur-sm rounded-md text-xs font-semibold text-gray-900 shadow-sm flex items-center gap-1.5">
-                        {course.sourceUrl ? <Globe className="w-3 h-3 text-indigo-600" /> : <BookOpen className="w-3 h-3 text-indigo-600" />}
+                    <span className="px-2.5 py-1 bg-[#090a0f]/60 backdrop-blur-md rounded-md text-xs font-bold text-slate-300 border border-white/5 flex items-center gap-1.5">
+                        {course.sourceUrl ? <Globe className="w-3 h-3 text-emerald-400" /> : <BookOpen className="w-3 h-3 text-emerald-400" />}
                         {course.platform || 'Tolzy'}
                     </span>
                 </div>
@@ -50,63 +50,65 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onClick }) => {
                     <div className="absolute bottom-3 right-3">
                         <span className="px-2 py-1 bg-black/60 backdrop-blur-sm rounded text-[10px] font-medium text-white flex items-center gap-1">
                             <Award className="w-3 h-3 text-yellow-400" />
-                            Certificate
+                            شهادة معتمدة
                         </span>
                     </div>
                 )}
             </div>
 
             {/* Content */}
-            <div className="p-5 flex flex-col flex-1">
+            <div className="p-5 flex flex-col flex-1 text-right" dir="rtl">
                 {/* Title & Instructor */}
                 <div className="mb-4 flex-1">
-                    <h3 className="font-bold text-gray-900 text-lg leading-tight line-clamp-2 mb-2 group-hover:text-indigo-600 transition-colors">
+                    <h3 className="font-black text-white text-lg leading-tight line-clamp-2 mb-2 group-hover:text-emerald-400 transition-colors">
                         {course.title}
                     </h3>
-                    <p className="text-sm text-gray-500 flex items-center gap-1">
-                        By <span className="font-medium text-gray-700">{course.instructor || 'Unknown Instructor'}</span>
+                    <p className="text-xs text-slate-400 flex items-center justify-end gap-1 font-bold">
+                        بواسطة <span className="text-slate-200">{course.instructor || 'أكاديمية تولزي'}</span>
                     </p>
                 </div>
 
                 {/* Rating & Stats */}
-                <div className="flex items-center gap-3 mb-4 text-sm">
-                    <div className="flex items-center gap-1 text-yellow-500 font-bold">
-                        <span className="text-base">{course.rating || 4.8}</span>
-                        <div className="flex">
+                <div className="flex items-center justify-end gap-3 mb-4 text-xs font-bold">
+                    <span className="text-slate-500">({course.reviewsCount || 12} تقييم)</span>
+                    <div className="flex items-center gap-1 text-amber-400">
+                        <span className="text-sm">{course.rating || 4.8}</span>
+                        <div className="flex gap-0.5">
                             {[...Array(5)].map((_, i) => (
                                 <Star
                                     key={i}
-                                    className={`w-3 h-3 ${i < Math.floor(course.rating || 4.8) ? 'fill-current' : 'text-gray-300'}`}
+                                    className={`w-3 h-3 ${i < Math.floor(course.rating || 4.8) ? 'fill-current text-amber-400' : 'text-slate-800'}`}
                                 />
                             ))}
                         </div>
                     </div>
-                    <span className="text-gray-400 text-xs">({course.reviewsCount || 120} reviews)</span>
                 </div>
 
                 {/* Metadata Divider */}
-                <div className="h-px bg-gray-100 mb-4" />
+                <div className="h-px bg-white/5 mb-4" />
 
                 {/* Footer Metadata */}
-                <div className="flex items-center justify-between text-xs text-gray-500 font-medium">
-                    <div className="flex items-center gap-3">
-                        <span className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded">
-                            <Clock className="w-3 h-3" />
-                            {course.duration || 'Self-paced'}
+                <div className="flex items-center justify-between text-[11px] text-slate-400 font-bold">
+                    <span className={`px-2.5 py-1 rounded-full border ${course.price === 'free' || !course.price 
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_12px_rgba(16,185,129,0.15)]' 
+                        : 'bg-purple-500/10 text-purple-400 border-purple-500/20 shadow-[0_0_12px_rgba(168,85,247,0.15)]'}`}>
+                        {course.price === 'free' || !course.price ? 'مجاني' : 'حصري'}
+                    </span>
+
+                    <div className="flex items-center gap-2">
+                        <span className="flex items-center gap-1 bg-[#0f1322] px-2 py-1 rounded-lg border border-white/5 text-[10px]">
+                            <Clock className="w-3 h-3 text-emerald-400" />
+                            {course.duration || 'مستمر'}
                         </span>
-                        <span className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded capitalize">
-                            <Users className="w-3 h-3" />
+                        <span className="flex items-center gap-1 bg-[#0f1322] px-2 py-1 rounded-lg border border-white/5 text-[10px]">
+                            <Users className="w-3 h-3 text-emerald-400" />
                             {course.studentsCount ? course.studentsCount.toLocaleString() : '0'}
                         </span>
-                        <span className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded capitalize">
-                            <BookOpen className="w-3 h-3" />
-                            {course.level || 'Beginner'}
+                        <span className="flex items-center gap-1 bg-[#0f1322] px-2 py-1 rounded-lg border border-white/5 text-[10px] capitalize">
+                            <BookOpen className="w-3 h-3 text-emerald-400" />
+                            {course.level === 'beginner' ? 'مبتدئ' : course.level === 'intermediate' ? 'متوسط' : 'متقدم'}
                         </span>
                     </div>
-
-                    <span className={`text-sm font-bold ${course.price === 'free' || !course.price ? 'text-green-600' : 'text-gray-900'}`}>
-                        {course.price === 'free' || !course.price ? 'Free' : '$49.99'}
-                    </span>
                 </div>
             </div>
         </div>

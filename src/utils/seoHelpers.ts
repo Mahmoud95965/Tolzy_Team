@@ -170,10 +170,10 @@ const getCategoryTexts = (category: string, toolCount: number): { title: string;
  * Generate title & description for Copilot page. Single source of truth.
  */
 const getCopilotTexts = () => {
-  const title = 'مساعد Tolzy Copilot: رفيقك الذكي للبرمجة والبحث';
-  const description = 'Tolzy Copilot هو مساعد ذكاء اصطناعي متقدم يفهم احتياجاتك. يساعدك في البحث عن الأدوات، شرح الأكواد البرمجية، الكتابة الإبداعية، وتلخيص المحتوى. جربه الآن مجاناً!';
+  const title = 'مساعد TOLZY Copilot: رفيقك الذكي للبرمجة والبحث';
+  const description = 'TOLZY Copilot هو مساعد ذكاء اصطناعي متقدم يفهم احتياجاتك. يساعدك في البحث عن الأدوات، شرح الأكواد البرمجية، الكتابة الإبداعية، وتلخيص المحتوى. جربه الآن مجاناً!';
   const keywords = [
-    'Tolzy Copilot', 'مساعد ذكي', 'شات بوت عربي', 'ChatGPT عربي',
+    'TOLZY Copilot', 'مساعد ذكي', 'شات بوت عربي', 'ChatGPT عربي',
     'بديل ChatGPT', 'مساعد شخصي AI', 'شرح كود برمجي',
     'كتابة مقالات بالذكاء الاصطناعي', 'أداة بحث ذكية',
     'تولزي كوبايلوت', 'ذكاء اصطناعي للمبرمجين', 'Copilot', 'AI Assistant'
@@ -321,7 +321,7 @@ export const generateCopilotSEO = () => {
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "Tolzy Copilot",
+    "name": "TOLZY Copilot",
     "applicationCategory": "AIAssistant",
     "operatingSystem": "Web, Mobile",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
@@ -675,7 +675,7 @@ export const generateCopilotMetadata = (): Metadata => {
     keywords,
     openGraph: {
       title, description,
-      images: [{ url: 'https://tolzy.me/image/copilot-chat.png', width: 1200, height: 630, alt: 'Tolzy Copilot' }],
+      images: [{ url: 'https://tolzy.me/image/copilot-chat.png', width: 1200, height: 630, alt: 'TOLZY Copilot' }],
       type: 'website', locale: 'ar_EG', siteName: SITE_CONFIG.name,
     },
     twitter: {

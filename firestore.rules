@@ -14,8 +14,18 @@ service cloud.firestore {
     }
 
     // Users Collection: User can read/write their own data, Admin can read/write all
+    // Secured against self-role upgrading
     match /users/{userId} {
-      allow read, write: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && (request.auth.uid == userId || isAdmin())
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'isAdmin', 'isVIP', 'disabled']));
+      allow delete: if isAdmin();
+
+      // Chat History Subcollection: User can read/write/delete their own chat history
+      match /chatHistory/{messageId} {
+        allow read, write: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      }
     }
 
     // --- Public Content Collections ---
@@ -33,9 +43,7 @@ service cloud.firestore {
       allow update: if request.auth != null 
         && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['votes', 'votingStats', 'rating', 'reviewCount', 'savedBy']);
-      // Only admin can create/delete or modify other fields
-      allow create, delete: if isAdmin();
-      // Allow admin full write access (overrides the update rule for admins)
+      // Allow admin full write access (covers create, update, delete)
       allow write: if isAdmin();
       
       // Votes subcollection - users can manage their own votes
@@ -66,11 +74,21 @@ service cloud.firestore {
     // Reviews
     match /reviews/{reviewId} {
       allow read: if true;
-      allow create: if request.auth != null;
+      // Prevent user identity spoofing during creation
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      // Allow user to edit their own reviews without modifying the userId field
+      allow update: if request.auth != null 
+        && resource.data.userId == request.auth.uid 
+        && request.resource.data.userId == request.auth.uid;
+      // Allow owner or admin to delete reviews
       allow delete: if request.auth != null && (request.auth.uid == resource.data.userId || isAdmin());
     }
 
-
+    // Roadmap
+    match /roadmap/{itemId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
 
     // Changelog
     match /changelog/{itemId} {
@@ -82,6 +100,12 @@ service cloud.firestore {
     match /newsletter_subscribers/{subscriberId} {
       allow create: if true; // Public can subscribe
       allow read, delete: if isAdmin(); // Only admin can manage
+    }
+
+    // Contact Messages
+    match /contact_messages/{messageId} {
+      allow create: if true; // Public can send messages
+      allow read, update, delete: if isAdmin(); // Only admin can read/manage
     }
 
     // Projects

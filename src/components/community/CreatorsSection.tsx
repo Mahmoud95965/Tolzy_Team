@@ -36,7 +36,7 @@ const CreatorsSection: React.FC<CreatorsSectionProps> = ({ onBack }) => {
 
     try {
       const params = new URLSearchParams({
-        limit: '10',
+        limit: '5',
         ...(lastDocId && !isInitial ? { lastDocId } : {}),
         ...(user?.uid ? { exclude: user.uid } : {}),
       });
@@ -68,7 +68,7 @@ const CreatorsSection: React.FC<CreatorsSectionProps> = ({ onBack }) => {
   useEffect(() => {
     const observer = new IntersectionObserver(
       entries => {
-        if (entries[0].isIntersecting && hasMore && !loadingMore && !loading) {
+        if (entries[0].isIntersecting && hasMore && !loadingMore && !loading && creators.length < 50) {
           fetchCreators(false);
         }
       },
@@ -77,7 +77,7 @@ const CreatorsSection: React.FC<CreatorsSectionProps> = ({ onBack }) => {
 
     if (loaderRef.current) observer.observe(loaderRef.current);
     return () => observer.disconnect();
-  }, [hasMore, loadingMore, loading, fetchCreators]);
+  }, [hasMore, loadingMore, loading, fetchCreators, creators.length]);
 
   // Arabic pluralizer for "post"
   const postsLabel = (count: number): string => {
@@ -181,11 +181,21 @@ const CreatorsSection: React.FC<CreatorsSectionProps> = ({ onBack }) => {
         ))}
       </div>
 
-      {/* Load more sentinel */}
-      <div ref={loaderRef} className="py-6 flex justify-center">
-        {loadingMore && <Loader2 className="w-6 h-6 animate-spin text-[#0866ff]" />}
+      {/* Load more sentinel / manual button */}
+      <div ref={loaderRef} className="py-8 flex flex-col items-center justify-center gap-4">
+        {loadingMore && <Loader2 className="w-6 h-6 animate-spin text-[#005cff]" />}
+        
+        {creators.length >= 50 && hasMore && !loadingMore && (
+          <button
+            onClick={() => fetchCreators(false)}
+            className="px-6 py-2.5 bg-gradient-to-tr from-[#005cff] to-indigo-600 hover:from-[#004bb5] hover:to-indigo-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-lg shadow-indigo-500/20 active:scale-95 transition-all flex items-center gap-2 cursor-pointer font-sans"
+          >
+            <span>تحميل المزيد من المبدعين ✨</span>
+          </button>
+        )}
+        
         {!hasMore && creators.length > 0 && (
-          <p className="text-gray-400 text-sm font-bold">لا يوجد المزيد</p>
+          <p className="text-gray-400 dark:text-slate-500 text-sm font-bold">لا يوجد المزيد من المبدعين</p>
         )}
       </div>
     </div>

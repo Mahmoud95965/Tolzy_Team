@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft } from 'lucide-react';
+// Icons: Material Symbols Outlined
 
 interface GuidedFlowProps {
     onComplete: (summary: string) => void;
@@ -81,7 +81,7 @@ const GuidedFlow: React.FC<GuidedFlowProps> = ({ onComplete }) => {
                                 <span className="text-lg font-medium text-slate-700 dark:text-slate-200 group-hover:text-blue-700 dark:group-hover:text-blue-400">
                                     {option}
                                 </span>
-                                <ChevronLeft className="text-slate-300 group-hover:text-blue-500 transition-colors opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0" />
+                                <span className="material-symbols-outlined text-[22px] text-slate-300 group-hover:text-blue-500 transition-colors opacity-0 group-hover:opacity-100">chevron_right</span>
                             </button>
                         ))}
                     </div>

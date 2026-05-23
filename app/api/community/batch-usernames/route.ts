@@ -21,24 +21,38 @@ export async function POST(req: NextRequest) {
 
     // Firestore allows up to 10 values in 'in' filter, process in batches
     const batchSize = 10;
-    for (let i = 0; i < uids.length; i += batchSize) {
-      const batch = uids.slice(i, i + batchSize);
-      const snap = await adminDb.collection('users').where('__name__', 'in', batch).get();
-      snap.docs.forEach(doc => {
-        const data = doc.data();
-        let username = data.username;
-        if (!username) {
-          const baseName = data.firstName || data.displayName || 'user';
-          const base = baseName.trim().toLowerCase().replace(/[^a-zA-Z0-9]/g, '').slice(0, 12);
-          const digits = Math.floor(100 + Math.random() * 900);
-          username = `${base}${digits}`;
-          doc.ref.update({ username, updatedAt: new Date().toISOString() }).catch(() => {});
+    try {
+      for (let i = 0; i < uids.length; i += batchSize) {
+        const batch = uids.slice(i, i + batchSize);
+        const snap = await adminDb.collection('users').where('__name__', 'in', batch).get();
+        snap.docs.forEach(doc => {
+          const data = doc.data();
+          let username = data.username;
+          if (!username) {
+            const baseName = data.firstName || data.displayName || 'user';
+            const base = baseName.trim().toLowerCase().replace(/[^a-zA-Z0-9]/g, '').slice(0, 12);
+            const digits = Math.floor(100 + Math.random() * 900);
+            username = `${base}${digits}`;
+            doc.ref.update({ username, updatedAt: new Date().toISOString() }).catch(() => {});
+          }
+          results[doc.id] = {
+            username: username.trim().toLowerCase(),
+            displayName: data.displayName || data.firstName || data.email?.split('@')[0] || 'مستخدم',
+            photoURL: data.photoURL || null,
+          };
+        });
+      }
+    } catch (fsErr) {
+      console.error('⚠️ [Firestore Admin] Batch username fetch failed (offline or quota exceeded):', fsErr);
+      // Fallback: Populate the results map with placeholder usernames based on UIDs
+      uids.forEach(uid => {
+        if (!results[uid]) {
+          results[uid] = {
+            username: `user_${uid.substring(0, 5)}`,
+            displayName: 'مستخدم',
+            photoURL: null,
+          };
         }
-        results[doc.id] = {
-          username: username.trim().toLowerCase(),
-          displayName: data.displayName || data.firstName || data.email?.split('@')[0] || 'مستخدم',
-          photoURL: data.photoURL || null,
-        };
       });
     }
 

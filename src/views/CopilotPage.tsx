@@ -11,7 +11,7 @@ const CopilotPage: React.FC = () => {
                 <div className="absolute top-[40%] left-[40%] w-[30%] h-[30%] bg-orange-500/5 dark:bg-orange-500/10 rounded-full blur-[100px] mix-blend-multiply dark:mix-blend-screen animate-pulse-slow delay-1000" />
             </div>
 
-            <div className="relative z-10 h-full">
+            <div className="relative z-10 h-full w-full max-w-full overflow-hidden">
                 <ChatInterface />
             </div>
         </div>

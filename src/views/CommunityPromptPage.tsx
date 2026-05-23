@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import PageLayout from '../components/layout/PageLayout';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../config/supabaseClient';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -10,13 +11,14 @@ import {
   Plus, Users, MessageSquare, Globe, Info,
   Briefcase, GraduationCap, Heart,
   Video, Image as ImageIcon, Award,
-  Home, Search, X, ArrowUpRight
+  Home, Search, X, ArrowUpRight,
+  Send, Trash2, Edit2
 } from 'lucide-react';
 import PromptCard from '../components/community/PromptCard';
 import CreatorsSection from '../components/community/CreatorsSection';
 import CreatePromptModal from '../components/community/CreatePromptModal';
 // RemixEditor removed — feature disabled
-import type { CommunityPrompt, PromptTag, FeedSortMode, PostType } from '../types/community';
+import type { CommunityPrompt, PromptTag, FeedSortMode, PostType, PromptComment } from '../types/community';
 import { POST_TYPE_CONFIG } from '../types/community';
 import Link from 'next/link';
 
@@ -41,6 +43,14 @@ const CommunityPromptPage: React.FC = () => {
 
   // Tags
   const [tags, setTags] = useState<(PromptTag & { prompts_count?: number })[]>([]);
+
+  // Comments state
+  const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
+  const [commentsMap, setCommentsMap] = useState<Record<string, PromptComment[]>>({});
+  const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
+  const [loadingComments, setLoadingComments] = useState<Set<string>>(new Set());
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editCommentContent, setEditCommentContent] = useState('');
 
   // User interactions
   const [userVotes, setUserVotes] = useState<Record<string, 'up' | 'down'>>({});
@@ -302,8 +312,133 @@ const CommunityPromptPage: React.FC = () => {
     toast.success('تم نسخ الرابط! 🔗');
   };
 
+  const timeAgo = (dateStr: string) => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return 'الآن';
+    if (m < 60) return `منذ ${m} د`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `منذ ${h} س`;
+    const d = Math.floor(h / 24);
+    return d < 30 ? `منذ ${d} يوم` : `منذ ${Math.floor(d / 30)} شهر`;
+  };
+
+  const toggleComments = async (promptId: string) => {
+    const isExpanded = expandedComments.has(promptId);
+    if (isExpanded) {
+      setExpandedComments(prev => { const n = new Set(prev); n.delete(promptId); return n; });
+      return;
+    }
+
+    setLoadingComments(prev => new Set(prev).add(promptId));
+    
+    try {
+      const { data, error } = await supabase
+        .from('prompt_comments')
+        .select('*')
+        .eq('prompt_id', promptId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      if (data) {
+        setCommentsMap(prev => ({ ...prev, [promptId]: data }));
+      }
+      setExpandedComments(prev => new Set(prev).add(promptId));
+    } catch (err) {
+      console.error('Failed to fetch comments:', err);
+      toast.error('حدث خطأ أثناء جلب التعليقات');
+    } finally {
+      setLoadingComments(prev => { const n = new Set(prev); n.delete(promptId); return n; });
+    }
+  };
+
+  const handleAddComment = async (promptId: string) => {
+    if (!user) { toast.error('سجّل دخولك أولاً'); return; }
+    const text = commentInputs[promptId]?.trim();
+    if (!text) return;
+
+    try {
+      const { data, error } = await supabase.from('prompt_comments').insert({
+        prompt_id: promptId,
+        author_uid: user.uid,
+        author_name: user.displayName || 'مستخدم',
+        author_avatar: user.photoURL || null,
+        content: text
+      }).select().single();
+
+      if (error) throw error;
+
+      if (data) {
+        setCommentsMap(prev => ({ ...prev, [promptId]: [...(prev[promptId] || []), data] }));
+        setCommentInputs(prev => ({ ...prev, [promptId]: '' }));
+        
+        // Update comment count
+        const prompt = prompts.find(p => p.id === promptId);
+        if (prompt) {
+          await supabase.from('community_prompts').update({ comments_count: (prompt.comments_count || 0) + 1 }).eq('id', promptId);
+          setPrompts(prev => prev.map(p => p.id === promptId ? { ...p, comments_count: (p.comments_count || 0) + 1 } : p));
+        }
+      }
+    } catch (err) {
+      console.error('Failed to add comment:', err);
+      toast.error('حدث خطأ أثناء إضافة التعليق');
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string, promptId: string) => {
+    if (!user) return;
+    if (!confirm('هل أنت متأكد من حذف هذا التعليق؟')) return;
+
+    try {
+      const { error } = await supabase.from('prompt_comments').delete().eq('id', commentId).eq('author_uid', user.uid);
+      if (error) throw error;
+      
+      toast.success('تم حذف التعليق');
+      setCommentsMap(prev => ({
+        ...prev,
+        [promptId]: (prev[promptId] || []).filter(c => c.id !== commentId)
+      }));
+      
+      const prompt = prompts.find(p => p.id === promptId);
+      if (prompt) {
+        await supabase.from('community_prompts').update({ comments_count: Math.max(0, (prompt.comments_count || 0) - 1) }).eq('id', promptId);
+        setPrompts(prev => prev.map(p => p.id === promptId ? { ...p, comments_count: Math.max(0, (p.comments_count || 0) - 1) } : p));
+      }
+    } catch (err) {
+      console.error('Failed to delete comment:', err);
+      toast.error('حدث خطأ أثناء حذف التعليق');
+    }
+  };
+
+  const startEditingComment = (comment: PromptComment) => {
+    setEditingCommentId(comment.id);
+    setEditCommentContent(comment.content);
+  };
+
+  const handleSaveCommentEdit = async (commentId: string, promptId: string) => {
+    if (!user) return;
+    try {
+      const { error } = await supabase.from('prompt_comments').update({
+        content: editCommentContent.trim()
+      }).eq('id', commentId).eq('author_uid', user.uid);
+
+      if (error) throw error;
+
+      toast.success('تم تعديل التعليق');
+      setCommentsMap(prev => ({
+        ...prev,
+        [promptId]: (prev[promptId] || []).map(c => c.id === commentId ? { ...c, content: editCommentContent.trim() } : c)
+      }));
+      setEditingCommentId(null);
+    } catch (err) {
+      console.error('Failed to save comment edit:', err);
+      toast.error('حدث خطأ أثناء تعديل التعليق');
+    }
+  };
+
   const handleComment = (promptId: string) => {
-    toast('التعليقات قريباً!', { icon: '💬' });
+    toggleComments(promptId);
   };
 
   const loadMore = () => {
@@ -479,16 +614,122 @@ const CommunityPromptPage: React.FC = () => {
                 </div>
               ) : (
                 prompts.map(prompt => (
-                  <PromptCard
-                    key={prompt.id}
-                    prompt={prompt}
-                    userVote={userVotes[prompt.id] || null}
-                    isOwner={user?.uid === prompt.author_uid}
-                    onVote={handleVote}
-                    onComment={handleComment}
-                    onShare={handleShare}
-                    onDelete={handleDelete}
-                  />
+                  <div key={prompt.id} className="space-y-3">
+                    <PromptCard
+                      prompt={prompt}
+                      userVote={userVotes[prompt.id] || null}
+                      isOwner={user?.uid === prompt.author_uid}
+                      onVote={handleVote}
+                      onComment={handleComment}
+                      onShare={handleShare}
+                      onDelete={handleDelete}
+                    />
+
+                    <AnimatePresence>
+                      {expandedComments.has(prompt.id) && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                          animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
+                          exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                          transition={{ duration: 0.25 }}
+                          className="bg-white dark:bg-[#242526] rounded-2xl border border-gray-150 dark:border-gray-700/60 p-4 shadow-sm space-y-4 overflow-hidden"
+                        >
+                          {/* Quick Reply */}
+                          <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-full shrink-0 ${user ? getAvatarColor(user.displayName || 'م') : 'bg-slate-350'} flex items-center justify-center text-white font-bold text-sm shadow-inner`}>
+                              {user?.displayName?.[0] || 'م'}
+                            </div>
+                            <div className="flex-1 relative">
+                              <input
+                                type="text"
+                                value={commentInputs[prompt.id] || ''}
+                                onChange={e => setCommentInputs(prev => ({ ...prev, [prompt.id]: e.target.value }))}
+                                onKeyDown={e => e.key === 'Enter' && handleAddComment(prompt.id)}
+                                placeholder="اكتب تعليقاً..."
+                                className="w-full bg-slate-100/70 dark:bg-[#18191a] border border-transparent dark:border-white/5 rounded-full py-2.5 pr-10 pl-4 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-indigo-500/50 transition-all duration-300 shadow-inner"
+                              />
+                              <button
+                                onClick={() => handleAddComment(prompt.id)}
+                                disabled={!commentInputs[prompt.id]?.trim()}
+                                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-indigo-500 disabled:text-slate-350 dark:disabled:text-slate-650 transition-all hover:scale-110 active:scale-95"
+                              >
+                                <Send size={15} className="rtl:-scale-x-100 shrink-0" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Comments List */}
+                          {loadingComments.has(prompt.id) ? (
+                            <div className="flex justify-center py-6">
+                              <Loader2 className="w-5 h-5 animate-spin text-indigo-500 shrink-0" />
+                            </div>
+                          ) : (
+                            <>
+                              {(commentsMap[prompt.id] || []).length === 0 && (
+                                <div className="text-center py-6 flex flex-col items-center gap-2 bg-slate-50/50 dark:bg-white/[0.01] rounded-2xl border border-dashed border-slate-200/60 dark:border-white/5 animate-in fade-in duration-300">
+                                  <MessageSquare size={20} className="text-slate-350 dark:text-slate-600 animate-pulse shrink-0" />
+                                  <p className="text-slate-400 dark:text-slate-550 text-xs font-bold">لا توجد تعليقات بعد. كن أول من يشارك برأيه!</p>
+                                </div>
+                              )}
+                              <div className="space-y-4 max-h-[320px] overflow-y-auto pr-1">
+                                {(commentsMap[prompt.id] || []).map(c => (
+                                  <div key={c.id} className="flex items-start gap-3 group/comment animate-in fade-in slide-in-from-top-1 duration-300">
+                                    <div className={`w-8 h-8 rounded-full ${getAvatarColor(c.author_name)} flex items-center justify-center text-white font-black text-xs shrink-0 shadow-sm`}>
+                                      {c.author_name[0]}
+                                    </div>
+                                    <div className="flex-1 bg-slate-50/70 dark:bg-white/[0.02] border border-slate-100/50 dark:border-white/[0.03] rounded-2xl px-4 py-3 hover:bg-slate-100/50 dark:hover:bg-white/[0.04] transition-all duration-300 hover:shadow-sm">
+                                      <div className="flex items-center justify-between mb-1.5">
+                                        <div className="flex items-center gap-2">
+                                          <span className="font-bold text-xs sm:text-sm text-slate-800 dark:text-white leading-none">{c.author_name}</span>
+                                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">{timeAgo(c.created_at)}</span>
+                                        </div>
+                                        {user?.uid === c.author_uid && (
+                                          <div className="flex items-center gap-1.5 opacity-0 group-hover/comment:opacity-100 transition-opacity duration-300">
+                                            <button 
+                                              onClick={() => startEditingComment(c)} 
+                                              className="p-1 text-slate-400 hover:text-indigo-500 transition-colors rounded hover:bg-slate-100 dark:hover:bg-white/5"
+                                              title="تعديل"
+                                            >
+                                              <Edit2 size={12} />
+                                            </button>
+                                            <button 
+                                              onClick={() => handleDeleteComment(c.id, prompt.id)} 
+                                              className="p-1 text-slate-400 hover:text-red-500 transition-colors rounded hover:bg-slate-100 dark:hover:bg-white/5"
+                                              title="حذف"
+                                            >
+                                              <Trash2 size={12} />
+                                            </button>
+                                          </div>
+                                        )}
+                                      </div>
+                                      {editingCommentId === c.id ? (
+                                        <div className="mt-1 space-y-2">
+                                          <input
+                                            type="text"
+                                            value={editCommentContent}
+                                            onChange={e => setEditCommentContent(e.target.value)}
+                                            onKeyDown={e => e.key === 'Enter' && handleSaveCommentEdit(c.id, prompt.id)}
+                                            className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-xs focus:outline-none"
+                                            autoFocus
+                                          />
+                                          <div className="flex justify-end gap-3">
+                                            <button onClick={() => setEditingCommentId(null)} className="text-[10px] font-bold text-slate-500">إلغاء</button>
+                                            <button onClick={() => handleSaveCommentEdit(c.id, prompt.id)} className="text-[10px] font-black text-indigo-500">حفظ</button>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <p className="text-slate-700 dark:text-slate-355 text-[13px] sm:text-[14px] leading-relaxed font-semibold">{c.content}</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 ))
               )}
 

@@ -26,8 +26,12 @@ function getSupabaseClient() {
 
 async function getUidByUsername(username: string): Promise<string | null> {
   if (!adminDb) return null;
-  const snap = await adminDb.collection('users').where('username', '==', username).limit(1).get();
-  if (!snap.empty) return snap.docs[0].id;
+  try {
+    const snap = await adminDb.collection('users').where('username', '==', username).limit(1).get();
+    if (!snap.empty) return snap.docs[0].id;
+  } catch (fsErr) {
+    console.error('⚠️ [Firestore Admin] Error fetching UID by username (quota exceeded or offline):', fsErr);
+  }
   return null;
 }
 

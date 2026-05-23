@@ -9,53 +9,78 @@ export let adminInitError: Error | null = null;
 // Helper function for safe error logging
 export function logError(error: unknown, context: string) {
     if (error instanceof Error) {
-        console.warn(`⚠️ ${context}:`, error.message);
+        console.error(`\u26a0\ufe0f ${context}:`, error.message);
     } else {
-        console.warn(`⚠️ ${context} (unknown error):`, error);
+        console.error(`\u26a0\ufe0f ${context} (unknown error):`, error);
     }
+}
+
+/**
+ * Normalize FIREBASE_PRIVATE_KEY from any format Vercel might store it in:
+ * 1. Wrapped in outer double-quotes: "-----BEGIN..." => strip quotes
+ * 2. Literal \n escaped as \\n (double backslash) => replace with real newline
+ * 3. Already correct — leave as-is
+ */
+function normalizePrivateKey(raw: string | undefined): string | null {
+    if (!raw) return null;
+    let key = raw.trim();
+    // Strip surrounding quotes added by some env editors
+    if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
+        key = key.slice(1, -1);
+    }
+    // Replace double-escaped newlines (\\n) with real newlines (\n)
+    key = key.replace(/\\n/g, '\n');
+    // Sanity check: must contain PEM header
+    if (!key.includes('-----BEGIN')) {
+        console.error('[firebase-admin] FIREBASE_PRIVATE_KEY does not contain a PEM header after normalization. Check Vercel env vars.');
+        return null;
+    }
+    return key;
 }
 
 // Initialize Firebase Admin SDK for server-side operations
 function initAdmin() {
-    if (getApps().length === 0) {
+    // Already initialized — return existing Firestore instance
+    if (getApps().length > 0) {
         try {
-            let privateKey = process.env.FIREBASE_PRIVATE_KEY;
-
-            if (privateKey) {
-                // Remove wrapping quotes
-                if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
-                    privateKey = privateKey.slice(1, -1);
-                }
-
-                // Replace literal \n with actual newlines
-                privateKey = privateKey.replace(/\\n/g, '\n');
-            }
-
-            if (!privateKey || !process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL) {
-                adminInitError = new Error('Missing FIREBASE_PRIVATE_KEY, FIREBASE_PROJECT_ID, or FIREBASE_CLIENT_EMAIL');
-                return null;
-            }
-
-            initializeApp({
-                credential: cert({
-                    projectId: process.env.FIREBASE_PROJECT_ID,
-                    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-                    privateKey: privateKey,
-                }),
-            });
-
-            console.log('✅ Firebase Admin initialized successfully');
-        } catch (error: unknown) {
-            logError(error, 'Error initializing Firebase Admin');
-            adminInitError = error instanceof Error ? error : new Error('Unknown error initializing Firebase Admin');
+            return getFirestore();
+        } catch {
             return null;
         }
     }
 
-    return getFirestore();
+    const privateKey = normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY);
+    const projectId  = process.env.FIREBASE_PROJECT_ID?.trim();
+    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL?.trim().replace(/^"|"$/g, '');
+
+    if (!privateKey || !projectId || !clientEmail) {
+        const missing = [
+            !projectId    && 'FIREBASE_PROJECT_ID',
+            !clientEmail  && 'FIREBASE_CLIENT_EMAIL',
+            !privateKey   && 'FIREBASE_PRIVATE_KEY',
+        ].filter(Boolean);
+        adminInitError = new Error(`Missing Firebase Admin env vars: ${missing.join(', ')}`);
+        console.error('[firebase-admin]', adminInitError.message);
+        console.error('[firebase-admin] Make sure these are set in Vercel \u2192 Project Settings \u2192 Environment Variables');
+        return null;
+    }
+
+    try {
+        initializeApp({
+            credential: cert({ projectId, clientEmail, privateKey }),
+        });
+        console.log('[firebase-admin] ✅ Firebase Admin initialized successfully');
+        return getFirestore();
+    } catch (error: unknown) {
+        logError(error, 'Error initializing Firebase Admin');
+        adminInitError = error instanceof Error ? error : new Error('Unknown error initializing Firebase Admin');
+        return null;
+    }
 }
 
 export const adminDb = initAdmin();
+
+
 
 // Helper to serialize Firestore data (convert Timestamps to strings)
 const serializeData = (data: any): any => {

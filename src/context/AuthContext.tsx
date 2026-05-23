@@ -123,11 +123,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             try {
               const { supabase } = await import('../config/supabaseClient');
               const userDocRef = doc(db, 'users', firebaseUser.uid);
-              const userDocSnap = await getDoc(userDocRef);
               
               let baseData: any = {};
-              if (userDocSnap.exists()) {
-                baseData = userDocSnap.data();
+              try {
+                const userDocSnap = await getDoc(userDocRef);
+                if (userDocSnap.exists()) {
+                  baseData = userDocSnap.data();
+                }
+              } catch (fsErr) {
+                console.warn('⚠️ [AuthContext] Firestore user fetch failed (offline or quota exceeded):', fsErr);
               }
 
               let truePlan = 'free';

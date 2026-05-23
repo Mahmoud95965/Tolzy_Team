@@ -24,7 +24,10 @@ export async function generateGoogleEmbedding(text) {
             const genAI = new GoogleGenerativeAI(apiKey);
             const model = genAI.getGenerativeModel({ model: "gemini-embedding-2-preview" });
             const cleanText = text.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
-            const result = await model.embedContent(cleanText);
+            const result = await model.embedContent({
+                content: { parts: [{ text: cleanText }] },
+                outputDimensionality: 1024
+            });
             return result.embedding.values;
         } catch (error) {
             if (error.message?.includes("429") && i < maxRetries) {
@@ -57,6 +60,7 @@ export async function batchGenerateGoogleEmbeddings(texts) {
             const result = await model.batchEmbedContents({
                 requests: texts.map((t) => ({
                     content: { role: "user", parts: [{ text: t.replace(/\n/g, " ").trim() }] },
+                    outputDimensionality: 1024
                 })),
             });
 

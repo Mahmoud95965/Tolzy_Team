@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Sparkles, Map, Zap, CheckCircle, ChevronLeft, ChevronRight, Bot } from 'lucide-react';
+// Icons: Material Symbols Outlined
 import { useRouter } from 'next/navigation';
 
 const OnboardingModal = () => {
@@ -56,17 +56,17 @@ const OnboardingModal = () => {
         {
             title: "فهم عميق للسياق",
             desc: "Copilot لا يجيب فقط، بل يفهم ما تحاول بناءه. تحدث معه وكأنه شريكك في المشروع.",
-            icon: <Sparkles size={80} className="text-blue-600" />,
+            icon: <span className="material-symbols-outlined text-[80px] text-blue-600" style={{fontSize:'80px'}}>auto_awesome</span>,
         },
         {
             title: "توجيه ذكي",
             desc: "هل أنت تائه وسط مئات الأدوات؟ نحن نرشدك خطوة بخطوة للأداة التي تناسب ميزانيتك وخبرتك.",
-            icon: <Map size={80} className="text-purple-600" />,
+            icon: <span className="material-symbols-outlined text-[80px] text-purple-600" style={{fontSize:'80px'}}>map</span>,
         },
         {
             title: "أمان وموثوقية",
             desc: "جميع الاقتراحات تأتي من قاعدة بيانات Tolzy الموثقة. لا روابط خارجية مشبوهة أو أدوات وهمية.",
-            icon: <CheckCircle size={80} className="text-green-600" />,
+            icon: <span className="material-symbols-outlined text-[80px] text-green-600" style={{fontSize:'80px'}}>check_circle</span>,
         }
     ];
 
@@ -83,13 +83,13 @@ const OnboardingModal = () => {
                         onClick={handleClose}
                         className="absolute top-8 left-8 p-4 bg-slate-50 hover:bg-slate-100 rounded-full transition-all group z-50 border border-slate-100"
                     >
-                        <X size={24} className="text-slate-400 group-hover:text-slate-800" />
+                        <span className="material-symbols-outlined text-[22px] text-slate-400 group-hover:text-slate-800">close</span>
                     </button>
 
                     <div className="absolute top-8 right-8 z-50 flex items-center gap-3">
                         <span className="font-bold text-lg tracking-wide text-slate-800">Tolzy Copilot</span>
                         <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
-                            <Bot size={24} />
+                            <span className="material-symbols-outlined text-[22px]">smart_toy</span>
                         </div>
                     </div>
 
@@ -112,7 +112,7 @@ const OnboardingModal = () => {
                                         className="mb-8"
                                     >
                                         <div className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-3xl flex items-center justify-center text-white shadow-2xl shadow-indigo-500/30">
-                                            <Bot size={64} />
+                                            <span className="material-symbols-outlined text-[64px] text-white" style={{fontSize:'64px'}}>smart_toy</span>
                                         </div>
                                     </motion.div>
 
@@ -140,7 +140,7 @@ const OnboardingModal = () => {
                                         transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
                                         className="absolute left-[5%] top-[25%] opacity-50"
                                     >
-                                        <Sparkles size={48} className="text-blue-300" />
+                                        <span className="material-symbols-outlined text-[44px] text-blue-300" style={{fontSize:'44px'}}>auto_awesome</span>
                                     </motion.div>
 
                                     <motion.div
@@ -148,7 +148,7 @@ const OnboardingModal = () => {
                                         transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
                                         className="absolute right-[5%] bottom-[30%] opacity-50"
                                     >
-                                        <Zap size={48} className="text-purple-300" />
+                                        <span className="material-symbols-outlined text-[44px] text-purple-300" style={{fontSize:'44px'}}>bolt</span>
                                     </motion.div>
                                 </div>
 
@@ -171,7 +171,7 @@ const OnboardingModal = () => {
                                             className="flex-1 md:flex-none px-10 py-5 bg-slate-900 text-white rounded-2xl font-bold text-lg hover:shadow-2xl hover:scale-105 transition-all flex items-center justify-center gap-2 shadow-xl shadow-slate-200"
                                         >
                                             ابدأ فوراً
-                                            <Zap size={20} className="fill-current" />
+                                            <span className="material-symbols-outlined text-[18px]">bolt</span>
                                         </button>
                                     </div>
                                 </div>
@@ -225,7 +225,7 @@ const OnboardingModal = () => {
                                         onClick={prevStep}
                                         className={`p-4 rounded-full hover:bg-slate-100 transition-colors ${!inTour && 'opacity-0'}`}
                                     >
-                                        <ChevronRight size={32} className="text-slate-400" />
+                                        <span className="material-symbols-outlined text-[30px] text-slate-400">chevron_left</span>
                                     </button>
 
                                     <div className="flex gap-3">
@@ -244,7 +244,7 @@ const OnboardingModal = () => {
                                         onClick={nextStep}
                                         className="p-4 bg-slate-900 text-white rounded-full hover:bg-slate-800 hover:scale-110 transition-all shadow-lg"
                                     >
-                                        {currentStep === tourSteps.length - 1 ? <Zap size={32} /> : <ChevronLeft size={32} />}
+                                        {currentStep === tourSteps.length - 1 ? <span className="material-symbols-outlined text-[30px]">bolt</span> : <span className="material-symbols-outlined text-[30px]">chevron_right</span>}
                                     </button>
                                 </div>
                             </motion.div>

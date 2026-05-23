@@ -73,9 +73,11 @@ const nextConfig: NextConfig = {
         imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     },
 
-    // Optimize production builds
     compiler: {
-        removeConsole: process.env.NODE_ENV === 'production',
+        // Keep console.error in production for Vercel logs — only remove info/log/warn
+        removeConsole: process.env.NODE_ENV === 'production'
+            ? { exclude: ['error'] }
+            : false,
     },
 
     // Headers for SEO and security

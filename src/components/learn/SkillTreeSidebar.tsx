@@ -92,9 +92,9 @@ interface SkillTreeSidebarProps {
 
 const SkillTreeSidebar: React.FC<SkillTreeSidebarProps> = ({ onSelectCategory, selectedCategory }) => {
     return (
-        <div className="w-72 bg-white/50 dark:bg-[#0a0a0a]/60 backdrop-blur-xl border border-gray-200 dark:border-white/5 rounded-3xl p-4 shadow-xl shadow-indigo-500/5 h-[calc(100vh-120px)] overflow-y-auto no-scrollbar">
-            <h2 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-6 px-2 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+        <div className="w-72 bg-[#0f1322]/40 backdrop-blur-xl border border-white/5 rounded-3xl p-4 shadow-2xl h-[calc(100vh-120px)] overflow-y-auto no-scrollbar">
+            <h2 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-6 px-2 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.8)]"></span>
                 مستكشف المسارات
             </h2>
 
@@ -107,7 +107,7 @@ const SkillTreeSidebar: React.FC<SkillTreeSidebarProps> = ({ onSelectCategory, s
                     startOpen={true}
                 />
 
-                <div className="my-4 border-t border-gray-100 dark:border-white/5" />
+                <div className="my-4 border-t border-white/5" />
 
                 {skillTreeData.map(node => (
                     <SkillTreeNode
@@ -133,6 +133,7 @@ const SkillTreeNode: React.FC<{
     const [isOpen, setIsOpen] = useState(startOpen);
     const hasChildren = node.children && node.children.length > 0;
     const isSelected = selectedId === node.id;
+    const isChildSelected = node.children?.some(child => child.id === selectedId);
 
     // Check if any child is selected to auto-expand
     React.useEffect(() => {
@@ -144,7 +145,7 @@ const SkillTreeNode: React.FC<{
     return (
         <div className="select-none">
             <motion.div
-                whileHover={{ x: 4 }}
+                whileHover={{ x: -4 }}
                 onClick={() => {
                     onSelect(node.id);
                     if (hasChildren) {
@@ -154,8 +155,8 @@ const SkillTreeNode: React.FC<{
                 className={`
                     relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200
                     ${isSelected
-                        ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-gray-200'
+                        ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.15)] font-bold'
+                        : 'text-slate-400 hover:bg-white/5 hover:text-slate-200 border border-transparent'
                     }
                 `}
                 style={{ marginRight: level * 16 }}
@@ -164,23 +165,23 @@ const SkillTreeNode: React.FC<{
                 {isSelected && (
                     <motion.div
                         layoutId="activeIndicator"
-                        className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 dark:bg-indigo-400 rounded-l-full"
+                        className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-500 rounded-l-full shadow-[0_0_8px_rgba(99,102,241,0.8)]"
                     />
                 )}
 
                 <div className={`
                     w-8 h-8 rounded-lg flex items-center justify-center transition-colors
-                    ${isSelected ? 'bg-indigo-100 dark:bg-indigo-500/20' : 'bg-gray-100 dark:bg-white/5'}
+                    ${isSelected ? 'bg-indigo-500/20 border border-indigo-500/30' : 'bg-[#0f1322] border border-white/5'}
                 `}>
                     {node.icon}
                 </div>
 
-                <span className={`text-sm font-medium flex-1 ${isSelected ? 'font-bold' : ''}`}>
+                <span className="text-sm font-medium flex-1">
                     {node.label}
                 </span>
 
                 {hasChildren && (
-                    <div className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-90' : 'rotate-0'}`}>
+                    <div className={`text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-90' : 'rotate-0'}`}>
                         <ChevronLeft className="w-4 h-4" />
                     </div>
                 )}
@@ -196,7 +197,21 @@ const SkillTreeNode: React.FC<{
                     >
                         <div className="mt-1 space-y-1 relative pr-4">
                             {/* Connector Line */}
-                            <div className="absolute right-[22px] top-0 bottom-4 w-px bg-gray-200 dark:bg-white/10" />
+                            <div className="absolute right-[22px] top-0 bottom-4 w-px bg-white/5" />
+                            {isChildSelected && (
+                                <motion.div
+                                    initial={{ opacity: 0.5 }}
+                                    animate={{
+                                        opacity: [0.4, 1, 0.4],
+                                    }}
+                                    transition={{
+                                        duration: 2,
+                                        repeat: Infinity,
+                                        ease: "easeInOut"
+                                    }}
+                                    className="absolute right-[22px] top-0 bottom-4 w-px bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)] animate-pulse"
+                                />
+                            )}
 
                             {node.children!.map(child => (
                                 <SkillTreeNode

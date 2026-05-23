@@ -35,21 +35,33 @@ async function getUsernamesByUids(uids: string[]): Promise<Record<string, { user
   if (!adminDb || uids.length === 0) return {};
   const map: Record<string, { username: string; photoURL: string | null; displayName: string }> = {};
   const batchSize = 10;
-  for (let i = 0; i < uids.length; i += batchSize) {
-    const batch = uids.slice(i, i + batchSize);
-    const snap = await adminDb.collection('users').where('__name__', 'in', batch).get();
-    snap.docs.forEach(doc => {
-      const data = doc.data();
-      let username = data.username;
-      if (!username) {
-        const baseName = data.firstName || data.displayName || 'user';
-        username = generateUsername(baseName);
-        doc.ref.update({ username, updatedAt: new Date().toISOString() }).catch(() => {});
-      }
-      map[doc.id] = {
-        username: username.trim().toLowerCase(),
-        photoURL: data.photoURL || null,
-        displayName: data.displayName || data.firstName || data.email?.split('@')[0] || 'مستخدم',
+  try {
+    for (let i = 0; i < uids.length; i += batchSize) {
+      const batch = uids.slice(i, i + batchSize);
+      const snap = await adminDb.collection('users').where('__name__', 'in', batch).get();
+      snap.docs.forEach(doc => {
+        const data = doc.data();
+        let username = data.username;
+        if (!username) {
+          const baseName = data.firstName || data.displayName || 'user';
+          username = generateUsername(baseName);
+          doc.ref.update({ username, updatedAt: new Date().toISOString() }).catch(() => {});
+        }
+        map[doc.id] = {
+          username: username.trim().toLowerCase(),
+          photoURL: data.photoURL || null,
+          displayName: data.displayName || data.firstName || data.email?.split('@')[0] || 'مستخدم',
+        };
+      });
+    }
+  } catch (fsErr) {
+    console.error('⚠️ [Firestore Admin] Failed to fetch usernames by UIDs (using fallback):', fsErr);
+    // Populate the map with graceful default templates so the feed still loads correctly!
+    uids.forEach(uid => {
+      map[uid] = {
+        username: `user_${uid.substring(0, 5)}`,
+        photoURL: null,
+        displayName: 'مستخدم',
       };
     });
   }
@@ -76,7 +88,7 @@ export async function GET(req: NextRequest) {
     else if (sort === 'top') orderCol = 'upvotes_count';
     else if (sort === 'most_remixed') orderCol = 'remixes_count';
 
-    // Build query
+    // Build query — try with preferred sort, fallback to created_at
     let query = supabase
       .from('community_prompts')
       .select('*', { count: 'exact' })
@@ -88,11 +100,32 @@ export async function GET(req: NextRequest) {
     if (authorUid) query = query.eq('author_uid', authorUid);
     if (postType) query = query.eq('post_type', postType);
 
-    const { data: prompts, count, error } = await query;
-    if (error) {
-      console.error('[community/feed] Query error:', error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    let { data: prompts, count, error } = await query;
+
+    // If the preferred sort column doesn't exist, retry with created_at
+    if (error && (error.message?.includes(orderCol) || error.code === '42703')) {
+      console.error(`[community/feed] Sort column '${orderCol}' not found, falling back to created_at`);
+      let fallbackQuery = supabase
+        .from('community_prompts')
+        .select('*', { count: 'exact' })
+        .eq('status', 'published')
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (authorUid) fallbackQuery = fallbackQuery.eq('author_uid', authorUid);
+      if (postType) fallbackQuery = fallbackQuery.eq('post_type', postType);
+
+      const fallback = await fallbackQuery;
+      prompts = fallback.data;
+      count = fallback.count;
+      error = fallback.error;
     }
+
+    if (error) {
+      console.error('[community/feed] Query error:', error.message, '| code:', error.code);
+      return NextResponse.json({ error: error.message, code: error.code }, { status: 500 });
+    }
+
 
     const promptIds = (prompts || []).map((p: any) => p.id);
     let enrichedPrompts = prompts || [];

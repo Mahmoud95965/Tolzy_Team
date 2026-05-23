@@ -20,8 +20,15 @@ if (typeof window !== 'undefined') {
 */
 
 import { initializeApp, FirebaseApp } from 'firebase/app';
-import { Firestore, getFirestore } from 'firebase/firestore';
-import { getAuth, GoogleAuthProvider, Auth, OAuthProvider, GithubAuthProvider } from 'firebase/auth';
+import { 
+  Firestore, 
+  getFirestore, 
+  initializeFirestore, 
+  persistentLocalCache, 
+  persistentMultipleTabManager, 
+  connectFirestoreEmulator 
+} from 'firebase/firestore';
+import { getAuth, GoogleAuthProvider, Auth, OAuthProvider, GithubAuthProvider, connectAuthEmulator } from 'firebase/auth';
 
 // Firebase configuration object
 // Note: In Next.js, we must access process.env.NEXT_PUBLIC_* directly for the bundler to capture it.
@@ -94,13 +101,43 @@ try {
 
   app = initializeApp(firebaseConfig);
 
-  // Initialize Firestore - use standard getFirestore to avoid SDK v11.5.0 issues
-  db = getFirestore(app);
+  // Initialize Firestore with robust local persistent cache (IndexedDB)
+  // This enables offline caching, loads data locally first, and saves Firestore reads / quotas.
+  try {
+    db = initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager()
+      })
+    });
+    console.log('📦 [Firebase Client] Offline persistence enabled successfully');
+  } catch (e: any) {
+    db = getFirestore(app);
+    console.warn('⚠️ [Firebase Client] Reusing existing Firestore instance:', e.message);
+  }
   
   auth = getAuth(app);
   
   // Set auth language to Arabic
   auth.languageCode = 'ar';
+
+  // 🔌 الاتصال بمحاكي Firebase المحلي في بيئة التطوير لتجنب استهلاك الحصص المجانية
+  // يتم الاتصال فقط إذا تم تفعيل المتغير NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true في ملف .env
+  if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true') {
+    try {
+      // استخدام try-catch لمنع التكرار وانهيار التطبيق بسبب الـ Hot-Reloading في Turbopack
+      connectFirestoreEmulator(db, '127.0.0.1', 8080);
+      console.log('🔌 [Firebase Emulator] تم ربط Firestore بنجاح على المنفذ 8080');
+    } catch (e) {
+      console.warn('⚠️ [Firebase Emulator] مستمع Firestore قيد التشغيل بالفعل أو فشل الربط:', e);
+    }
+
+    try {
+      connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+      console.log('🔌 [Firebase Emulator] تم ربط Auth بنجاح على المنفذ 9099');
+    } catch (e) {
+      console.warn('⚠️ [Firebase Emulator] مستمع Auth قيد التشغيل بالفعل أو فشل الربط:', e);
+    }
+  }
   
   googleProvider = new GoogleAuthProvider();
   microsoftProvider = new OAuthProvider('microsoft.com');

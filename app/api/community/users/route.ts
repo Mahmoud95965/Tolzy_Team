@@ -67,18 +67,25 @@ export async function GET(req: NextRequest) {
     const excludeUid = searchParams.get('exclude') || '';
     const limit = Math.min(parseInt(searchParams.get('limit') || '10', 10), 20);
 
+    let docs: any[] = [];
     const usersRef = adminDb.collection('users');
-    let query = usersRef.orderBy('__name__').limit(limit);
+    
+    try {
+      let query = usersRef.orderBy('__name__').limit(limit);
 
-    if (lastDocId) {
-      const lastDoc = await usersRef.doc(lastDocId).get();
-      if (lastDoc.exists) {
-        query = query.startAfter(lastDoc);
+      if (lastDocId) {
+        const lastDoc = await usersRef.doc(lastDocId).get();
+        if (lastDoc.exists) {
+          query = query.startAfter(lastDoc);
+        }
       }
-    }
 
-    const snapshot = await query.get();
-    const docs = snapshot.docs;
+      const snapshot = await query.get();
+      docs = snapshot.docs;
+    } catch (fsErr) {
+      console.error('⚠️ [Firestore Admin] Error paginating users (quota exceeded or offline):', fsErr);
+      return NextResponse.json({ users: [], hasMore: false });
+    }
 
     if (docs.length === 0) {
       return NextResponse.json({ users: [], hasMore: false });
@@ -139,10 +146,14 @@ export async function GET(req: NextRequest) {
     // Check if there are more users
     let hasMore = false;
     if (lastId) {
-      const lastDoc = await usersRef.doc(lastId).get();
-      const nextQuery = usersRef.orderBy('__name__').startAfter(lastDoc).limit(1);
-      const nextSnap = await nextQuery.get();
-      hasMore = !nextSnap.empty;
+      try {
+        const lastDoc = await usersRef.doc(lastId).get();
+        const nextQuery = usersRef.orderBy('__name__').startAfter(lastDoc).limit(1);
+        const nextSnap = await nextQuery.get();
+        hasMore = !nextSnap.empty;
+      } catch (fsErr) {
+        console.warn('⚠️ [Firestore Admin] Error checking hasMore users:', fsErr);
+      }
     }
 
     return NextResponse.json({

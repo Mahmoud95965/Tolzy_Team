@@ -150,43 +150,26 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'يرجى إدخال فكرة واضحة (5 أحرف على الأقل)' }, { status: 400 });
         }
 
-        // --- Rate Limiting: 3 requests/day for free users ---
-        if (userId && adminDb) {
+        if (!userId) {
+            return NextResponse.json({ error: 'يرجى تسجيل الدخول أولاً للتحقق من الصلاحية.' }, { status: 401 });
+        }
+
+        // --- Plan validation: Build with AI is Pro/Ultra only ---
+        if (adminDb) {
             try {
                 const userRef = adminDb.collection('users').doc(userId);
                 const userSnap = await userRef.get();
                 const userData = userSnap.data();
-                const userPlan = userData?.plan || 'free';
+                const userPlan = String(userData?.plan || 'free').toLowerCase();
+                const isPro = userPlan.includes('pro') || userPlan.includes('ultra');
 
-                if (userPlan === 'free') {
-                    const buildCount = userData?.buildWithAICount || 0;
-                    const lastBuildTime = userData?.lastBuildWithAIDate ? userData.lastBuildWithAIDate.toDate() : new Date(0);
-                    const now = new Date();
-                    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-                    const timeSinceLastBuild = now.getTime() - lastBuildTime.getTime();
-
-                    let currentCount = buildCount;
-                    if (timeSinceLastBuild > ONE_DAY_MS) {
-                        currentCount = 0;
-                    }
-
-                    if (currentCount >= 3) {
-                        const hoursRemaining = Math.ceil((ONE_DAY_MS - timeSinceLastBuild) / (60 * 60 * 1000));
-                        return NextResponse.json({
-                            error: `لقد استخدمت 3 طلبات اليوم. سيتم التجديد خلال ${hoursRemaining} ساعة.`,
-                            limitReached: true,
-                            hoursRemaining
-                        }, { status: 429 });
-                    }
-
-                    // Increment counter
-                    await userRef.set({
-                        buildWithAICount: currentCount + 1,
-                        lastBuildWithAIDate: admin.firestore.Timestamp.now()
-                    }, { merge: true });
+                if (!isPro) {
+                    return NextResponse.json({
+                        error: 'عذراً، ميزة البناء بالذكاء الاصطناعي متوفرة فقط لمشتركي باقة Pro. يرجى ترقية حسابك للاستفادة منها.'
+                    }, { status: 403 });
                 }
             } catch (e) {
-                console.error('Build rate limit check error:', e);
+                console.error('Build plan check error:', e);
             }
         }
 

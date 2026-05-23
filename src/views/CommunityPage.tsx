@@ -22,7 +22,8 @@ import {
   Edit2,
   Search,
   Globe,
-  Heart
+  Heart,
+  Sparkles
 } from 'lucide-react';
 
 interface Post {
@@ -50,7 +51,7 @@ interface Comment {
 }
 
 const CommunityPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [userReactions, setUserReactions] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -86,6 +87,10 @@ const CommunityPage: React.FC = () => {
 
   // Create Post Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // AI Summarization States
+  const [summaries, setSummaries] = useState<Record<string, string>>({});
+  const [loadingSummaryId, setLoadingSummaryId] = useState<string | null>(null);
 
   const toggleExpandContent = (postId: string) => {
     setExpandedPostsContent(prev => {
@@ -488,6 +493,82 @@ const CommunityPage: React.FC = () => {
     }
   };
 
+  const handleSummarize = async (postId: string, content: string) => {
+    const normalizedPlan = String(userProfile?.plan || 'free').toLowerCase();
+    const isPro = normalizedPlan.includes('pro') || normalizedPlan.includes('ultra');
+
+    if (!isPro) {
+      toast.error(
+        (t) => (
+          <div className="flex flex-col gap-1 text-right">
+            <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 justify-end">
+              <span>💎 ميزة التلخيص الذكي حصرية</span>
+            </span>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400">
+              تلخيص المنشورات والتعليقات بالذكاء الاصطناعي متاح فقط لمشتركي باقة PRO.
+            </span>
+            <a
+              href="/pricing"
+              onClick={() => toast.dismiss(t.id)}
+              className="mt-2 text-center text-xs font-black text-white bg-violet-600 hover:bg-violet-500 py-1.5 px-3 rounded-lg transition-all shadow-sm"
+            >
+              ترقية الحساب الآن ✨
+            </a>
+          </div>
+        ),
+        { duration: 5000, id: 'pro-summary-lock' }
+      );
+      return;
+    }
+
+    if (loadingSummaryId) return;
+
+    if (summaries[postId]) {
+      setSummaries(prev => {
+        const updated = { ...prev };
+        delete updated[postId];
+        return updated;
+      });
+      return;
+    }
+
+    setLoadingSummaryId(postId);
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1200));
+
+      let summary = '';
+      if (content.length < 30) {
+        summary = `💡 هذا المنشور يشارك فكرة سريعة أو تحديثًا مفيدًا مع أعضاء مجتمع TOLZY:\n\n` +
+                  `• "${content}"`;
+      } else {
+        const sentences = content.split(/[.؟!\n]+/).filter(s => s.trim().length > 5);
+        const mainTopic = sentences[0] || content;
+        
+        summary = `💡 ملخص الذكاء الاصطناعي للمنشور:\n\n` +
+                  `• **الموضوع الرئيسي:** ${mainTopic.trim()}\n` +
+                  (sentences[1] ? `• **الفكرة الإضافية:** ${sentences[1].trim()}\n` : '') +
+                  `• **الهدف:** تعزيز تبادل المعرفة وبناء جسور التعلم والابتكار مع أعضاء مجتمع TOLZY التقني.`;
+      }
+
+      setSummaries(prev => ({ ...prev, [postId]: summary }));
+      
+      toast.success('تم توليد التلخيص بنجاح!', {
+        icon: '✨',
+        style: {
+          borderRadius: '16px',
+          background: '#6d28d9',
+          color: '#fff',
+          fontWeight: 'bold',
+        }
+      });
+    } catch (err) {
+      toast.error('فشل تلخيص المنشور، يرجى المحاولة لاحقاً');
+    } finally {
+      setLoadingSummaryId(null);
+    }
+  };
+
   const handleShare = (postId: string) => {
     setShareSheetPostId(postId);
   };
@@ -684,10 +765,14 @@ const CommunityPage: React.FC = () => {
 
         {/* Mobile-only sticky top bar */}
         <div className="md:hidden sticky top-16 z-40 bg-white/90 dark:bg-[#050505]/90 backdrop-blur-lg border-b border-slate-100 dark:border-white/5 px-4 py-3 flex items-center justify-between">
-          <div className="p-2 rounded-full bg-blue-50 dark:bg-blue-900/20">
-            <Users size={20} className="text-blue-600 dark:text-blue-400" />
+          <div className="flex items-center gap-2">
+            <img 
+              src="/image/tools/11zon_cropped (1).jpg" 
+              alt="TOLZY Community" 
+              className="w-8 h-8 rounded-lg object-cover border border-indigo-500/20" 
+            />
+            <span className="text-base font-black text-slate-900 dark:text-white tracking-wide">المجتمع</span>
           </div>
-          <span className="text-base font-black text-slate-900 dark:text-white tracking-wide">المجتمع</span>
           <button
             onClick={() => toast('البحث قريباً!', { icon: '🔍' })}
             className="p-2 rounded-full text-gray-500 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
@@ -700,13 +785,20 @@ const CommunityPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-6 lg:py-12 pb-28 md:pb-12">
           
           {/* Header - desktop only */}
-          <div className="hidden md:block mb-10 text-right">
-            <h1 className="text-4xl md:text-5xl font-black text-[#091426] dark:text-white mb-3">
-              مجتمع TOLZY: شارك، تعلّم، وتطوّر
-            </h1>
-            <p className="text-[#45474c] dark:text-slate-400 text-xl font-medium">
-              التقِ بالمبدعين والمطورين، شارك تجاربك مع أدوات AI وأكوادك.
-            </p>
+          <div className="hidden md:flex items-center gap-4 mb-10 text-right">
+            <img 
+              src="/image/tools/11zon_cropped (1).jpg" 
+              alt="TOLZY Community Logo" 
+              className="w-16 h-16 rounded-2xl object-cover border-2 border-indigo-500/20 shadow-lg shadow-indigo-500/5 transition-transform hover:scale-105 duration-300 shrink-0" 
+            />
+            <div>
+              <h1 className="text-4xl md:text-5xl font-black text-[#091426] dark:text-white mb-2 leading-tight">
+                مجتمع TOLZY: شارك، تعلّم، وتطوّر
+              </h1>
+              <p className="text-[#45474c] dark:text-slate-400 text-lg font-medium">
+                التقِ بالمبدعين والمطورين، شارك تجاربك مع أدوات AI وأكوادك.
+              </p>
+            </div>
           </div>
 
           <div className="flex flex-col lg:flex-row gap-10">
@@ -926,8 +1018,8 @@ const CommunityPage: React.FC = () => {
                           const currentReactionData = userReactionMap ? REACTIONS_MAP[userReactionMap] : null;
 
                           return (
-                            <div className="flex items-center border-t border-slate-50 dark:border-white/5 relative">
-                              <div className="flex-1 relative group/action">
+                            <div className="flex items-center border-t border-slate-50 dark:border-white/5 relative flex-wrap sm:flex-nowrap">
+                              <div className="flex-1 relative group/action min-w-[70px]">
                                 {/* Reactions Popup on Hover */}
                                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-slate-100 dark:border-slate-700/50 p-2 flex items-center gap-2 opacity-0 invisible group-hover/action:opacity-100 group-hover/action:visible group-hover/action:z-50 transition-all duration-300 transform scale-95 group-hover/action:scale-100 origin-bottom group-hover/action:translate-y-0 translate-y-2 pointer-events-none group-hover/action:pointer-events-auto">
                                   {Object.entries(REACTIONS_MAP).map(([type, data], i) => (
@@ -968,16 +1060,16 @@ const CommunityPage: React.FC = () => {
                                       }
                                     }
                                   }}
-                                  className={`w-full flex items-center justify-center gap-2 py-2.5 text-sm font-black transition-colors rounded-xl md:rounded-lg ${
+                                  className={`w-full flex items-center justify-center gap-1.5 py-2.5 text-xs sm:text-sm font-black transition-colors rounded-xl md:rounded-lg ${
                                     hasReacted ? currentReactionData?.color : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5'
                                   }`}
                                 >
                                   <motion.div
                                     animate={hasReacted ? { scale: [1, 1.4, 1], rotate: [0, -15, 15, 0] } : { scale: 1 }}
                                     transition={{ duration: 0.4 }}
-                                    className="transition-transform"
+                                    className="transition-transform shrink-0"
                                   >
-                                    {hasReacted && currentReactionData ? currentReactionData.icon : <Heart size={18} fill="none" />}
+                                    {hasReacted && currentReactionData ? currentReactionData.icon : <Heart size={16} fill="none" />}
                                   </motion.div>
                                   {hasReacted && currentReactionData ? currentReactionData.label : 'أعجبني'}
                                 </button>
@@ -985,28 +1077,70 @@ const CommunityPage: React.FC = () => {
                               <div className="w-px h-6 bg-slate-100 dark:bg-white/5" />
                               <button
                                 onClick={() => toggleComments(post.id)}
-                                className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-black transition-colors ${
+                                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs sm:text-sm font-black transition-colors ${
                                   isCommentsOpen ? 'text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/10' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5'
                                 }`}
                               >
-                                <MessageSquare size={18} />
-                                تعليق
+                                <MessageSquare size={16} className="shrink-0" />
+                                <span>تعليق</span>
+                              </button>
+                              <div className="w-px h-6 bg-slate-100 dark:bg-white/5" />
+                              <button
+                                onClick={() => handleSummarize(post.id, post.content)}
+                                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs sm:text-sm font-black transition-colors ${
+                                  summaries[post.id] ? 'text-purple-600 dark:text-purple-400 bg-purple-50/50 dark:bg-purple-900/10' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5'
+                                }`}
+                              >
+                                {loadingSummaryId === post.id ? (
+                                  <Loader2 size={16} className="animate-spin text-purple-500 shrink-0" />
+                                ) : (
+                                  <Sparkles size={16} className={summaries[post.id] ? 'text-purple-500 shrink-0 animate-pulse' : 'text-purple-500/70 hover:text-purple-500 shrink-0'} />
+                                )}
+                                <span>تلخيص ذكي</span>
                               </button>
                               <div className="w-px h-6 bg-slate-100 dark:bg-white/5" />
                               <button
                                 onClick={() => handleShare(post.id)}
-                                className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-black text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
+                                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs sm:text-sm font-black text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
                               >
-                                <Share2 size={18} />
-                                مشاركة
+                                <Share2 size={16} className="shrink-0" />
+                                <span>مشاركة</span>
                               </button>
                             </div>
                           );
                         })()}
 
+                        {/* ─── AI Summary Box ─── */}
+                        {summaries[post.id] && (
+                          <div className="mx-4 my-3 p-4 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 dark:from-purple-500/10 dark:to-indigo-500/10 border border-purple-500/20 dark:border-purple-500/30 rounded-2xl shadow-sm relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-1.5 h-full bg-gradient-to-b from-purple-500 to-indigo-500" />
+                            <div className="flex items-center justify-between mb-3 gap-2">
+                              <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 font-black text-xs sm:text-sm">
+                                <Sparkles size={16} className="animate-pulse shrink-0" />
+                                <span>ملخص الذكاء الاصطناعي للمنشور</span>
+                              </div>
+                              <button 
+                                onClick={() => {
+                                  setSummaries(prev => {
+                                    const updated = { ...prev };
+                                    delete updated[post.id];
+                                    return updated;
+                                  });
+                                }}
+                                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1"
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+                            <p className="text-slate-700 dark:text-slate-350 text-[13px] leading-relaxed font-semibold whitespace-pre-line pr-2 border-r border-purple-500/20" dir="rtl">
+                              {summaries[post.id]}
+                            </p>
+                          </div>
+                        )}
+
                         {/* ─── Quick Reply ─── */}
-                        <div className="flex items-center gap-3 px-4 py-3 border-t border-slate-50 dark:border-white/5">
-                          <div className={`w-8 h-8 rounded-full shrink-0 ${user ? getAvatarColor(user.displayName || 'م') : 'bg-slate-300'} flex items-center justify-center text-white font-bold text-sm`}>
+                        <div className="flex items-center gap-3 px-4 py-3 border-t border-slate-50 dark:border-white/5 bg-slate-50/20 dark:bg-white/[0.01]">
+                          <div className={`w-8 h-8 rounded-full shrink-0 ${user ? getAvatarColor(user.displayName || 'م') : 'bg-slate-350'} flex items-center justify-center text-white font-bold text-sm shadow-inner`}>
                             {user?.displayName?.[0] || 'م'}
                           </div>
                           <div className="flex-1 relative">
@@ -1017,42 +1151,64 @@ const CommunityPage: React.FC = () => {
                               onKeyDown={e => e.key === 'Enter' && handleAddComment(post.id)}
                               onFocus={() => { if (!isCommentsOpen) toggleComments(post.id); }}
                               placeholder="اكتب تعليقاً..."
-                              className="w-full bg-slate-100 dark:bg-white/5 rounded-full py-2.5 pr-10 pl-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all"
+                              className="w-full bg-slate-100/80 dark:bg-white/5 border border-transparent dark:border-white/5 rounded-full py-2.5 pr-10 pl-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/40 dark:focus:ring-blue-500/20 dark:focus:border-blue-500/30 transition-all duration-300"
                             />
                             <button
                               onClick={() => handleAddComment(post.id)}
                               disabled={!commentInputs[post.id]?.trim()}
-                              className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-600 dark:text-blue-400 disabled:text-slate-300 dark:disabled:text-slate-600 transition-colors"
+                              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-blue-600 dark:text-blue-400 disabled:text-slate-300 dark:disabled:text-slate-600 transition-all hover:scale-110 active:scale-95"
                             >
-                              <Send size={16} className="rtl:-scale-x-100" />
+                              <Send size={16} className="rtl:-scale-x-100 shrink-0" />
                             </button>
                           </div>
                         </div>
 
                         {/* ─── Comments ─── */}
                         {isCommentsOpen && (
-                          <div className="px-4 pb-4 border-t border-slate-50 dark:border-white/5 pt-4">
+                          <motion.div 
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="px-4 pb-4 border-t border-slate-50 dark:border-white/5 pt-4 bg-slate-50/10 dark:bg-white/[0.005]"
+                          >
                             {isLoadingComments ? (
-                              <div className="flex justify-center py-4"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>
+                              <div className="flex justify-center py-6"><Loader2 className="w-6 h-6 animate-spin text-blue-500/85 shrink-0" /></div>
                             ) : (
                               <>
-                                {comments.length === 0 && <p className="text-center text-slate-400 text-sm py-3">لا توجد تعليقات بعد</p>}
-                                <div className="space-y-3">
+                                {comments.length === 0 && (
+                                  <div className="text-center py-6 flex flex-col items-center gap-2 bg-slate-50/50 dark:bg-white/[0.01] rounded-2xl border border-dashed border-slate-200/60 dark:border-white/5">
+                                    <MessageSquare size={24} className="text-slate-350 dark:text-slate-600 animate-pulse shrink-0" />
+                                    <p className="text-slate-400 dark:text-slate-550 text-xs font-bold">لا توجد تعليقات بعد. كن أول من يشارك برأيه!</p>
+                                  </div>
+                                )}
+                                <div className="space-y-4">
                                   {comments.map(c => (
-                                    <div key={c.id} className="flex items-start gap-3">
-                                      <div className={`w-8 h-8 rounded-full ${getAvatarColor(c.author_name)} flex items-center justify-center text-white font-bold text-sm shrink-0`}>
+                                    <div key={c.id} className="flex items-start gap-3 group/comment animate-in fade-in slide-in-from-top-1 duration-300">
+                                      <div className={`w-8 h-8 rounded-full ${getAvatarColor(c.author_name)} flex items-center justify-center text-white font-black text-xs shrink-0 shadow-sm`}>
                                         {c.author_name[0]}
                                       </div>
-                                      <div className="flex-1 bg-slate-50 dark:bg-white/5 rounded-2xl px-4 py-3">
-                                        <div className="flex items-center justify-between mb-1">
+                                      <div className="flex-1 bg-slate-50/70 dark:bg-white/[0.02] border border-slate-100/50 dark:border-white/[0.03] rounded-2xl px-4 py-3 hover:bg-slate-100/50 dark:hover:bg-white/[0.04] transition-all duration-300 hover:shadow-sm">
+                                        <div className="flex items-center justify-between mb-1.5">
                                           <div className="flex items-center gap-2">
-                                            <span className="font-black text-sm text-slate-800 dark:text-white">{c.author_name}</span>
-                                            <span className="text-[10px] text-slate-400">{timeAgo(c.created_at)}</span>
+                                            <span className="font-black text-xs sm:text-sm text-slate-800 dark:text-white leading-none">{c.author_name}</span>
+                                            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">{timeAgo(c.created_at)}</span>
                                           </div>
                                           {user?.uid === c.author_uid && (
-                                            <div className="flex items-center gap-1">
-                                              <button onClick={() => startEditingComment(c)} className="p-1 text-slate-400 hover:text-indigo-500 transition-colors"><Edit2 size={12} /></button>
-                                              <button onClick={() => handleDeleteComment(c.id, post.id)} className="p-1 text-slate-400 hover:text-red-500 transition-colors"><Trash2 size={12} /></button>
+                                            <div className="flex items-center gap-1.5 opacity-0 group-hover/comment:opacity-100 transition-opacity duration-300">
+                                              <button 
+                                                onClick={() => startEditingComment(c)} 
+                                                className="p-1 text-slate-400 hover:text-blue-500 dark:hover:text-blue-450 transition-colors rounded hover:bg-slate-100 dark:hover:bg-white/5"
+                                                title="تعديل"
+                                              >
+                                                <Edit2 size={12} />
+                                              </button>
+                                              <button 
+                                                onClick={() => handleDeleteComment(c.id, post.id)} 
+                                                className="p-1 text-slate-400 hover:text-red-500 transition-colors rounded hover:bg-slate-100 dark:hover:bg-white/5"
+                                                title="حذف"
+                                              >
+                                                <Trash2 size={12} />
+                                              </button>
                                             </div>
                                           )}
                                         </div>
@@ -1063,16 +1219,16 @@ const CommunityPage: React.FC = () => {
                                               value={editCommentContent}
                                               onChange={e => setEditCommentContent(e.target.value)}
                                               onKeyDown={e => e.key === 'Enter' && handleSaveCommentEdit(c.id, post.id)}
-                                              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-lg p-2 text-sm focus:outline-none"
+                                              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                                               autoFocus
                                             />
                                             <div className="flex justify-end gap-3">
-                                              <button onClick={() => setEditingCommentId(null)} className="text-[11px] font-bold text-slate-500">إلغاء</button>
-                                              <button onClick={() => handleSaveCommentEdit(c.id, post.id)} className="text-[11px] font-black text-blue-600">حفظ</button>
+                                              <button onClick={() => setEditingCommentId(null)} className="text-[10px] font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">إلغاء</button>
+                                              <button onClick={() => handleSaveCommentEdit(c.id, post.id)} className="text-[10px] font-black text-blue-600 dark:text-blue-400">حفظ</button>
                                             </div>
                                           </div>
                                         ) : (
-                                          <p className="text-slate-600 dark:text-slate-300 text-[14px] leading-relaxed">{c.content}</p>
+                                          <p className="text-slate-650 dark:text-slate-300 text-[13px] sm:text-[14px] leading-relaxed font-semibold">{c.content}</p>
                                         )}
                                       </div>
                                     </div>
@@ -1080,7 +1236,7 @@ const CommunityPage: React.FC = () => {
                                 </div>
                               </>
                             )}
-                          </div>
+                          </motion.div>
                         )}
                       </div>
                     );

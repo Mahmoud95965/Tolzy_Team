@@ -5,7 +5,9 @@ export interface FilterOptions {
   category: import('./tool').ToolCategory | 'All';
   pricing: import('./tool').ToolPricing | 'All';
   searchQuery?: string;
+  isAiSearch?: boolean;
 }
+
 
 
 

@@ -61,3 +61,7 @@ vite.config.ts.timestamp-*
 # Database settings
 *.sql
 secure_firebase_rules.md
+
+# Local Scratch Directory
+scratch/
+

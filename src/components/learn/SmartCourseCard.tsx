@@ -52,11 +52,11 @@ const SmartCourseCard: React.FC<SmartCourseCardProps> = ({ course, onClick, feat
         >
             <div
                 style={{ transform: "translateZ(10px)", transformStyle: "preserve-3d" }}
-                className={`h-full bg-white dark:bg-slate-900 rounded-[1.5rem] overflow-hidden border border-slate-200 dark:border-slate-800 transition-all duration-300 hover:border-indigo-500/30 dark:hover:border-indigo-500/30 group-hover:shadow-2xl group-hover:shadow-indigo-500/10 ${featured ? 'flex flex-col md:flex-row' : 'flex flex-col'}`}
+                className={`h-full bg-[#0f1322]/40 backdrop-blur-xl rounded-[1.5rem] overflow-hidden border border-white/5 transition-all duration-300 hover:border-emerald-500/30 group-hover:shadow-[0_0_30px_rgba(16,185,129,0.08)] ${featured ? 'flex flex-col md:flex-row' : 'flex flex-col'}`}
             >
                 {/* Thumbnail */}
                 <div className={`relative overflow-hidden ${featured ? 'md:w-3/5 h-64 md:h-auto' : 'h-40 md:h-48'}`}>
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent z-10 opacity-60" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#090a0f] via-transparent to-transparent z-10 opacity-80" />
                     <Image
                         src={course.thumbnail || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?q=80&w=2070&auto=format&fit=crop'}
                         alt={course.title}
@@ -68,13 +68,13 @@ const SmartCourseCard: React.FC<SmartCourseCardProps> = ({ course, onClick, feat
                     {/* Floating Badges */}
                     <div className="absolute top-3 right-3 z-20 flex flex-wrap gap-2 justify-end max-w-[80%]">
                         {course.sourceUrl ? (
-                            <span className="px-2 py-0.5 md:px-2.5 md:py-1 bg-white/90 backdrop-blur-md rounded-full text-[9px] md:text-[10px] font-bold text-slate-900 flex items-center gap-1 shadow-md">
-                                <Globe className="w-2.5 h-2.5 md:w-3 md:h-3 text-blue-500" />
+                            <span className="px-2.5 py-1 bg-[#090a0f]/60 backdrop-blur-md rounded-full text-[9px] md:text-[10px] font-bold text-blue-400 border border-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.1)] flex items-center gap-1">
+                                <Globe className="w-3 h-3 text-blue-400" />
                                 {course.platform || 'خارجي'}
                             </span>
                         ) : (
-                            <span className="px-2 py-0.5 md:px-2.5 md:py-1 bg-indigo-600/90 backdrop-blur-md rounded-full text-[9px] md:text-[10px] font-bold text-white flex items-center gap-1 shadow-md">
-                                <MonitorPlay className="w-2.5 h-2.5 md:w-3 md:h-3" />
+                            <span className="px-2.5 py-1 bg-purple-500/10 backdrop-blur-md rounded-full text-[9px] md:text-[10px] font-bold text-purple-400 border border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.15)] flex items-center gap-1">
+                                <MonitorPlay className="w-3 h-3 text-purple-400" />
                                 حصري
                             </span>
                         )}
@@ -82,11 +82,11 @@ const SmartCourseCard: React.FC<SmartCourseCardProps> = ({ course, onClick, feat
 
                     {/* Price Tag */}
                     <div className="absolute top-3 left-3 z-20 text-right">
-                        <span className={`px-2 py-0.5 md:px-2.5 md:py-1 backdrop-blur-md rounded-full text-[9px] md:text-[10px] font-bold shadow-md ${course.price === 'free'
-                            ? 'bg-emerald-500/90 text-white'
-                            : 'bg-white/90 text-slate-900'
+                        <span className={`px-2.5 py-1 backdrop-blur-md rounded-full text-[9px] md:text-[10px] font-bold border ${course.price === 'free'
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
+                            : 'bg-purple-500/10 text-purple-400 border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.15)]'
                             }`}>
-                            {course.price === 'free' ? 'مجاني' : 'مدفوع'}
+                            {course.price === 'free' ? 'مجاني' : 'حصري'}
                         </span>
                     </div>
                 </div>
@@ -94,45 +94,45 @@ const SmartCourseCard: React.FC<SmartCourseCardProps> = ({ course, onClick, feat
                 {/* Content */}
                 <div className={`p-4 md:p-5 flex flex-col ${featured ? 'md:w-2/5 justify-between' : 'flex-1'}`}>
                     <div>
-                        <div className="flex items-center gap-3 text-[10px] md:text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 md:mb-2 text-right">
+                        <div className="flex items-center gap-3 text-[10px] md:text-xs font-semibold text-slate-400 mb-1.5 md:mb-2 text-right justify-end w-full">
                             <span className="flex items-center gap-1">
-                                <Users className="w-3 md:w-3.5 h-3 md:h-3.5" />
+                                <Users className="w-3 md:w-3.5 h-3 md:h-3.5 text-slate-400" />
                                 {course.studentsCount ? course.studentsCount.toLocaleString() : '0'}
                             </span>
-                            <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700" />
-                            <span className="flex items-center gap-1 text-amber-500">
-                                <Star className="w-3 md:w-3.5 h-3 md:h-3.5 fill-current" />
+                            <span className="w-1 h-1 rounded-full bg-slate-800" />
+                            <span className="flex items-center gap-1 text-amber-400 font-bold">
+                                <Star className="w-3 md:w-3.5 h-3 md:h-3.5 fill-current text-amber-400" />
                                 {course.rating || 5.0}
                             </span>
                         </div>
 
-                        <h3 className={`font-bold text-slate-900 dark:text-white leading-tight mb-1.5 md:mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors text-right ${featured ? 'text-xl md:text-2xl lg:text-3xl' : 'text-base md:text-lg line-clamp-2'}`}>
+                        <h3 className={`font-black text-white leading-tight mb-1.5 md:mb-2 group-hover:text-emerald-400 transition-colors text-right ${featured ? 'text-xl md:text-2xl lg:text-3xl' : 'text-base md:text-lg line-clamp-2'}`}>
                             {course.title}
                         </h3>
 
-                        <p className={`text-slate-500 dark:text-slate-400 text-xs md:text-sm leading-relaxed mb-3 md:mb-4 text-right ${featured ? 'line-clamp-4' : 'line-clamp-2'}`}>
+                        <p className={`text-slate-400 text-xs md:text-sm leading-relaxed mb-3 md:mb-4 text-right ${featured ? 'line-clamp-4' : 'line-clamp-2'}`}>
                             {course.description}
                         </p>
                     </div>
 
                     <div className="mt-auto">
-                        <div className="flex items-center justify-between pt-3 md:pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center justify-between pt-3 md:pt-4 border-t border-white/5">
                             <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-[#0f1322] flex items-center justify-center text-[10px] font-bold text-slate-300 border border-white/5">
                                     {(course.instructor?.[0] || 'T').toUpperCase()}
                                 </div>
                                 <div className="flex flex-col text-right">
-                                    <span className="text-[10px] md:text-xs font-bold text-slate-900 dark:text-slate-200">
+                                    <span className="text-[10px] md:text-xs font-bold text-white">
                                         {course.instructor || 'Tolzy Team'}
                                     </span>
-                                    <span className="text-[9px] md:text-[10px] text-slate-500 dark:text-slate-400">
-                                        {course.level || 'مبتدئ'}
+                                    <span className="text-[9px] md:text-[10px] text-slate-400">
+                                        {course.level === 'beginner' ? 'مبتدئ' : course.level === 'intermediate' ? 'متوسط' : 'متقدم'}
                                     </span>
                                 </div>
                             </div>
 
-                            <button className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transform translate-y-0 md:translate-y-2 md:group-hover:translate-y-0 transition-all duration-300 shadow-lg">
-                                <ArrowUpRight className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                            <button className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-emerald-500 text-[#090a0f] flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transform translate-y-0 md:translate-y-2 md:group-hover:translate-y-0 transition-all duration-300 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                                <ArrowUpRight className="w-3.5 h-3.5 md:w-4 md:h-4 stroke-[3px]" />
                             </button>
                         </div>
                     </div>

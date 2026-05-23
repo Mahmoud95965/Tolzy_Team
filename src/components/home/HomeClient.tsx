@@ -65,10 +65,7 @@ export default function HomeClient() {
             {/* What is Tolzy - Feature explanation section */}
             <WhatIsTolzy />
 
-            {/* Below-the-fold content - Lazy Loaded */}
-            <LogoMarquee />
-
-            {/* News Panel — between logo marquee and bento */}
+            {/* News Panel — below the Bento Grid */}
             <div className="max-w-2xl mx-auto px-4 py-6">
                 <NewsPanelSection />
             </div>
