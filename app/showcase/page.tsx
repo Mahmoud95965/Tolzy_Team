@@ -28,7 +28,7 @@ export default function ShowcasePage() {
   // Stats for the showcase card
   const stats = [
     { label: 'أدوات ذكية', value: '+630', icon: Cpu },
-    { label: 'مستخدم نشط', value: '+350k', icon: Compass },
+    { label: 'مستخدم مسجل', value: '+2500', icon: Compass },
     { label: 'دقة عالية', value: '100%', icon: Activity },
   ];
 

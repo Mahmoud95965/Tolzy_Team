@@ -158,29 +158,34 @@ function BuildWithAIEmulator() {
   const [completedTasks, setCompletedTasks] = useState<boolean[]>([false, false, false]);
 
   const phases = [
-    { title: '💡 تحليل الفكرة وصياغة الهيكل...', code: [] },
+    { title: '💡 تحليل الفكرة وتحديد أبعاد المشروع...', code: [] },
     { 
-      title: '⚙️ إنشاء نموذج البيانات والمخزن التفاعلي...', 
+      title: '⚙️ استخلاص واقتراح التقنيات المناسبة...', 
       code: [
-        'const [tasks, setTasks] = useState([]);',
-        'const addTask = (text) => {',
-        '  setTasks([...tasks, { text, done: false }]);',
-        '};'
+        '// خطة المشروع التقنية (Project Plan)',
+        '{',
+        '  "name": "تطبيق المهام الذكي",',
+        '  "technologies": ["React", "Firebase"],',
+        '  "estimatedTime": "12 ساعة"',
+        '}'
       ] 
     },
     { 
-      title: '🎨 تركيب التنسيقات بـ Tailwind CSS المظلم...', 
+      title: '📋 توليد البرومبتات وهندسة الأوامر الجاهزة...', 
       code: [
-        'const [tasks, setTasks] = useState([]);',
-        'const addTask = (text) => {',
-        '  setTasks([...tasks, { text, done: false }]);',
-        '};',
-        '<div className="bg-slate-900 border border-white/5 rounded-xl">',
-        '  {tasks.map(t => <TaskItem task={t} />)}',
-        '</div>'
+        '// خطة المشروع التقنية (Project Plan)',
+        '{',
+        '  "name": "تطبيق المهام الذكي",',
+        '  "technologies": ["React", "Firebase"],',
+        '  "estimatedTime": "12 ساعة",',
+        '  "prompts": [',
+        '    "اكتب دالة لتصفية المهام...",',
+        '    "صمم قاعدة بيانات Firebase..."',
+        '  ]',
+        '}'
       ] 
     },
-    { title: '✨ تمت البرمجة ومتاح للمعاينة الفورية!', code: [] }
+    { title: '✨ اكتملت خطة البناء الفنية بالكامل!', code: [] }
   ];
 
   useEffect(() => {
@@ -221,20 +226,20 @@ function BuildWithAIEmulator() {
         </div>
         
         <div className="mt-4 flex-grow space-y-1 overflow-y-auto max-h-[140px] pr-2">
-          <div className="text-slate-500">// TaskManager.tsx</div>
+          <div className="text-slate-500">// ProjectPlan.json</div>
           {codeLines.map((line, i) => (
             <motion.div 
               key={i} 
               initial={{ opacity: 0, x: -10 }} 
               animate={{ opacity: 1, x: 0 }} 
               transition={{ duration: 0.3 }}
-              className={line.startsWith('<') ? 'text-indigo-400 pl-2' : 'text-emerald-400 pl-4'}
+              className={line.startsWith(' ') ? 'text-emerald-400 pl-4' : 'text-indigo-400 pl-2'}
             >
               {line}
             </motion.div>
           ))}
           {phase === 0 && (
-            <div className="text-slate-500 animate-pulse pl-4">جاري توليد الكود برمجياً...</div>
+            <div className="text-slate-500 animate-pulse pl-4">جاري توليد خطة العمل التقنية...</div>
           )}
         </div>
 
@@ -242,7 +247,7 @@ function BuildWithAIEmulator() {
           isDarkMode ? 'border-white/5' : 'border-slate-800'
         }`}>
           <span className="text-indigo-400 font-bold flex items-center gap-1">
-            <Code className="w-3.5 h-3.5" /> TypeScript + React
+            <Code className="w-3.5 h-3.5" /> JSON + Tech Plan
           </span>
           <span className="text-slate-500 font-sans">تم التوليد بذكاء</span>
         </div>
@@ -265,14 +270,14 @@ function BuildWithAIEmulator() {
             }`}>
               معاينة حية
             </span>
-            <span className={`text-xs font-sans ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>قائمة المهام الذكية</span>
+            <span className={`text-xs font-sans ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>خطة البناء المقترحة</span>
           </div>
 
           <div className="space-y-2.5">
             {[
-              { label: '1. تصميم واجهات التطبيق الرشيقة 🎨', checked: completedTasks[0] },
-              { label: '2. إعداد قواعد بيانات Supabase 🗄️', checked: completedTasks[1] },
-              { label: '3. ربط وتدريب ملقنات AI المعقدة 🤖', checked: completedTasks[2] }
+              { label: '1. صياغة الهيكل المعماري والتقنيات 🏗️', checked: completedTasks[0] },
+              { label: '2. توليد البرومبتات والأوامر الملقنة 📋', checked: completedTasks[1] },
+              { label: '3. تحديد أوقات التنفيذ والمهام المقدرة ⏱️', checked: completedTasks[2] }
             ].map((task, i) => (
               <div key={i} className={`flex items-center justify-between p-2 rounded-xl border transition-all duration-300 ${
                 isDarkMode 
@@ -406,12 +411,12 @@ export default function WhatIsTolzy() {
                   </div>
                   <div className="text-right">
                     <h3 className={`text-xl font-bold transition-colors duration-500 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>ميزة ابنِ بالذكاء الاصطناعي (Build with AI)</h3>
-                    <p className={`text-xs mt-0.5 transition-colors duration-500 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>تطوير فوري للمواقع وتوليد الأكواد بالتفاعلات الذكية</p>
+                    <p className={`text-xs mt-0.5 transition-colors duration-500 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>توليد خطط البناء والمواصفات والأوامر لمشروعك</p>
                   </div>
                 </div>
 
                 <p className={`text-sm leading-relaxed mb-6 text-right transition-colors duration-500 ${isDarkMode ? 'text-slate-300' : 'text-slate-650'}`}>
-                  محرك محاكاة فائق القوة يتيح للمطورين وأصحاب الأفكار كتابة متطلباتهم باللغة العربية البسيطة، ليقوم المساعد ببرمجة الواجهات، توليد الهيكل البرمجي بالكامل، وربطه بالقواعد في ثوانٍ معدودة.
+                  مساعد فني مبتكر يتيح لك طرح فكرة تطبيقك أو موقعك، ليقوم تلقائياً بتحليل الفكرة وصياغة خطة عمل برمجية شاملة وهيكلية؛ توضح التقنيات المستخدمة والبرومبتات الدقيقة المطلوبة والوقت التقريبي المتوقع، لمساعدتك في التخطيط والهندسة دون بناء الكود الفعلي.
                 </p>
               </div>
 
@@ -455,8 +460,8 @@ export default function WhatIsTolzy() {
                 </div>
 
                 <div className={`border-t pt-4 transition-colors duration-300 ${isDarkMode ? 'border-white/5' : 'border-slate-150'}`}>
-                  <span className={`text-xs block mb-1 transition-colors duration-305 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>مطور في المجتمع العربي</span>
-                  <LiveCounter target={350000} suffix="+" />
+                  <span className={`text-xs block mb-1 transition-colors duration-305 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>مستخدم مسجل في المنصة</span>
+                  <LiveCounter target={2500} suffix="+" />
                 </div>
               </div>
             </TiltCard>
@@ -537,30 +542,15 @@ export default function WhatIsTolzy() {
                   }`}>
                     <BookOpen className="w-4 h-4" />
                   </div>
-                  <span className="text-[10px] text-purple-500 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-md font-semibold">دورة حصرية</span>
+                  <span className="text-[10px] text-purple-500 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-md font-semibold">تعلم مجاني</span>
                 </div>
 
                 <h3 className={`text-lg font-bold text-right mb-2 transition-colors duration-500 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>هندسة الأوامر (Prompt Engineering) للمحترفين</h3>
-                <p className={`text-xs text-right mb-5 transition-colors duration-500 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>كورسات تولزي التعليمية المتقدمة</p>
+                <p className={`text-xs text-right mb-4 transition-colors duration-500 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>كورسات تولزي التعليمية الشاملة</p>
 
-                {/* Progress bar mock */}
-                <div className="space-y-2 mb-6" dir="rtl">
-                  <div className={`flex items-center justify-between text-xs transition-colors duration-300 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                    <span>نسبة الاكتمال والشروحات</span>
-                    <span className="font-mono text-purple-500 font-bold">85%</span>
-                  </div>
-                  <div className={`w-full h-1.5 rounded-full overflow-hidden border transition-all duration-300 ${
-                    isDarkMode ? 'bg-slate-900 border-white/5' : 'bg-slate-200 border-slate-300/40'
-                  }`}>
-                    <motion.div 
-                      className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"
-                      initial={{ width: 0 }}
-                      whileInView={{ width: '85%' }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 1.5, delay: 0.2 }}
-                    />
-                  </div>
-                </div>
+                <p className={`text-xs leading-relaxed text-right mb-6 transition-colors duration-500 ${isDarkMode ? 'text-slate-350' : 'text-slate-650'}`}>
+                  اكتشف وتعلّم كيفية كتابة وصياغة الأوامر البرمجية بدقة للتعامل مع النماذج اللغوية الكبيرة واستخراج أفضل النتائج وأعلى درجات الدقة منها مجاناً بالكامل.
+                </p>
               </div>
 
               {/* Course Meta Info */}
