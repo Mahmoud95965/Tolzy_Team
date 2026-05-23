@@ -1248,7 +1248,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                     </div>
                 )}
 
-                <div className="flex flex-col sm:flex-row items-end gap-2.5 sm:gap-3 px-4 py-2.5 rounded-[28px] bg-blue-50/60 dark:bg-blue-950/20 backdrop-blur-xl border border-blue-200/60 dark:border-blue-500/20 focus-within:bg-blue-50/90 dark:focus-within:bg-[#0c1222]/90 focus-within:border-blue-400 dark:focus-within:border-blue-500/40 shadow-[0_0_20px_rgba(59,130,246,0.15)] dark:shadow-[0_0_25px_rgba(59,130,246,0.22)] focus-within:shadow-[0_0_35px_rgba(59,130,246,0.35)] dark:focus-within:shadow-[0_0_40px_rgba(59,130,246,0.45)] transition-all duration-200" dir="rtl">
+                <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2 rounded-full bg-white dark:bg-[#131314]/90 backdrop-blur-xl border border-slate-200 dark:border-white/[0.08] focus-within:border-blue-400 dark:focus-within:border-blue-500/40 shadow-md dark:shadow-none transition-all duration-200" dir="rtl">
                     
                     {/* Leading Actions (Attach Plus Button) */}
                     <div className="flex-shrink-0 mb-0.5">
@@ -1326,105 +1326,148 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                     </div>
 
                     {/* Trailing Actions */}
-                    <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 mb-0.5 relative">
+                    <div className="flex items-center gap-1.5 flex-shrink-0 mb-0.5 relative">
                         
-                        {/* Model Switcher / Mode Picker Pill */}
-                        <div className="relative">
-                            <button
-                                onClick={() => setIsModeDropdownOpen(!isModeDropdownOpen)}
-                                type="button"
-                                className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-200/50 hover:bg-slate-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-slate-300/30 dark:border-white/[0.05] transition-all duration-200 active:scale-95 cursor-pointer select-none"
-                            >
-                                <span>{MODES.find(m => m.id === mode)?.label || 'عام'}</span>
-                                <span className="material-symbols-outlined text-[14px] sm:text-[16px] transition-transform duration-200" style={{ transform: isModeDropdownOpen ? 'rotate(180deg)' : 'none' }}>
-                                    keyboard_arrow_down
-                                </span>
-                            </button>
-
-                            {/* Mode Dropdown Popover */}
-                            <AnimatePresence>
-                                {isModeDropdownOpen && (
-                                    <motion.div
-                                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                                        className="absolute bottom-full left-0 mb-3 w-44 bg-white dark:bg-[#131314] border border-slate-200 dark:border-white/[0.08] rounded-2xl shadow-2xl p-1.5 z-50 overflow-hidden"
+                        {/* MOBILE CONTROLS (lg:hidden) */}
+                        <div className="flex items-center gap-2 lg:hidden">
+                            {input.trim() === '' ? (
+                                <div className="flex items-center gap-1 p-1 rounded-full bg-blue-50/80 dark:bg-blue-900/10 border border-blue-100/50 dark:border-blue-500/10">
+                                    {hasSupport && (
+                                        <button
+                                            onClick={toggleListening}
+                                            type="button"
+                                            title="الميكروفون"
+                                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                                                isListening
+                                                    ? 'text-red-500 bg-red-500/10 animate-pulse'
+                                                    : 'text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/10'
+                                            }`}
+                                        >
+                                            <span className="material-symbols-outlined text-[18px]">mic</span>
+                                        </button>
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={() => toast('قريباً: إدخال المحادثات الصوتية الحية! 🎙️', { icon: '✨' })}
+                                        className="w-8 h-8 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/10"
+                                        title="التحليل الصوتي"
                                     >
-                                        <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-white/[0.04] mb-1">
-                                            <span className="text-[10px] font-bold text-slate-400 block text-right">وضع المحادثة</span>
-                                        </div>
-                                        <div className="space-y-0.5">
-                                            {MODES.map((m) => (
-                                                <button
-                                                    key={m.id}
-                                                    onClick={() => {
-                                                        setMode(m.id as CopilotMode);
-                                                        setIsModeDropdownOpen(false);
-                                                        textareaRef.current?.focus();
-                                                    }}
-                                                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-right text-xs transition-all ${
-                                                        mode === m.id
-                                                            ? 'bg-blue-500/10 text-blue-500 font-bold dark:bg-blue-500/20'
-                                                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04]'
-                                                    }`}
-                                                >
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-slate-400 dark:text-slate-500 flex items-center">{m.icon}</span>
-                                                        <span>{m.label}</span>
-                                                    </div>
-                                                    {mode === m.id && (
-                                                        <span className="material-symbols-outlined text-[14px] text-blue-500">check</span>
-                                                    )}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+                                        <span className="material-symbols-outlined text-[18px]">graphic_eq</span>
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => handleSendMessage()}
+                                    disabled={isLoading}
+                                    type="button"
+                                    title="إرسال رسالة"
+                                    className="w-9 h-9 rounded-full flex items-center justify-center bg-blue-500 text-white hover:bg-blue-600 shadow-md active:scale-95 transition-all"
+                                >
+                                    <span className="material-symbols-outlined text-[18px] font-bold">arrow_upward</span>
+                                </button>
+                            )}
                         </div>
 
-                        {/* Mic Button */}
-                        {hasSupport && (
+                        {/* DESKTOP CONTROLS (hidden lg:flex) */}
+                        <div className="hidden lg:flex items-center gap-2">
+                            {/* Model Switcher / Mode Picker Pill */}
+                            <div className="relative">
+                                <button
+                                    onClick={() => setIsModeDropdownOpen(!isModeDropdownOpen)}
+                                    type="button"
+                                    className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-200/50 hover:bg-slate-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-slate-300/30 dark:border-white/[0.05] transition-all duration-200 active:scale-95 cursor-pointer select-none"
+                                >
+                                    <span>{MODES.find(m => m.id === mode)?.label || 'عام'}</span>
+                                    <span className="material-symbols-outlined text-[14px] sm:text-[16px] transition-transform duration-200" style={{ transform: isModeDropdownOpen ? 'rotate(180deg)' : 'none' }}>
+                                        keyboard_arrow_down
+                                    </span>
+                                </button>
+
+                                {/* Mode Dropdown Popover */}
+                                <AnimatePresence>
+                                    {isModeDropdownOpen && (
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                            className="absolute bottom-full left-0 mb-3 w-44 bg-white dark:bg-[#131314] border border-slate-200 dark:border-white/[0.08] rounded-2xl shadow-2xl p-1.5 z-50 overflow-hidden"
+                                        >
+                                            <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-white/[0.04] mb-1">
+                                                <span className="text-[10px] font-bold text-slate-400 block text-right">وضع المحادثة</span>
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                {MODES.map((m) => (
+                                                    <button
+                                                        key={m.id}
+                                                        onClick={() => {
+                                                            setMode(m.id as CopilotMode);
+                                                            setIsModeDropdownOpen(false);
+                                                            textareaRef.current?.focus();
+                                                        }}
+                                                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-right text-xs transition-all ${
+                                                            mode === m.id
+                                                                ? 'bg-blue-500/10 text-blue-500 font-bold dark:bg-blue-500/20'
+                                                                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04]'
+                                                        }`}
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-slate-400 dark:text-slate-500 flex items-center">{m.icon}</span>
+                                                            <span>{m.label}</span>
+                                                        </div>
+                                                        {mode === m.id && (
+                                                            <span className="material-symbols-outlined text-[14px] text-blue-500">check</span>
+                                                        )}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+
+                            {/* Mic Button */}
+                            {hasSupport && (
+                                <button
+                                    onClick={toggleListening}
+                                    type="button"
+                                    title={isListening ? 'إيقاف التسجيل' : 'الميكروفون'}
+                                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-200 ${
+                                        isListening
+                                            ? 'text-red-500 bg-red-500/10 border border-red-500/20 animate-pulse'
+                                            : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-white/[0.06] border border-transparent'
+                                    }`}
+                                >
+                                    <span className="material-symbols-outlined text-[18px] sm:text-[20px]">mic</span>
+                                </button>
+                            )}
+
+                            {/* Close / Collapse Button */}
+                            {!isCentered && (
+                                <button
+                                    onClick={() => setIsInputExpanded(false)}
+                                    type="button"
+                                    title="إغلاق شريط الكتابة"
+                                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400 hover:bg-red-500/10 dark:hover:bg-red-500/10 transition-all duration-200 active:scale-95 cursor-pointer"
+                                >
+                                    <span className="material-symbols-outlined text-[20px]">close</span>
+                                </button>
+                            )}
+
+                            {/* Send / Upward Arrow Button */}
                             <button
-                                onClick={toggleListening}
+                                onClick={() => input.trim() && handleSendMessage()}
+                                disabled={isLoading || !input.trim()}
                                 type="button"
-                                title={isListening ? 'إيقاف التسجيل' : 'الميكروفون'}
+                                title="إرسال رسالة"
                                 className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-200 ${
-                                    isListening
-                                        ? 'text-red-500 bg-red-500/10 border border-red-500/20 animate-pulse'
-                                        : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-white/[0.06] border border-transparent'
+                                    input.trim()
+                                        ? 'bg-blue-500 text-white hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-500/20 active:scale-95'
+                                        : 'bg-transparent text-slate-300 dark:text-slate-650 cursor-not-allowed'
                                 }`}
                             >
-                                <span className="material-symbols-outlined text-[18px] sm:text-[20px]">mic</span>
+                                <span className="material-symbols-outlined text-[20px] sm:text-[22px] font-bold">arrow_upward</span>
                             </button>
-                        )}
-
-                        {/* Close / Collapse Button */}
-                        {!isCentered && (
-                            <button
-                                onClick={() => setIsInputExpanded(false)}
-                                type="button"
-                                title="إغلاق شريط الكتابة"
-                                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400 hover:bg-red-500/10 dark:hover:bg-red-500/10 transition-all duration-200 active:scale-95 cursor-pointer"
-                            >
-                                <span className="material-symbols-outlined text-[20px]">close</span>
-                            </button>
-                        )}
-
-                        {/* Send / Upward Arrow Button */}
-                        <button
-                            onClick={() => input.trim() && handleSendMessage()}
-                            disabled={isLoading || !input.trim()}
-                            type="button"
-                            title="إرسال رسالة"
-                            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-200 ${
-                                input.trim()
-                                    ? 'bg-blue-500 text-white hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-500/20 active:scale-95'
-                                    : 'bg-transparent text-slate-300 dark:text-slate-650 cursor-not-allowed'
-                            }`}
-                        >
-                            <span className="material-symbols-outlined text-[20px] sm:text-[22px] font-bold">arrow_upward</span>
-                        </button>
+                        </div>
 
                     </div>
 
@@ -1966,64 +2009,93 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                 {/* ── Main Chat Screen Area ── */}
                 <main className={`flex-1 flex flex-col relative h-full w-full overflow-hidden transition-all duration-300 lg:pr-16 ${isSidebarOpen ? 'lg:pr-[344px]' : ''}`}>
                     
-                    {/* Floating Brand Logo Button (Opens sidebar archive) */}
+                    {/* Mobile Gemini-Style Header */}
+                    <div className="flex lg:hidden items-center justify-between h-14 w-full border-b border-slate-200/40 dark:border-white/[0.05] px-4 relative z-40 bg-[#FDFDFD]/80 dark:bg-[#050505]/80 backdrop-blur-md">
+                        {/* Hamburger menu button on Left */}
+                        <button
+                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                            className="w-10 h-10 flex items-center justify-center text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-white/5 active:scale-95 transition-all rounded-full"
+                            title={isSidebarOpen ? "إغلاق القائمة" : "فتح القائمة الجانبية"}
+                        >
+                            <svg className="w-6 h-6 text-slate-800 dark:text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h16M4 16h16" />
+                            </svg>
+                        </button>
+
+                        {/* Model/Mode Selector in Center */}
+                        <div className="relative">
+                            <button
+                                onClick={() => setIsModeDropdownOpen(!isModeDropdownOpen)}
+                                className="flex items-center gap-1 text-slate-800 dark:text-white text-sm font-black hover:bg-slate-100 dark:hover:bg-white/5 px-3 py-1.5 rounded-xl transition-all select-none"
+                            >
+                                <span>{MODES.find(m => m.id === mode)?.label || 'عام'}</span>
+                                <span className="material-symbols-outlined text-[16px] transition-transform duration-200" style={{ transform: isModeDropdownOpen ? 'rotate(180deg)' : 'none' }}>
+                                    keyboard_arrow_down
+                                </span>
+                            </button>
+
+                            {/* Mode Dropdown Popover */}
+                            <AnimatePresence>
+                                {isModeDropdownOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-44 bg-white dark:bg-[#131314] border border-slate-200 dark:border-white/[0.08] rounded-2xl shadow-2xl p-1.5 z-50 overflow-hidden"
+                                    >
+                                        <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-white/[0.04] mb-1 text-center">
+                                            <span className="text-[10px] font-bold text-slate-400 block">وضع المحادثة</span>
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            {MODES.map((m) => (
+                                                <button
+                                                    key={m.id}
+                                                    onClick={() => {
+                                                        setMode(m.id as CopilotMode);
+                                                        setIsModeDropdownOpen(false);
+                                                        textareaRef.current?.focus();
+                                                    }}
+                                                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all ${
+                                                        mode === m.id
+                                                            ? 'bg-blue-500/10 text-blue-500 font-bold dark:bg-blue-500/20'
+                                                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04]'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-slate-400 dark:text-slate-500 flex items-center">{m.icon}</span>
+                                                        <span>{m.label}</span>
+                                                    </div>
+                                                    {mode === m.id && (
+                                                        <span className="material-symbols-outlined text-[14px] text-blue-500">check</span>
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Sparkly Edit/New Chat button on Right */}
+                        <button
+                            onClick={startNewChat}
+                            className="w-9 h-9 rounded-full border border-dashed border-slate-300 dark:border-white/20 flex items-center justify-center text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-white/5 active:scale-95 transition-all"
+                            title="محادثة جديدة"
+                        >
+                            <span className="material-symbols-outlined text-[18px]">edit</span>
+                        </button>
+                    </div>
+
+                    {/* Desktop Floating Brand Logo Button */}
                     <button
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                        className="absolute top-5 right-5 z-40 w-10 h-10 rounded-xl bg-white/70 dark:bg-[#0c0c0e]/70 border border-slate-200/50 dark:border-white/5 backdrop-blur-md flex items-center justify-center text-blue-500 hover:text-blue-600 active:scale-95 shadow-sm transition-all group"
+                        className="hidden lg:flex absolute top-5 right-5 z-40 w-10 h-10 rounded-xl bg-white/70 dark:bg-[#0c0c0e]/70 border border-slate-200/50 dark:border-white/5 backdrop-blur-md items-center justify-center text-blue-500 hover:text-blue-600 active:scale-95 shadow-sm transition-all group"
                         title={isSidebarOpen ? "إغلاق الأرشيف" : "فتح الأرشيف - القائمة الجانبية"}
                     >
                         <svg className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 3C12 3 12 9 6 12C12 15 12 21 12 21C12 21 12 15 18 12C12 9 12 3 12 3Z" fill="currentColor" />
                         </svg>
                     </button>
-
-                    {/* Floating Mobile Controls (Account and Settings only - hidden on desktop since they are in the dock) */}
-                    <div className="absolute top-5 left-5 z-40 flex items-center gap-2 lg:hidden">
-                        {/* Account Popover Toggle */}
-                        <button
-                            onClick={() => {
-                                setIsAccountPopoverOpen(!isAccountPopoverOpen);
-                                setIsSettingsPopoverOpen(false);
-                            }}
-                            className={`w-10 h-10 rounded-xl flex items-center justify-center border backdrop-blur-md transition-all duration-200 active:scale-95 shadow-sm ${
-                                isAccountPopoverOpen
-                                    ? 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400'
-                                    : 'bg-white/70 dark:bg-[#0c0c0e]/70 border-slate-200/50 dark:border-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                            }`}
-                            title="الحساب الشخصي"
-                        >
-                            {user?.photoURL ? (
-                                <div className="w-6 h-6 rounded-full overflow-hidden border border-slate-200 dark:border-white/10">
-                                    <Image src={user.photoURL} alt="User" width={24} height={24} className="object-cover" />
-                                </div>
-                            ) : (
-                                <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 3h12l4 6-10 12L2 9z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M11 3L8 9l4 12 4-12-3-6" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M2 9h20" />
-                                </svg>
-                            )}
-                        </button>
-
-                        {/* Settings Popover Toggle */}
-                        <button
-                            onClick={() => {
-                                setIsSettingsPopoverOpen(!isSettingsPopoverOpen);
-                                setIsAccountPopoverOpen(false);
-                            }}
-                            className={`w-10 h-10 rounded-xl flex items-center justify-center border backdrop-blur-md transition-all duration-200 active:scale-95 shadow-sm ${
-                                isSettingsPopoverOpen
-                                    ? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white'
-                                    : 'bg-white/70 dark:bg-[#0c0c0e]/70 border-slate-200/50 dark:border-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                            }`}
-                            title="الإعدادات"
-                        >
-                            <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                        </button>
-                    </div>
 
                     {/* Messages Area / Welcome Screen / Integrations View */}
                     {isIntegrationsOpen ? (
@@ -2040,8 +2112,8 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                             onQuickAction={(text) => handleSendMessage(text)}
                                             userName={userData?.displayName || user?.displayName || undefined}
                                         >
-                                            {/* Centered light blue input pill */}
-                                            <div className="w-full max-w-2xl mx-auto mt-6">
+                                            {/* Centered light blue input pill - hidden on mobile (since it's at the bottom) */}
+                                            <div className="hidden lg:block w-full max-w-2xl mx-auto mt-6">
                                                 {renderInputPill(true)}
                                             </div>
                                         </WelcomeScreen>
@@ -2064,21 +2136,19 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                             </div>
 
                             {/* Floating bottom capsule Area */}
-                            {messages.length > 0 && (
-                                <div className="absolute bottom-0 left-0 right-0 z-30 px-4 pb-4 sm:pb-6 pt-16 bg-gradient-to-t from-white via-white/85 to-transparent dark:from-[#06080f] dark:via-[#06080f]/85 dark:to-transparent pointer-events-none">
-                                    <div className="max-w-3xl mx-auto w-full pointer-events-auto flex flex-col gap-3">
-                                        
-                                        {renderInputPill(false)}
-                                        
-                                        {/* Disclaimer */}
-                                        <div className="text-center mt-1.5">
-                                            <p className="text-[10px] text-slate-650 dark:text-slate-600 font-medium tracking-tight">
-                                                TOLZY Copilot <span className="opacity-60">قد يخطئ أحياناً، يرجى التحقق من المعلومات البرمجية المهمة.</span>
-                                            </p>
-                                        </div>
+                            <div className={`absolute bottom-0 left-0 right-0 z-30 px-4 pb-4 sm:pb-6 pt-16 bg-gradient-to-t from-white via-white/85 to-transparent dark:from-[#06080f] dark:via-[#06080f]/85 dark:to-transparent pointer-events-none ${messages.length === 0 ? 'lg:hidden' : ''}`}>
+                                <div className="max-w-3xl mx-auto w-full pointer-events-auto flex flex-col gap-3">
+                                    
+                                    {renderInputPill(false)}
+                                    
+                                    {/* Disclaimer */}
+                                    <div className="text-center mt-1.5">
+                                        <p className="text-[10px] text-slate-650 dark:text-slate-600 font-medium tracking-tight">
+                                            TOLZY Copilot <span className="opacity-60">قد يخطئ أحياناً، يرجى التحقق من المعلومات البرمجية المهمة.</span>
+                                        </p>
                                     </div>
                                 </div>
-                            )}
+                            </div>
                         </>
                     )}
 
