@@ -398,7 +398,7 @@ export default function AskYouTubeLearn({ onStateChange, isForceOpen, onCloseFor
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ type: "spring", stiffness: 260, damping: 25 }}
-                    className={`fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[999] flex flex-col justify-center overflow-hidden transition-all duration-300 ${
+                    className={`fixed bottom-20 right-4 md:bottom-6 md:right-6 z-[999] flex flex-col justify-center overflow-hidden transition-all duration-300 ${
                         isBarOpen 
                             ? 'w-[calc(100vw-2rem)] sm:w-[420px] h-[300px] p-6 bg-slate-900/95 dark:bg-[#0c0d14]/95 backdrop-blur-2xl border border-violet-500/30 rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.4)]' 
                             : 'w-12 h-12 md:w-16 md:h-16 p-0 bg-white dark:bg-[#090a0f] border-2 border-violet-500/50 hover:border-violet-400 rounded-full shadow-[0_10px_35px_rgba(139,92,246,0.35)] dark:shadow-[0_15px_35px_rgba(0,0,0,0.6)] cursor-pointer'
@@ -444,7 +444,7 @@ export default function AskYouTubeLearn({ onStateChange, isForceOpen, onCloseFor
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ type: "spring", stiffness: 260, damping: 25 }}
-                className={`fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[999] flex items-center overflow-hidden transition-all duration-300 ${
+                className={`fixed bottom-20 right-4 md:bottom-6 md:right-6 z-[999] flex items-center overflow-hidden transition-all duration-300 ${
                     isBarOpen 
                         ? 'w-[calc(100vw-2rem)] sm:w-[450px] h-12 md:h-16 pl-3 pr-1 bg-white/95 dark:bg-[#0f1322]/90 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-full shadow-[0_15px_45px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.6)]' 
                         : 'w-12 h-12 md:w-16 md:h-16 p-0 bg-white dark:bg-[#090a0f] border-2 border-emerald-500/50 hover:border-emerald-400 rounded-full shadow-[0_10px_35px_rgba(16,185,129,0.35)] dark:shadow-[0_15px_35px_rgba(0,0,0,0.6)] cursor-pointer'
@@ -652,7 +652,7 @@ export default function AskYouTubeLearn({ onStateChange, isForceOpen, onCloseFor
                             
                             {/* Video Information Card */}
                             {metadata && (
-                                <div className="p-6 bg-white/80 dark:bg-[#0f1322]/40 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.4)] flex flex-col gap-4 text-right flex-1 overflow-y-auto min-h-0 scrollbar-thin">
+                                <div className="p-6 bg-white/80 dark:bg-[#0f1322]/40 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.4)] flex flex-col gap-4 text-right flex-1 overflow-y-auto max-h-[240px] lg:max-h-none min-h-0 scrollbar-thin">
                                     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-white/5 pb-4">
                                         <div className="flex items-center gap-2">
                                             <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-black">
