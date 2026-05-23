@@ -154,9 +154,13 @@ ${contextText}
             }
         }
 
-        // 5. Call Groq Completions API with Llama 3.3 70B model in JSON mode with automatic resilient fallback to Llama 3.1 8B model
+        // 5. Call Groq Completions API with Llama 3.3 70B model in JSON mode with automatic resilient fallback to Llama 3.1 8B model and AbortController timeouts
         let groqResponse;
         let responseData;
+
+        // Primary attempt: llama-3.3-70b-versatile with 4 seconds timeout
+        const primaryController = new AbortController();
+        const primaryTimeoutId = setTimeout(() => primaryController.abort(), 4000);
 
         try {
             groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -174,43 +178,60 @@ ${contextText}
                     ],
                     temperature: 0.3,
                     response_format: { type: 'json_object' }
-                })
+                }),
+                signal: primaryController.signal
             });
+            clearTimeout(primaryTimeoutId);
 
             if (!groqResponse.ok) {
                 const errBody = await groqResponse.text();
                 console.warn('Groq 70B model failed or rate-limited. Error:', errBody);
-                throw new Error('GROQ_70B_FAILED');
+                throw new Error(`GROQ_70B_FAILED: ${errBody}`);
             }
             responseData = await groqResponse.json();
         } catch (error: any) {
-            console.warn('Groq primary attempt failed, initiating fallback to llama-3.1-8b-instant...', error.message || error);
+            clearTimeout(primaryTimeoutId);
+            const isTimeout = error.name === 'AbortError';
+            console.warn(`Groq primary attempt ${isTimeout ? 'TIMED OUT' : 'FAILED'}, initiating fallback to llama-3.1-8b-instant... Error:`, error.message || error);
             
-            groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${GROQ_API_KEY}`
-                },
-                body: JSON.stringify({
-                    model: 'llama-3.1-8b-instant',
-                    messages: [
-                        { role: 'system', content: systemPrompt },
-                        ...formattedMessages,
-                        { role: 'user', content: question }
-                    ],
-                    temperature: 0.3,
-                    response_format: { type: 'json_object' }
-                })
-            });
+            // Fallback attempt: llama-3.1-8b-instant with 5 seconds timeout
+            const fallbackController = new AbortController();
+            const fallbackTimeoutId = setTimeout(() => fallbackController.abort(), 5000);
 
-            if (!groqResponse.ok) {
-                const errBody = await groqResponse.text();
-                console.error('Groq API fallback model also returned an error:', errBody);
-                throw new Error('فشل محرك الذكاء الاصطناعي في الاستجابة، يرجى المحاولة لاحقاً');
+            try {
+                groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${GROQ_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: 'llama-3.1-8b-instant',
+                        messages: [
+                            { role: 'system', content: systemPrompt },
+                            ...formattedMessages,
+                            { role: 'user', content: question }
+                        ],
+                        temperature: 0.3,
+                        response_format: { type: 'json_object' }
+                    }),
+                    signal: fallbackController.signal
+                });
+                clearTimeout(fallbackTimeoutId);
+
+                if (!groqResponse.ok) {
+                    const errBody = await groqResponse.text();
+                    console.error('Groq API fallback model also returned an error:', errBody);
+                    throw new Error(`فشل محرك الذكاء الاصطناعي في الاستجابة (خطأ من Groq: ${errBody.substring(0, 150)})`);
+                }
+
+                responseData = await groqResponse.json();
+            } catch (fallbackError: any) {
+                clearTimeout(fallbackTimeoutId);
+                const isFallbackTimeout = fallbackError.name === 'AbortError';
+                console.error(`Groq API fallback model also ${isFallbackTimeout ? 'TIMED OUT' : 'FAILED'}:`, fallbackError);
+                throw new Error(`فشل محرك الذكاء الاصطناعي في الاستجابة (تفاصيل الخطأ: ${isFallbackTimeout ? 'انتهاء وقت الاتصال بالخادم' : (fallbackError.message || fallbackError)})`);
             }
-
-            responseData = await groqResponse.json();
         }
 
         const rawContent = responseData.choices[0].message.content.trim();
