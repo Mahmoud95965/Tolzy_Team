@@ -109,7 +109,7 @@ const docContent: DocContent[] = [
         subtitle: 'ما هي منظومة Tolzy؟',
         content: () => (
           <>
-            <p>منظومة <strong>Tolzy</strong> هي المنصة العربية الأولى لأدوات الذكاء الاصطناعي والتعليم التقني. نمكّن التعليم من خلال الذكاء الاصطناعي ونجعل موارد التعلم عالية الجودة متاحة للجميع. تضم المنصة أكثر من <strong>630 أداة AI</strong>، بمحتوى <strong>100% عربي</strong>، ومجتمع يضم <strong>350,000+ مطور ومحترف</strong>. وتشمل الميزات: <strong>Tolzy Copilot V2.5</strong>، بيئة <strong>Tolzy Build</strong>، وصانع الأوامر المتقدم.</p>
+            <p>منظومة <strong>Tolzy</strong> هي المنصة العربية الأولى لأدوات الذكاء الاصطناعي والتعليم التقني. نمكّن التعليم من خلال الذكاء الاصطناعي ونجعل موارد التعلم عالية الجودة متاحة للجميع. تضم المنصة أكثر من <strong>630 أداة AI</strong>، بمحتوى <strong>100% عربي</strong>، ومجتمع يضم <strong>+2500 مطور ومحترف</strong>. وتشمل الميزات: <strong>Tolzy Copilot V2.5</strong>، بيئة <strong>Tolzy Build</strong>، وصانع الأوامر المتقدم.</p>
             <Callout type="tip" title="ابدأ رحلتك الآن">
               سجّل حساباً مجانياً واستكشف أدواتنا ومواردنا فوراً دون أي تكلفة مسبقة.
             </Callout>
@@ -133,7 +133,7 @@ const docContent: DocContent[] = [
               <li>أنشئ حساباً مجانياً عبر البريد الإلكتروني أو Google.</li>
               <li>استكشف أكثر من 630 أداة ذكاء اصطناعي مصنّفة بوضوح.</li>
               <li>استخدم <strong>Tolzy Copilot V2.5</strong> للإجابة الفورية على استفساراتك.</li>
-              <li>انضم لـ <strong>Tolzy Community</strong> وشارك مع أكثر من 350,000 مطور ومحترف.</li>
+              <li>انضم لـ <strong>Tolzy Community</strong> وشارك مع أكثر من +2000, مطور ومحترف.</li>
             </ul>
           </>
         )

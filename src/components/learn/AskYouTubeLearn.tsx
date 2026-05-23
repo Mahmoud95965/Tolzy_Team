@@ -719,7 +719,7 @@ export default function AskYouTubeLearn({ onStateChange, isForceOpen, onCloseFor
                         </div>
 
                         {/* LEFT: AI Assistant Chat (40% width) */}
-                        <div className="lg:col-span-4 flex flex-col bg-white/80 dark:bg-[#0f1322]/40 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-3xl shadow-[0_15px_40px_rgba(0,0,0,0.04)] dark:shadow-[0_15px_40px_rgba(0,0,0,0.6)] overflow-hidden h-[600px] lg:h-full min-h-0">
+                        <div className="lg:col-span-4 flex flex-col bg-white/80 dark:bg-[#0f1322]/40 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-3xl shadow-[0_15px_40px_rgba(0,0,0,0.04)] dark:shadow-[0_15px_40px_rgba(0,0,0,0.6)] overflow-hidden h-[480px] sm:h-[580px] lg:h-full min-h-0">
                             {/* Chat Header */}
                             <div className="p-4 border-b border-slate-200 dark:border-white/5 flex items-center justify-between bg-slate-50/50 dark:bg-black/20 text-right shrink-0">
                                 <div className="flex items-center gap-2">

@@ -4,9 +4,16 @@ import { getAllCoursesFromFirebase } from '@/lib/firebase-admin';
 import { generateCollectionPageSchema } from '@/src/utils/seoHelpers';
 
 export const metadata: Metadata = {
-    title: 'Tolzy Learn - كورسات برمجة مجانية عالية الجودة | تعلم البرمجة من الصفر',
-    description: 'منصة Tolzy Learn التعليمية - أفضل كورسات البرمجة المجانية بالعربية. تعلم تطوير الويب، JavaScript، React، Python، وأكثر من خلال دورات شاملة ومشاريع عملية. ابدأ رحلتك في عالم البرمجة مجاناً الآن!',
+    title: 'Tolzy Learn - كورسات برمجة مجانية وميزة Ask YouTube Learn الذكية',
+    description: 'منصة Tolzy Learn التعليمية - أفضل كورسات البرمجة المجانية بالعربية وميزة Ask YouTube Learn الثورية لمناقشة وتلخيص فيديوهات اليوتيوب التعليمية بالذكاء الاصطناعي. تعلم البرمجة من الصفر مجاناً الآن!',
     keywords: [
+        'Ask YouTube Learn',
+        'تلخيص فيديوهات يوتيوب بالذكاء الاصطناعي',
+        'الدردشة مع يوتيوب',
+        'شرح كورسات يوتيوب بالذكاء الاصطناعي',
+        'تفريغ فيديوهات يوتيوب تلقائياً',
+        'مساعد يوتيوب الذكي',
+        'تحليل الفيديوهات بالذكاء الاصطناعي',
         'Tolzy Learn',
         'كورسات برمجة',
         'كورسات برمجة مجانية',
