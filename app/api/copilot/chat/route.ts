@@ -178,13 +178,17 @@ export async function POST(req: NextRequest) {
 
         if (userId && adminDb) {
             try {
-                const userRef = adminDb.collection('users').doc(userId);
-                const userSnap = await userRef.get();
+                // Wrap Firestore get in a 1.5s timeout to prevent serverless function hangs
+                const firestorePromise = adminDb.collection('users').doc(userId).get();
+                const timeoutPromise = new Promise<never>((_, reject) =>
+                    setTimeout(() => reject(new Error('Firestore Timeout')), 1500)
+                );
+                const userSnap: any = await Promise.race([firestorePromise, timeoutPromise]);
                 const userData = userSnap.data();
                 finalPlan = String(userData?.plan || 'free').toLowerCase();
                 isProPlan = finalPlan.includes('pro') || finalPlan.includes('ultra');
             } catch (e) {
-                console.error('Secure plan check error, defaulting to client tier:', e);
+                console.error('Secure plan check error or timeout, defaulting to client tier:', e);
                 const normClientPlan = String(userPlan || 'free').toLowerCase();
                 isProPlan = normClientPlan.includes('pro') || normClientPlan.includes('ultra');
             }
@@ -210,7 +214,15 @@ export async function POST(req: NextRequest) {
         if (!isProPlan && userId && adminDb) {
             try {
                 const userRef = adminDb.collection('users').doc(userId);
-                const userData = (await userRef.get()).data();
+                
+                // Wrap Firestore get in a 1.5s timeout to prevent freezes
+                const firestoreGetPromise = userRef.get();
+                const getTimeoutPromise = new Promise<never>((_, reject) =>
+                    setTimeout(() => reject(new Error('Firestore Get Timeout')), 1500)
+                );
+                const userSnap: any = await Promise.race([firestoreGetPromise, getTimeoutPromise]);
+                const userData = userSnap.data();
+
                 const count = userData?.copilotRequestCount || 0;
                 const lastDate = userData?.lastCopilotRequestDate?.toDate() || new Date(0);
                 const ONE_DAY = 24 * 60 * 60 * 1000;
@@ -223,11 +235,19 @@ export async function POST(req: NextRequest) {
                         response: `🎯 **لقد استنفدت حدك اليومي في Copilot (5 طلبات يومياً)!**\n\n⏰ سيتم تجديد طلباتك خلال **${hoursLeft} ساعة**\n\n💎 **الخطة المدفوعة Pro تشمل:**\n✅ طلبات غير محدودة ومستمرة وبدون أي قيود\n✅ الوصول لأقوى نماذج الذكاء الاصطناعي (Llama 3.3 70B)\n✅ سرعة وأولوية فائقة في معالجة طلباتك`
                     });
                 }
-                await userRef.set({
+
+                // Wrap Firestore set in a 1.5s timeout to prevent freezes
+                const firestoreSetPromise = userRef.set({
                     copilotRequestCount: currentCount + 1,
                     lastCopilotRequestDate: admin.firestore.Timestamp.now()
                 }, { merge: true });
-            } catch (e) { console.error('Free limit error:', e); }
+                const setTimeoutPromise = new Promise<never>((_, reject) =>
+                    setTimeout(() => reject(new Error('Firestore Set Timeout')), 1500)
+                );
+                await Promise.race([firestoreSetPromise, setTimeoutPromise]);
+            } catch (e) { 
+                console.error('Free limit error or timeout:', e); 
+            }
         }
 
         // =======================

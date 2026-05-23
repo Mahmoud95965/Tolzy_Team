@@ -735,8 +735,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
     const [atMenuFilter, setAtMenuFilter] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [isInputExpanded, setIsInputExpanded] = useState(false);
-
+    const [isInputExpanded, setIsInputExpanded] = useState(true);
     const { isListening, transcript, toggleListening, hasSupport } = useSpeechRecognition();
 
     useEffect(() => {
@@ -1441,17 +1440,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                 </button>
                             )}
 
-                            {/* Close / Collapse Button */}
-                            {!isCentered && (
-                                <button
-                                    onClick={() => setIsInputExpanded(false)}
-                                    type="button"
-                                    title="إغلاق شريط الكتابة"
-                                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400 hover:bg-red-500/10 dark:hover:bg-red-500/10 transition-all duration-200 active:scale-95 cursor-pointer"
-                                >
-                                    <span className="material-symbols-outlined text-[20px]">close</span>
-                                </button>
-                            )}
 
                             {/* Send / Upward Arrow Button */}
                             <button
@@ -2136,7 +2124,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                             </div>
 
                             {/* Floating bottom capsule Area */}
-                            <div className={`absolute bottom-0 left-0 right-0 z-30 px-4 pb-4 sm:pb-6 pt-16 bg-gradient-to-t from-white via-white/85 to-transparent dark:from-[#06080f] dark:via-[#06080f]/85 dark:to-transparent pointer-events-none ${messages.length === 0 ? 'lg:hidden' : ''}`}>
+                            <div className={`absolute bottom-[56px] md:bottom-0 left-0 right-0 z-30 px-4 pb-4 sm:pb-6 pt-16 bg-gradient-to-t from-white via-white/85 to-transparent dark:from-[#06080f] dark:via-[#06080f]/85 dark:to-transparent pointer-events-none ${messages.length === 0 ? 'lg:hidden' : ''}`}>
                                 <div className="max-w-3xl mx-auto w-full pointer-events-auto flex flex-col gap-3">
                                     
                                     {renderInputPill(false)}

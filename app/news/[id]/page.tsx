@@ -10,18 +10,9 @@ type Props = {
 };
 
 // Generate static paths for top news - Critical for SEO!
-// Fetching a reasonable number of latest articles for SSG
+// Returning empty array at build time allows pages to be rendered dynamically on-demand (ISR) and prevents database quota exhaustion.
 export async function generateStaticParams() {
-    try {
-        const { articles } = await getPublishedArticles(1, 50);
-
-        return articles.map((article) => ({
-            id: article.id,
-        }));
-    } catch (error) {
-        console.error('Error generating static params:', error);
-        return [];
-    }
+    return [];
 }
 
 // Generate metadata for each news page using centralized helper
