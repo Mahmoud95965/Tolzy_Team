@@ -154,33 +154,66 @@ ${contextText}
             }
         }
 
-        // 5. Call Groq Completions API with Llama 3.3 70B model in JSON mode
-        const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${GROQ_API_KEY}`
-            },
-            body: JSON.stringify({
-                model: 'llama-3.3-70b-versatile',
-                messages: [
-                    { role: 'system', content: systemPrompt },
-                    ...formattedMessages,
-                    { role: 'user', content: question }
-                ],
-                temperature: 0.3,
-                response_format: { type: 'json_object' }
-            })
-        });
+        // 5. Call Groq Completions API with Llama 3.3 70B model in JSON mode with automatic resilient fallback to Llama 3.1 8B model
+        let groqResponse;
+        let responseData;
 
-        if (!groqResponse.ok) {
-            const errBody = await groqResponse.text();
-            console.error('Groq API returned an error:', errBody);
-            throw new Error('فشل محرك الذكاء الاصطناعي في الاستجابة، يرجى المحاولة لاحقاً');
+        try {
+            groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${GROQ_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: 'llama-3.3-70b-versatile',
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        ...formattedMessages,
+                        { role: 'user', content: question }
+                    ],
+                    temperature: 0.3,
+                    response_format: { type: 'json_object' }
+                })
+            });
+
+            if (!groqResponse.ok) {
+                const errBody = await groqResponse.text();
+                console.warn('Groq 70B model failed or rate-limited. Error:', errBody);
+                throw new Error('GROQ_70B_FAILED');
+            }
+            responseData = await groqResponse.json();
+        } catch (error: any) {
+            console.warn('Groq primary attempt failed, initiating fallback to llama-3.1-8b-instant...', error.message || error);
+            
+            groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${GROQ_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: 'llama-3.1-8b-instant',
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        ...formattedMessages,
+                        { role: 'user', content: question }
+                    ],
+                    temperature: 0.3,
+                    response_format: { type: 'json_object' }
+                })
+            });
+
+            if (!groqResponse.ok) {
+                const errBody = await groqResponse.text();
+                console.error('Groq API fallback model also returned an error:', errBody);
+                throw new Error('فشل محرك الذكاء الاصطناعي في الاستجابة، يرجى المحاولة لاحقاً');
+            }
+
+            responseData = await groqResponse.json();
         }
 
-        const data = await groqResponse.json();
-        const rawContent = data.choices[0].message.content.trim();
+        const rawContent = responseData.choices[0].message.content.trim();
 
         // 6. Parse and structure the response
         let finalResponse = {
