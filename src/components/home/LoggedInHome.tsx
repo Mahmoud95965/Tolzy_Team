@@ -247,7 +247,7 @@ export default function LoggedInHome() {
             {/* ══════════════════════════════════════════
                 MAIN CONTENT
             ══════════════════════════════════════════ */}
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-20 space-y-10 relative z-10">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 space-y-10 relative z-10">
 
                 {/* ── 1. Welcome Banner ── */}
                 <motion.div
@@ -306,7 +306,7 @@ export default function LoggedInHome() {
                     </div>
 
                     {/* Stats row */}
-                    <div className={`flex items-center gap-3 sm:gap-4 relative z-10 shrink-0 self-end sm:self-auto pt-4 sm:pt-0 border-t sm:border-t-0 w-full sm:w-auto ${isDarkMode ? 'border-white/5' : 'border-slate-100'}`}>
+                    <div className={`grid grid-cols-3 gap-2 sm:flex sm:items-center sm:gap-4 relative z-10 shrink-0 self-end sm:self-auto pt-4 sm:pt-0 border-t sm:border-t-0 w-full sm:w-auto ${isDarkMode ? 'border-white/5' : 'border-slate-100'}`}>
                         {[
                             { label: 'أداة ذكية', value: (popularTools?.length || 0).toString(), icon: Layers, color: isDarkMode ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20' : 'text-indigo-600 bg-indigo-50 border-indigo-100' },
                             { label: 'عضو نشط', value: '14.2k+', icon: Users, color: isDarkMode ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-emerald-600 bg-emerald-50 border-emerald-100' },
@@ -314,7 +314,7 @@ export default function LoggedInHome() {
                         ].map(s => {
                             const Icon = s.icon;
                             return (
-                                <div key={s.label} className={`flex-1 sm:flex-initial flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-all ${card}`}>
+                                <div key={s.label} className={`flex items-center gap-1.5 sm:gap-2.5 px-2 sm:px-3 py-1.5 sm:py-2.5 rounded-xl border transition-all ${card}`}>
                                     <div className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 ${s.color}`}>
                                         <Icon className="w-3.5 h-3.5" />
                                     </div>
