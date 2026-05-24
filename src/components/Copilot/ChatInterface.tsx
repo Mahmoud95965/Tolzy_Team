@@ -819,6 +819,8 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
     }, [messages]);
 
     useEffect(() => {
+        // Use messages.length (primitive) instead of messages (array reference)
+        // to avoid triggering this effect on every streaming chunk update
         if (!hasHandledInitialQuery && !initialChatId && messages.length === 0 && !isLoading) {
             const params = new URLSearchParams(window.location.search);
             const q = params.get('q');
@@ -828,7 +830,8 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                 window.history.replaceState({}, '', '/copilot');
             }
         }
-    }, [hasHandledInitialQuery, initialChatId, messages, isLoading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [hasHandledInitialQuery, initialChatId, messages.length, isLoading]);
 
     // Load Conversations
     useEffect(() => {
@@ -857,12 +860,10 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
         fetchConversations();
     }, [user, initialChatId]);
 
-    useEffect(() => {
-        if (currentConversationId && conversations.length > 0) {
-            const conv = conversations.find(c => c.id === currentConversationId);
-            if (conv) setMessages(conv.messages);
-        }
-    }, [currentConversationId, conversations]);
+    // ⚠️ REMOVED: This effect was overwriting live streaming messages with stale
+    // conversations state on every message send, causing visual glitches and
+    // extra re-renders. Messages are now set directly in loadConversation() and
+    // in the fetch effect above when initialChatId is provided.
 
     const handleSendMessage = async (customPrompt?: string) => {
         if (!user) {
@@ -1002,7 +1003,9 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                         if (error) console.error('Error updating conversation:', error);
                     });
             }
-            refreshUserData?.();
+            // refreshUserData intentionally not called here — avoids a Firestore
+            // read on every single chat turn. User data is refreshed on auth state
+            // change and on explicit profile actions only.
 
         } catch (error) {
             console.error(error);
