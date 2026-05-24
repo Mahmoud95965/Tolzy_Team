@@ -1,1 +1,9 @@
-/* /index.html 200
+# Proxy API routes to the primary Vercel deployment
+/api/*  https://www.tolzy.me/api/:splat  307
+
+# SPA Route fallbacks for dynamic pages
+/admin/articles/edit/*  /admin/articles/edit/[id].html  200
+/build/projects/*  /build/projects/[id].html  200
+/changelog/*  /changelog/[id].html  200
+/copilot/*  /copilot/[chatId].html  200
+/paths/*  /paths/[pathId].html  200

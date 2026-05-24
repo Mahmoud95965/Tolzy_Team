@@ -10,7 +10,7 @@ type Props = {
 // Generate static paths for all tools - Critical for SEO!
 // Returning empty array at build time allows pages to be rendered dynamically on-demand (ISR) and prevents Firebase quota exhaustion.
 export async function generateStaticParams() {
-    return [];
+    return [{ id: 'placeholder' }];
 }
 
 // Generate metadata for each tool page using centralized helper

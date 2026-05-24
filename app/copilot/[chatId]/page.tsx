@@ -1,10 +1,16 @@
-"use client";
 import ChatInterface from '@/src/components/Copilot/ChatInterface';
-import { useParams } from 'next/navigation';
 
-export default function CopilotChatPage() {
-    const params = useParams();
-    const chatId = params?.chatId as string;
+export async function generateStaticParams() {
+    return [{ chatId: 'placeholder' }];
+}
+
+interface PageProps {
+    params: Promise<{ chatId: string }>;
+}
+
+export default async function CopilotChatPage({ params }: PageProps) {
+    const resolvedParams = await params;
+    const chatId = resolvedParams.chatId;
 
     return (
         <div className="min-h-screen bg-white dark:bg-[#0a0a0a]">

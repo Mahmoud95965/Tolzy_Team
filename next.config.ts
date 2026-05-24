@@ -170,6 +170,9 @@ const nextConfig: NextConfig = {
     // NOTE: Do NOT use output: 'standalone' on Vercel — Vercel manages its own output format.
     // output: 'standalone', // Only for self-hosted Node.js deployments
 
+    // Enable static HTML export when building for Cloudflare Pages (CF_PAGES === '1')
+    output: process.env.CF_PAGES === '1' ? 'export' : undefined,
+
     // Server Components External Packages (Stable in Next.js 16)
     serverExternalPackages: ['sharp'],
 };

@@ -46,6 +46,8 @@
   "exclude": [
     "node_modules",
     "functions",
-    "verfiy.ts"
+    "verfiy.ts",
+    ".next",
+    "**/*.disabled.ts"
   ]
 }

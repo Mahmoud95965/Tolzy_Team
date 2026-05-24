@@ -3,6 +3,9 @@ import ToolsPage from '@/src/views/ToolsPage';
 import { getAllToolsFromFirebase } from '@/lib/firebase-admin';
 import { generateCollectionPageSchema } from '@/src/utils/seoHelpers';
 
+export const dynamic = 'force-static';
+
+
 // Generate metadata dynamically based on search params (e.g. category)
 export async function generateMetadata({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }): Promise<Metadata> {
     const resolvedSearchParams = await searchParams;

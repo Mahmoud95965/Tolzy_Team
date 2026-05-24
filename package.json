@@ -8,7 +8,9 @@
   },
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/prebuild.js",
     "build": "next build",
+    "postbuild": "node scripts/postbuild.js",
     "start": "next start",
     "lint": "next lint",
     "server": "node server/index.js",

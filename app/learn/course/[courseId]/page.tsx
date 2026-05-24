@@ -15,7 +15,7 @@ type Props = {
 // Generate static paths for all courses
 // Returning empty array at build time allows pages to be rendered dynamically on-demand (ISR) and prevents Supabase database quota exhaustion.
 export async function generateStaticParams() {
-    return [];
+    return [{ courseId: 'placeholder' }];
 }
 
 // Generate comprehensive metadata for Tolzy Learn courses

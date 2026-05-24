@@ -6,6 +6,10 @@ export const metadata: Metadata = {
     description: 'عرض تفاصيل خطة البناء الكاملة لمشروعك.',
 };
 
+export async function generateStaticParams() {
+    return [{ id: 'placeholder' }];
+}
+
 export default function Page() {
     return <ProjectDetailPage />;
 }

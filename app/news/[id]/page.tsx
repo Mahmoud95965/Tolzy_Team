@@ -12,7 +12,7 @@ type Props = {
 // Generate static paths for top news - Critical for SEO!
 // Returning empty array at build time allows pages to be rendered dynamically on-demand (ISR) and prevents database quota exhaustion.
 export async function generateStaticParams() {
-    return [];
+    return [{ id: 'placeholder' }];
 }
 
 // Generate metadata for each news page using centralized helper
