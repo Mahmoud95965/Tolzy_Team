@@ -63,13 +63,13 @@ if (projectId && projectId.endsWith('.')) {
 }
 
 export const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'placeholder-api-key',
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "auth.tolzy.me",
   databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
-  projectId: projectId,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  projectId: projectId || 'placeholder-project-id',
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'placeholder-bucket.appspot.com',
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '1234567890',
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:1234567890:web:1234567890',
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 } as const;
 
@@ -81,15 +81,9 @@ let googleProvider: GoogleAuthProvider;
 let microsoftProvider: OAuthProvider;
 
 try {
-  // Check if required config values exist
-  if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-    const missingKeys = [];
-    if (!firebaseConfig.apiKey) missingKeys.push('apiKey');
-    if (!firebaseConfig.projectId) missingKeys.push('projectId');
-    
-    const errorMsg = `Firebase configuration is incomplete. Missing: ${missingKeys.join(', ')}. Please check your .env.local file.`;
-    console.error('[Firebase] ' + errorMsg);
-    throw new Error(errorMsg);
+  // Check if required config values exist in production runtime
+  if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY || !process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
+    console.warn('[Firebase] Missing Firebase API Key or Project ID in build environment. Using placeholders for build-time evaluation.');
   }
 
   console.log('[Firebase] Initializing with config:', {
