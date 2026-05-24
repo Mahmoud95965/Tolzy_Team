@@ -4,6 +4,7 @@ import type { User, Auth, GoogleAuthProvider, GithubAuthProvider } from 'firebas
 import type { UserProfile } from '../types/user';
 import { useFCMToken } from '../hooks/useFCMToken';
 import { getAuthErrorMessage } from '../utils/authErrorHandler';
+import { cachedUserData } from '../utils/userCache';
 
 // Define context type with minimal initial dependencies
 export interface AuthContextType {
@@ -129,6 +130,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const userDocSnap = await getDoc(userDocRef);
                 if (userDocSnap.exists()) {
                   baseData = userDocSnap.data();
+                  // Warm up the shared useUserData hook's memory cache to avoid double Firestore fetch
+                  cachedUserData[firebaseUser.uid] = {
+                    email: baseData.email || firebaseUser.email || '',
+                    firstName: baseData.firstName || '',
+                    lastName: baseData.lastName || '',
+                    displayName: baseData.displayName || firebaseUser.displayName || baseData.email?.split('@')[0] || 'المستخدم',
+                    photoURL: baseData.photoURL || firebaseUser.photoURL,
+                    coverURL: baseData.coverURL || null,
+                    createdAt: baseData.createdAt || new Date().toISOString(),
+                    role: baseData.role || 'user',
+                    copilotRequestCount: baseData.copilotRequestCount || 0,
+                    lastCopilotRequestDate: baseData.lastCopilotRequestDate || null
+                  };
                 }
               } catch (fsErr) {
                 console.warn('⚠️ [AuthContext] Firestore user fetch failed (offline or quota exceeded):', fsErr);

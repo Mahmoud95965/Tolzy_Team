@@ -23,6 +23,17 @@ import { collection, getCountFromServer } from 'firebase/firestore';
 import { db } from '../../src/config/firebase';
 import LoadingSpinner from '../../src/components/common/LoadingSpinner';
 
+// Module-level cache for admin dashboard stats
+let cachedAdminStats: {
+    users: number;
+    tools: number;
+    courses: number;
+    news: number;
+    exams: number;
+} | null = null;
+let lastStatsFetchTime = 0;
+const STATS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes Time-To-Live
+
 const AdminDashboard = () => {
     const { user, loading: authLoading } = useAuth();
     const { userData, loading: userLoading } = useUserData();
@@ -47,19 +58,30 @@ const AdminDashboard = () => {
 
     useEffect(() => {
         const fetchStats = async () => {
+            // Check cache first (avoid duplicate runAggregationQuery under free quota)
+            const now = Date.now();
+            if (cachedAdminStats && (now - lastStatsFetchTime < STATS_CACHE_TTL)) {
+                setStats(cachedAdminStats);
+                return;
+            }
+
             try {
                 const usersCount = (await getCountFromServer(collection(db, 'users'))).data().count;
                 const toolsCount = (await getCountFromServer(collection(db, 'tools'))).data().count;
                 const coursesCount = (await getCountFromServer(collection(db, 'courses'))).data().count;
                 const newsCount = (await getCountFromServer(collection(db, 'news'))).data().count;
 
-                setStats(prev => ({
-                    ...prev,
+                const newStats = {
                     users: usersCount,
                     tools: toolsCount,
                     courses: coursesCount,
-                    news: newsCount
-                }));
+                    news: newsCount,
+                    exams: 1
+                };
+
+                cachedAdminStats = newStats;
+                lastStatsFetchTime = now;
+                setStats(newStats);
             } catch (error) {
                 console.error('Error fetching admin stats:', error);
             }

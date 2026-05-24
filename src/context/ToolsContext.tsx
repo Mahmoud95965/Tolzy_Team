@@ -106,17 +106,38 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     await Promise.all(unique.map((cat) => getCategoryCountDeduped(cat)));
   }, [getCategoryCountDeduped]);
 
-  // دالة لجلب الأدوات الخاص (المميزة، الشائعة، الجديدة) بشكل مستقل
+  // دالة لجلب الأدوات الخاص (المميزة، الشائعة، الجديدة) بشكل مستقل مع استخدام الكاش
   const fetchSpecialTools = async () => {
     try {
+      // محاولة التحميل من الكاش أولاً لتوفير الكوتا والقراءات الزائدة لـ Firebase
+      const featuredCached = getCache('tolzy_cached_featured');
+      const popularCached = getCache('tolzy_cached_popular');
+      const newlyCached = getCache('tolzy_cached_newly');
+
+      if (featuredCached && popularCached && newlyCached && 
+          Array.isArray(featuredCached) && Array.isArray(popularCached) && Array.isArray(newlyCached)) {
+        console.log('📦 Loaded special tools (Featured, Popular, New) from Cache');
+        setFeaturedTools(featuredCached);
+        setPopularTools(popularCached);
+        setNewTools(newlyCached);
+        return;
+      }
+
+      console.log('🔄 Fetching special tools from Firestore (No cache found or expired)');
       const [featured, popular, newly] = await Promise.all([
         getFeaturedTools(8),
         getPopularTools(8),
         getNewTools(8)
       ]);
+
       setFeaturedTools(featured);
       setPopularTools(popular);
       setNewTools(newly);
+
+      // حفظ في الكاش للمرات القادمة
+      if (featured.length > 0) setCache('tolzy_cached_featured', featured);
+      if (popular.length > 0) setCache('tolzy_cached_popular', popular);
+      if (newly.length > 0) setCache('tolzy_cached_newly', newly);
     } catch (err) {
       console.error('Error fetching special tools:', err);
     }

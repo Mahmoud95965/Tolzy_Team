@@ -38,7 +38,26 @@ export function useDashboardData() {
 
   useEffect(() => {
     async function fetchAll() {
+      const cacheKey = 'tolzy_dashboard_cache';
+      const cacheTTL = 15 * 60 * 1000; // 15 minutes TTL
+
       try {
+        // 1. Check local cache first to avoid unneeded Firestore/Supabase queries
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < cacheTTL) {
+            console.log('📦 Loaded dashboard data (Courses & Prompts) from Cache');
+            setTrending(data.trending || []);
+            setCourses(data.courses || []);
+            setStats(data.stats || { totalPrompts: 0, totalMembers: 12400, totalCourses: 0 });
+            setLoading(false);
+            return;
+          }
+        }
+
+        console.log('🔄 Fetching dashboard data from database (No cache found or expired)');
+
         // 1. Trending prompts from Supabase
         const { data: prompts } = await supabase
           .from('community_prompts')
@@ -62,11 +81,20 @@ export function useDashboardData() {
         const fetchedCourses = snap.docs.map(d => ({ id: d.id, ...d.data() })) as DashboardCourse[];
         setCourses(fetchedCourses);
 
-        setStats({
+        const newStats = {
           totalPrompts: promptCount || 0,
           totalMembers: 12400,
           totalCourses: snap.size,
-        });
+        };
+        setStats(newStats);
+
+        // Save in cache
+        const cacheData = {
+          trending: prompts || [],
+          courses: fetchedCourses,
+          stats: newStats
+        };
+        localStorage.setItem(cacheKey, JSON.stringify({ data: cacheData, timestamp: Date.now() }));
       } catch (e) {
         console.error('Dashboard fetch error:', e);
       } finally {

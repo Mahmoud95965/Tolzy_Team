@@ -4,6 +4,12 @@ import ChatInterface from '../components/Copilot/ChatInterface';
 const CopilotPage: React.FC = () => {
     return (
         <div className="fixed inset-0 h-[100dvh] bg-[#FDFDFD] dark:bg-[#050505] overflow-hidden font-sans selection:bg-[#fea619]/30">
+            {/* Load Google Material Symbols Outlined stylesheet directly in Copilot */}
+            <link 
+                rel="stylesheet" 
+                href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" 
+            />
+
             {/* Ambient Background */}
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
                 <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-[#fea619]/5 dark:bg-[#fea619]/10 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen animate-pulse-slow" />

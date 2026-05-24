@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Youtube, Sparkles, Send, RefreshCw, CheckCircle2, 
@@ -91,12 +91,20 @@ const MOCK_QUIZ_QUESTIONS: QuizQuestion[] = [
         explanation: "التصميم الزجاجي المتميز يعتمد على شفافية الخلفية (bg-opacity)، وضبابية ما خلفها (backdrop-blur)، وحدود بيضاء رفيعة جداً بشفافية عالية (border-white/10) لمحاكاة حواف الزجاج الحقيقي."
     }
 ];
-
 interface AskYouTubeLearnProps {
     onStateChange?: (isActive: boolean) => void;
     isForceOpen?: boolean;
     onCloseForceOpen?: () => void;
 }
+
+// Helper to format message content: replaces weird bullet characters (o, ◦, •, *) at the start of a line
+// with standard markdown bullets (- ) to ensure ReactMarkdown renders them as proper bullet lists.
+const formatMessageContent = (text: string) => {
+    if (!text) return '';
+    return text
+        .replace(/^([ \t]*)[o◦•*][ \t]+/gm, '$1- ')
+        .replace(/\\n/g, '\n');
+};
 
 export default function AskYouTubeLearn({ onStateChange, isForceOpen, onCloseForceOpen }: AskYouTubeLearnProps) {
     const { user, userProfile } = useAuth();
@@ -756,9 +764,9 @@ export default function AskYouTubeLearn({ onStateChange, isForceOpen, onCloseFor
                                                             h1: ({ children }) => <h1 className="text-sm sm:text-base font-black mb-2 mt-3 text-slate-900 dark:text-white leading-tight text-right">{children}</h1>,
                                                             h2: ({ children }) => <h2 className="text-xs sm:text-sm font-bold mb-1.5 mt-3 text-slate-900 dark:text-white pb-1 border-b border-slate-200 dark:border-white/[0.06] leading-snug text-right">{children}</h2>,
                                                             h3: ({ children }) => <h3 className="text-xs font-semibold mb-1.5 mt-2.5 text-slate-800 dark:text-slate-200 text-right">{children}</h3>,
-                                                            ul: ({ children }) => <ul className="list-disc list-outside mr-4 mb-2 space-y-1 text-slate-800 dark:text-slate-350 text-right">{children}</ul>,
-                                                            ol: ({ children }) => <ol className="list-decimal list-outside mr-4 mb-2 space-y-1 text-slate-800 dark:text-slate-350 text-right">{children}</ol>,
-                                                            li: ({ children }) => <li className="text-slate-700 dark:text-slate-300 pl-1 text-[11px] sm:text-[12px] leading-relaxed text-right">{children}</li>,
+                                                            ul: ({ children }) => <ul className="list-disc pr-5 mb-2.5 space-y-1.5 text-slate-800 dark:text-slate-300 text-right w-full">{children}</ul>,
+                                                            ol: ({ children }) => <ol className="list-decimal pr-5 mb-2.5 space-y-1.5 text-slate-800 dark:text-slate-300 text-right w-full">{children}</ol>,
+                                                            li: ({ children }) => <li className="text-slate-700 dark:text-slate-300 pr-1 pl-0 text-[12.5px] sm:text-[13px] leading-[1.75] text-right w-full">{children}</li>,
                                                             blockquote: ({ children }) => (
                                                                 <blockquote className="border-r-2 border-emerald-500 pr-3 my-2 italic text-slate-550 dark:text-slate-400 text-right">
                                                                     {children}
@@ -814,7 +822,7 @@ export default function AskYouTubeLearn({ onStateChange, isForceOpen, onCloseFor
                                                                         </div>
                                                                     </div>
                                                                 ) : (
-                                                                    <code className="bg-slate-200 dark:bg-white/[0.08] text-slate-850 dark:text-slate-200 px-1.5 py-0.5 rounded text-[0.9em] font-mono border border-slate-300 dark:border-white/[0.08]" {...props}>{children}</code>
+                                                                    <code className="bg-slate-200/80 dark:bg-white/[0.08] text-slate-800 dark:text-slate-200 px-2.5 py-0.5 rounded-full text-[0.88em] font-mono border border-slate-300/50 dark:border-white/[0.04]" {...props}>{children}</code>
                                                                 )
                                                             },
                                                             a: ({ node, className, href, children, ...props }: any) => {
@@ -832,7 +840,7 @@ export default function AskYouTubeLearn({ onStateChange, isForceOpen, onCloseFor
                                                             }
                                                         }}
                                                     >
-                                                        {msg.text}
+                                                        {formatMessageContent(msg.text)}
                                                     </ReactMarkdown>
                                                 </div>
                                             ) : (

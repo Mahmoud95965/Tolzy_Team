@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 // Icons: Material Symbols Outlined (loaded globally via layout.tsx + index.css)
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
@@ -9,6 +9,7 @@ import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import ToolCard from './ToolCard';
+import CourseCard from './CourseCard';
 import WelcomeScreen from './WelcomeScreen';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { useAuth } from '../../context/AuthContext';
@@ -111,22 +112,6 @@ const MODES: ModeConfig[] = [
     },
 ];
 
-// High fidelity mock messages to immediately show off visual design and UI widgets
-const MOCK_MESSAGES: Message[] = [
-    {
-        id: 'mock-1',
-        role: 'user',
-        content: 'مرحباً تولزي! أريد مراجعة كود JavaScript سريع، واقترح لي بعض الأدوات لتسريع عملي، مع إمكانية إرسال ملخص بالبريد الإلكتروني.'
-    },
-    {
-        id: 'mock-2',
-        role: 'assistant',
-        content: `أهلاً بك! يسعدني جداً مساعدتك اليوم في رحلتك البرمجية عبر **TOLZY Copilot** 🚀\n\n### 1. مراجعة وتصحيح كودك البرمجي\nإليك مثال على دالة محسنة بلغة JavaScript تقوم بترتيب العناصر وتصفيتها بكفاءة عالية:\n\n\`\`\`javascript\n// دالة مصفاة ومحسنة لتنظيف وترتيب البيانات\nconst processUserData = (users) => {\n  return users\n    .filter(user => user.isActive && user.age >= 18)\n    .sort((a, b) => b.score - a.score);\n};\n\nconsole.log(processUserData(usersList));\n\`\`\`\n\n### 2. أدوات ذكاء اصطناعي مقترحة من منصة Tolzy\nلقد قمت باختيار هذه الأداة المتميزة لتسريع كتابة ومراجعة أكوادك:\n\n\`\`\`tool\nname: Tolzy Code Optimizer\ndescription: أداة ذكية لتحليل الأكواد وتوفير اقتراحات فورية لتحسين الأداء والأمان.\ncategory: برمجة\nlink: https://tolzy.com/tools/code-optimizer\n\`\`\`\n\n### 3. ربط البريد الإلكتروني (Gmail)\nيمكنك التحكم ببريدك مباشرة! لقد قمت بجلب آخر الرسائل الواردة إليك لتلخيصها:\n\n\`\`\`gmail-inbox\nfrom: فريق Tolzy التقني <support@tolzy.com>\nsubject: تحديثات باقة Pro الجديدة ومميزات Copilot\ndate: اليوم، 12:30 م\npreview: مرحباً بك في عائلة Tolzy! نود إعلامك بإطلاق أدوات جديدة للذكاء الاصطناعي...\nbody: مرحباً بك في عائلة Tolzy! نود إعلامك بإطلاق أدوات جديدة للذكاء الاصطناعي تدعم تلخيص الأكواد، أتمتة العمل، والربط المباشر مع بريدك الإلكتروني لزيادة الإنتاجية بمعدل 10 أضعاف. استمتع بالتحديثات!\nunread: true\n---\nfrom: سارة أحمد (مديرة المشاريع) <sara.a@company.com>\nsubject: مراجعة خطة العمل لمشروع التخرج الذكي\ndate: أمس، 4:15 م\npreview: أرسل لك خطة العمل المقترحة لمشروع التخرج بعد التعديل، أرجو الاطلاع...\nbody: أرسل لك خطة العمل المقترحة لمشروع التخرج بعد التعديل، أرجو الاطلاع والمراجعة لنقوم بمناقشة التفاصيل البرمجية وتكامل الأدوات في اجتماع الغد.\nunread: false\n\`\`\`\n\nهل تود مني صياغة رد سريع على إحدى هذه الرسائل، أم نركز على شرح الدالة البرمجية؟ أنا هنا لمساعدتك! ✨`,
-        status: 'complete',
-        modelId: 'tolzy-v2.5'
-    }
-];
-
 const generateId = () => {
     if (typeof crypto !== 'undefined' && crypto.randomUUID) {
         return crypto.randomUUID();
@@ -178,7 +163,6 @@ const GmailInboxWidget = ({ rawContent }: { rawContent: string }) => {
 
     return (
         <div className="my-6 w-full max-w-[620px] animate-in fade-in duration-300" dir="rtl">
-            {/* Widget Header */}
             <div className="flex items-center gap-3 mb-4">
                 <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#ea4335] via-[#ea4335] to-[#fbbc05] shadow-lg shadow-red-500/20">
                     <svg viewBox="0 0 24 24" className="w-5 h-5" fill="white">
@@ -191,7 +175,6 @@ const GmailInboxWidget = ({ rawContent }: { rawContent: string }) => {
                 </div>
             </div>
 
-            {/* List Glass Card */}
             <div className="rounded-2xl border border-white/5 overflow-hidden bg-slate-950/40 backdrop-blur-xl shadow-2xl">
                 {emails.map((email, idx) => (
                     <div key={idx} className="border-b border-white/5 last:border-b-0">
@@ -201,7 +184,6 @@ const GmailInboxWidget = ({ rawContent }: { rawContent: string }) => {
                                 email.unread ? 'bg-indigo-500/[0.04]' : ''
                             }`}
                         >
-                            {/* Unread glow dot */}
                             <div className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 transition-all ${
                                 email.unread ? 'bg-indigo-400 shadow-[0_0_10px_rgba(129,140,248,0.8)]' : 'bg-transparent border border-white/10'
                             }`} />
@@ -222,7 +204,6 @@ const GmailInboxWidget = ({ rawContent }: { rawContent: string }) => {
                             </div>
                         </button>
 
-                        {/* Expanded View */}
                         <AnimatePresence>
                             {expandedIdx === idx && (
                                 <motion.div
@@ -276,7 +257,6 @@ const GmailInboxWidget = ({ rawContent }: { rawContent: string }) => {
                 ))}
             </div>
 
-            {/* Inline Compose Sheet Triggered from reply */}
             {replyDraft && (
                 <div className="mt-4">
                     <GmailComposeWidget
@@ -347,7 +327,6 @@ const GmailComposeWidget = ({
 
     return (
         <div className="my-6 w-full max-w-[620px] animate-in fade-in duration-300" dir="rtl">
-            {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20">
@@ -365,9 +344,7 @@ const GmailComposeWidget = ({
                 )}
             </div>
 
-            {/* Compose Card */}
             <div className="rounded-2xl border border-white/5 overflow-hidden bg-slate-950/40 backdrop-blur-xl shadow-2xl">
-                {/* To */}
                 <div className="flex items-center gap-4 px-5 py-3.5 border-b border-white/5">
                     <span className="text-[11px] font-bold text-slate-400 w-12 flex-shrink-0">إلى</span>
                     <input
@@ -379,7 +356,6 @@ const GmailComposeWidget = ({
                         dir="ltr"
                     />
                 </div>
-                {/* Subject */}
                 <div className="flex items-center gap-4 px-5 py-3.5 border-b border-white/5">
                     <span className="text-[11px] font-bold text-slate-400 w-12 flex-shrink-0">الموضوع</span>
                     <input
@@ -390,7 +366,6 @@ const GmailComposeWidget = ({
                         className="flex-1 text-sm bg-transparent outline-none text-slate-100 placeholder:text-slate-600 font-medium"
                     />
                 </div>
-                {/* Body */}
                 <div className="px-5 py-4">
                     <textarea
                         value={body}
@@ -400,7 +375,6 @@ const GmailComposeWidget = ({
                         className="w-full text-sm bg-transparent outline-none text-slate-200 placeholder:text-slate-600 resize-none leading-relaxed font-medium"
                     />
                 </div>
-                {/* Footer Controls */}
                 <div className="px-5 py-4 border-t border-white/5 bg-slate-950/20 flex items-center justify-between">
                     <span className="text-[10px] text-slate-400">إرسال آمن ومباشر عبر Gmail</span>
                     <button
@@ -409,7 +383,7 @@ const GmailComposeWidget = ({
                         className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-indigo-500/25 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {sendState === 'sending' ? (
-                                        <><span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span><span>جاري الإرسال...</span></>
+                            <><span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span><span>جاري الإرسال...</span></>
                         ) : (
                             <><span className="material-symbols-outlined text-[14px]">send</span><span>إرسال بريد</span></>
                         )}
@@ -418,6 +392,13 @@ const GmailComposeWidget = ({
             </div>
         </div>
     );
+};
+
+const formatMessageContent = (text: string) => {
+    if (!text) return '';
+    return text
+        .replace(/^([ \t]*)[o◦•*][ \t]+/gm, '$1- ')
+        .replace(/\\n/g, '\n');
 };
 
 // ─── Message Item Component (Premium Glassmorphic Styles) ───
@@ -461,6 +442,10 @@ const MessageItem = React.memo(({ msg, user, onResend }: {
         setTimeout(() => setIsUserCopied(false), 2000);
     };
 
+    const processedContent = useMemo(() => {
+        return formatMessageContent(displayedContent);
+    }, [displayedContent]);
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -468,7 +453,6 @@ const MessageItem = React.memo(({ msg, user, onResend }: {
             transition={{ duration: 0.2, ease: 'easeOut' }}
             className={`flex gap-3 sm:gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''} group relative mb-5 sm:mb-7 pb-5 border-b border-slate-100 dark:border-white/[0.04] last:border-0 last:pb-0`}
         >
-            {/* Avatar */}
             <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden border
                 ${msg.role === 'user'
                     ? 'bg-slate-100 dark:bg-white/[0.06] border-slate-200 dark:border-white/[0.08]'
@@ -486,16 +470,13 @@ const MessageItem = React.memo(({ msg, user, onResend }: {
                 )}
             </div>
 
-            {/* Bubble & content */}
             <div className={`flex flex-col flex-1 max-w-[calc(100%-44px)] sm:max-w-[85%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                {/* Bubble Container */}
                 <div className={`w-full text-[14px] sm:text-[15px] leading-relaxed relative
                     ${msg.role === 'user'
                         ? 'bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] text-slate-800 dark:text-slate-100 rounded-xl rounded-tr-none px-4 py-3 sm:px-5 sm:py-3.5'
                         : 'bg-transparent border-none text-slate-800 dark:text-slate-200 px-0 py-0.5'
                     }
                 `}>
-                    {/* Bot label */}
                     {msg.role === 'assistant' && (
                         <div className="flex items-center gap-2 mb-2.5">
                             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
@@ -505,7 +486,6 @@ const MessageItem = React.memo(({ msg, user, onResend }: {
                     )}
 
                     {msg.status === 'thinking' ? (
-                        /* Minimalist thinking indicator */
                         <div className="flex items-center gap-2 py-2">
                             {[0, 1, 2].map(i => (
                                 <motion.span
@@ -525,20 +505,20 @@ const MessageItem = React.memo(({ msg, user, onResend }: {
                             </span>
                         </div>
                     ) : (
-                        <ReactMarkdown children={displayedContent} remarkPlugins={[remarkGfm as any]} components={{
-                            p: ({ children }) => <p className="mb-3.5 last:mb-0 text-slate-700 dark:text-slate-300 leading-[1.8] text-[14px] sm:text-[15px]">{children}</p>,
-                            h1: ({ children }) => <h1 className="text-xl sm:text-2xl font-black mb-3 mt-4 text-slate-950 dark:text-white leading-tight">{children}</h1>,
-                            h2: ({ children }) => <h2 className="text-base sm:text-lg font-bold mb-2.5 mt-4 text-slate-900 dark:text-white pb-2 border-b border-slate-200 dark:border-white/[0.06] leading-snug">{children}</h2>,
-                            h3: ({ children }) => <h3 className="text-sm sm:text-base font-semibold mb-2 mt-3.5 text-slate-800 dark:text-slate-200">{children}</h3>,
-                            ul: ({ children }) => <ul className="list-disc list-outside mr-5 mb-3.5 space-y-1.5 text-slate-700 dark:text-slate-300">{children}</ul>,
-                            ol: ({ children }) => <ol className="list-decimal list-outside mr-5 mb-3.5 space-y-1.5 text-slate-700 dark:text-slate-300">{children}</ol>,
-                            li: ({ children }) => <li className="text-slate-650 dark:text-slate-400 pl-1 text-[13px] sm:text-[14px] leading-relaxed">{children}</li>,
+                        <ReactMarkdown children={processedContent} remarkPlugins={[remarkGfm as any]} components={{
+                            p: ({ children }) => <p className="mb-3.5 last:mb-0 text-slate-700 dark:text-slate-300 leading-[1.85] text-[14px] sm:text-[15px] text-right">{children}</p>,
+                            h1: ({ children }) => <h1 className="text-xl sm:text-2xl font-black mb-3 mt-4 text-slate-950 dark:text-white leading-tight text-right">{children}</h1>,
+                            h2: ({ children }) => <h2 className="text-base sm:text-lg font-bold mb-2.5 mt-4 text-slate-900 dark:text-white pb-2 border-b border-slate-200 dark:border-white/[0.06] leading-snug text-right">{children}</h2>,
+                            h3: ({ children }) => <h3 className="text-sm sm:text-base font-semibold mb-2 mt-3.5 text-slate-800 dark:text-slate-200 text-right">{children}</h3>,
+                            ul: ({ children }) => <ul className="list-disc pr-6 mb-3.5 space-y-2 text-slate-750 dark:text-slate-300 text-right w-full">{children}</ul>,
+                            ol: ({ children }) => <ol className="list-decimal pr-6 mb-3.5 space-y-2 text-slate-750 dark:text-slate-300 text-right w-full">{children}</ol>,
+                            li: ({ children }) => <li className="text-slate-650 dark:text-slate-400 pr-1 pl-0 text-[13.5px] sm:text-[14.5px] leading-[1.8] text-right w-full">{children}</li>,
                             blockquote: ({ children }) => (
-                                <blockquote className="border-r-2 border-slate-300 dark:border-white/20 pr-4 my-3.5 italic text-slate-500">
+                                <blockquote className="border-r-2 border-slate-300 dark:border-white/20 pr-4 my-3.5 italic text-slate-500 text-right">
                                     {children}
                                 </blockquote>
                             ),
-                            strong: ({ children }) => <strong className="font-semibold text-slate-900 dark:text-white">{children}</strong>,
+                            strong: ({ children }) => <strong className="font-extrabold text-slate-950 dark:text-white mx-0.5">{children}</strong>,
                             table: ({ children }) => (
                                 <div className="overflow-x-auto my-4 rounded-xl border border-slate-200 dark:border-white/[0.08]">
                                     <table className="w-full text-xs sm:text-sm text-right border-collapse">
@@ -578,6 +558,37 @@ const MessageItem = React.memo(({ msg, user, onResend }: {
                                     );
                                 }
 
+                                if (match && match[1] === 'course') {
+                                    const content = String(children);
+                                    const lines = content.split('\n');
+                                    const courseData: any = {};
+                                    lines.forEach(line => {
+                                        const colonIdx = line.indexOf(':');
+                                        if (colonIdx > -1) {
+                                            const rawKey = line.substring(0, colonIdx).trim().toLowerCase();
+                                            const val = line.substring(colonIdx + 1).trim();
+                                            if (rawKey.includes('name') || rawKey.includes('title') || rawKey.includes('عنوان')) courseData.title = val;
+                                            else if (rawKey.includes('description') || rawKey.includes('وصف')) courseData.description = val;
+                                            else if (rawKey.includes('link') || rawKey.includes('رابط')) courseData.link = val;
+                                            else if (rawKey.includes('level') || rawKey.includes('مستوى')) courseData.level = val;
+                                            else if (rawKey.includes('duration') || rawKey.includes('مدة')) courseData.duration = val;
+                                            else if (rawKey.includes('instructor') || rawKey.includes('مدرب') || rawKey.includes('اشراف') || rawKey.includes('إشراف')) courseData.instructor = val;
+                                        }
+                                    });
+                                    return (
+                                        <div className="my-3">
+                                            <CourseCard
+                                                title={courseData.title || 'كورس تعليمي'}
+                                                description={courseData.description || ''}
+                                                link={courseData.link}
+                                                level={courseData.level}
+                                                duration={courseData.duration}
+                                                instructor={courseData.instructor}
+                                            />
+                                        </div>
+                                    );
+                                }
+
                                 if (match && match[1] === 'gmail-inbox') {
                                     const content = String(children).replace(/\n$/, '');
                                     return <GmailInboxWidget rawContent={content} />;
@@ -590,7 +601,6 @@ const MessageItem = React.memo(({ msg, user, onResend }: {
 
                                 return match ? (
                                     <div className="bg-slate-900 dark:bg-[#0b0c10] rounded-xl overflow-hidden my-4 border border-slate-800 dark:border-white/[0.08] w-full max-w-full" dir="ltr">
-                                        {/* Terminal header */}
                                         <div className="bg-slate-800 dark:bg-white/[0.03] px-4 py-2.5 flex justify-between items-center border-b border-slate-700 dark:border-white/[0.06]">
                                             <div className="flex items-center gap-2.5">
                                                 <div className="flex gap-1.5">
@@ -633,7 +643,7 @@ const MessageItem = React.memo(({ msg, user, onResend }: {
                                         </div>
                                     </div>
                                 ) : (
-                                    <code className="bg-slate-100 dark:bg-white/[0.06] text-slate-800 dark:text-slate-300 px-1.5 py-0.5 rounded text-[0.88em] font-mono border border-slate-200 dark:border-white/[0.08]" {...props}>{children}</code>
+                                    <code className="bg-slate-100/90 dark:bg-white/[0.06] text-slate-800 dark:text-slate-200 px-2.5 py-0.5 rounded-full text-[0.88em] font-mono border border-slate-200/50 dark:border-white/[0.04]" {...props}>{children}</code>
                                 )
                             },
                             a: ({ node, className, href, children, ...props }: any) => {
@@ -649,17 +659,16 @@ const MessageItem = React.memo(({ msg, user, onResend }: {
                                         href={href}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1 text-blue-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white underline underline-offset-2 text-[0.9em] transition-colors duration-200 mx-0.5 no-underline hover:underline"
+                                        className="inline-flex items-center gap-1 px-2.5 py-0.5 my-0.5 mx-1 rounded-full bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 font-bold border border-blue-500/20 transition-all text-xs duration-200 decoration-none select-none shrink-0"
                                         {...props}
                                     >
-                                        <span className="material-symbols-outlined text-[11px] flex-shrink-0">open_in_new</span>
+                                        <span className="material-symbols-outlined text-[13px] translate-y-[0.5px]">link</span>
                                         <span className="truncate max-w-[200px]">{content}</span>
                                     </a>
                                 );
                             }
                         }} />
                     )}
-                    {/* Streaming Cursor */}
                     {msg.isStreaming && (
                         <span
                             className="inline-block w-[2px] h-4 bg-indigo-400 ml-0.5 rounded-sm align-middle"
@@ -668,7 +677,6 @@ const MessageItem = React.memo(({ msg, user, onResend }: {
                     )}
                 </div>
 
-                {/* Assistant actions */}
                 {msg.role === 'assistant' && !msg.isStreaming && (
                     <div className="flex items-center gap-1.5 mt-2 opacity-0 group-hover:opacity-100 transition-all duration-200">
                         <button
@@ -686,7 +694,6 @@ const MessageItem = React.memo(({ msg, user, onResend }: {
                     </div>
                 )}
 
-                {/* User actions */}
                 {msg.role === 'user' && (
                     <div className="flex items-center gap-1.5 mt-2 justify-end opacity-0 group-hover:opacity-100 transition-all duration-200">
                         <button
@@ -728,7 +735,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
     const isFree = !isProPlan;
     const [showGuestOverlay, setShowGuestOverlay] = useState(true);
 
-    // Use Mock Messages by default to show visual features immediately if no active chat
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [showAtMenu, setShowAtMenu] = useState(false);
@@ -836,7 +842,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                     .order('updated_at', { ascending: false });
                 if (data && data.length > 0) {
                     setConversations(data as Conversation[]);
-                    // If initialChatId was specified, load that, otherwise load the most recent conversation
                     if (initialChatId) {
                         const target = data.find(c => c.id === initialChatId);
                         if (target) {
@@ -866,8 +871,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
             return;
         }
 
-
-
         const promptText = customPrompt || input.trim();
         if (!promptText || isLoading) return;
 
@@ -877,7 +880,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
             content: promptText
         };
 
-        // Clear mock data if starting a fresh chat
         const currentMsgs = messages;
 
         setMessages(prev => [...prev, userMessage]);
@@ -1048,7 +1050,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
         textareaRef.current?.focus();
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const handle開KeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleSendMessage();
@@ -1094,7 +1096,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
         return 'U';
     };
 
-    // Group Conversations by Date
     const groupedConversations = conversations.reduce((groups, conversation) => {
         const date = new Date(conversation.updated_at);
         const now = new Date();
@@ -1112,26 +1113,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
     }, {} as Record<string, Conversation[]>);
 
     const groupOrder = ['اليوم', 'أمس', 'الأسبوع السابق', 'الشهر السابق', 'السابق'];
-
-    // Interactive quick prompt macros
-    const MACRO_COMMANDS = [
-        { label: '💡 فكرة مشروع ذكي', prompt: 'اقترح علي 5 أفكار لمشاريع تقنية مبتكرة باستخدام الذكاء الاصطناعي مع توضيح العائد المادي وخطة العمل.' },
-        { label: '🛠️ مراجعة كود برمجي', prompt: 'أريد مراجعة هذا الكود وتحسين أدائه وأمانه مع كتابة النسخة المحسنة كاملة بالتعليقات: \n\n' },
-        { label: '✍️ صياغة بريد رسمي', prompt: 'ساعدني في صياغة بريد إلكتروني احترافي باللغة العربية موجه للشركة بخصوص: \nالموضوع: طلب شراكة تقنية وتوفير حلول برمجية.' },
-        { label: '🔍 تحسين محتوى SEO', prompt: 'كيف يمكنني صياغة مقال تقني مميز ليتوافق مع محركات البحث SEO ويتصدر النتائج بسهولة؟ أعطني خطة عملية.' }
-    ];
-
-    const handleMacroClick = (macroPrompt: string) => {
-        setInput(macroPrompt);
-        textareaRef.current?.focus();
-        // Resize textarea to accommodate potential long text
-        setTimeout(() => {
-            if (textareaRef.current) {
-                textareaRef.current.style.height = 'auto';
-                textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 192)}px`;
-            }
-        }, 50);
-    };
 
     const renderInputPill = (isCentered = false) => {
         if (!user) {
@@ -1165,9 +1146,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                         whileTap={{ scale: 0.95 }}
                         className="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-600 via-indigo-650 to-indigo-700 dark:from-indigo-650 dark:via-purple-600 dark:to-pink-650 text-white flex items-center justify-center shadow-[0_8px_32px_rgba(99,102,241,0.4)] dark:shadow-[0_8px_32px_rgba(168,85,247,0.3)] cursor-pointer relative group border border-white/10"
                     >
-                        {/* Glow / Pulse ring */}
                         <span className="absolute inset-0 rounded-full bg-indigo-500/25 animate-ping pointer-events-none" />
-                        
                         <svg className="w-7 h-7 relative z-10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 3C12 3 12 9 6 12C12 15 12 21 12 21C12 21 12 15 18 12C12 9 12 3 12 3Z" fill="currentColor" />
                         </svg>
@@ -1184,61 +1163,15 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="relative w-full transition-all duration-300 z-30"
             >
-                {/* Custom keyframe styles for smooth, baby blue ambient breathing aura waves */}
                 <style dangerouslySetInnerHTML={{ __html: `
-                    @keyframes auraWave1 {
-                        0% {
-                            transform: scale(0.4);
-                            opacity: 0;
-                        }
-                        35% {
-                            opacity: 0.85;
-                        }
-                        100% {
-                            transform: scale(1.4);
-                            opacity: 0;
-                        }
-                    }
-                    @keyframes auraWave2 {
-                        0% {
-                            transform: scale(0.4);
-                            opacity: 0;
-                        }
-                        35% {
-                            opacity: 0.65;
-                        }
-                        100% {
-                            transform: scale(2.2);
-                            opacity: 0;
-                        }
-                    }
-                    @keyframes auraWave3 {
-                        0% {
-                            transform: scale(0.4);
-                            opacity: 0;
-                        }
-                        35% {
-                            opacity: 0.45;
-                        }
-                        100% {
-                            transform: scale(3.0);
-                            opacity: 0;
-                        }
-                    }
-                    .animate-aura-1 {
-                        animation: auraWave1 6.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-                    }
-                    .animate-aura-2 {
-                        animation: auraWave2 6.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-                        animation-delay: 2.1s;
-                    }
-                    .animate-aura-3 {
-                        animation: auraWave3 6.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-                        animation-delay: 4.2s;
-                    }
+                    @keyframes auraWave1 { 0% { transform: scale(0.4); opacity: 0; } 35% { opacity: 0.85; } 100% { transform: scale(1.4); opacity: 0; } }
+                    @keyframes auraWave2 { 0% { transform: scale(0.4); opacity: 0; } 35% { opacity: 0.65; } 100% { transform: scale(2.2); opacity: 0; } }
+                    @keyframes auraWave3 { 0% { transform: scale(0.4); opacity: 0; } 35% { opacity: 0.45; } 100% { transform: scale(3.0); opacity: 0; } }
+                    .animate-aura-1 { animation: auraWave1 6.5s cubic-bezier(0.16, 1, 0.3, 1) infinite; }
+                    .animate-aura-2 { animation: auraWave2 6.5s cubic-bezier(0.16, 1, 0.3, 1) infinite; animation-delay: 2.1s; }
+                    .animate-aura-3 { animation: auraWave3 6.5s cubic-bezier(0.16, 1, 0.3, 1) infinite; animation-delay: 4.2s; }
                 `}} />
 
-                {/* Soft Gemini-style Sky Blue Ambient Aura Waves (Fullscreen spreading) */}
                 {!isLoading && (
                     <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vw] max-w-[100vw] h-[800px] -z-20 pointer-events-none overflow-hidden flex items-center justify-center">
                         <div className="absolute w-[1200px] h-[600px] rounded-full bg-gradient-to-tr from-blue-200/25 via-sky-200/30 to-blue-100/15 dark:from-blue-600/3 dark:via-sky-500/5 dark:to-indigo-500/2 blur-[140px] sm:blur-[180px] animate-aura-1" />
@@ -1248,8 +1181,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                 )}
 
                 <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2 rounded-full bg-white dark:bg-[#131314]/90 backdrop-blur-xl border border-slate-200 dark:border-white/[0.08] focus-within:border-blue-400 dark:focus-within:border-blue-500/40 shadow-md dark:shadow-none transition-all duration-200" dir="rtl">
-                    
-                    {/* Leading Actions (Attach Plus Button) */}
                     <div className="flex-shrink-0 mb-0.5">
                         <button
                             onClick={() => toast('قريباً: إمكانية إرفاق الملفات! 📎', { icon: '✨' })}
@@ -1261,7 +1192,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                         </button>
                     </div>
 
-                    {/* Main Input Textarea */}
                     <div className="flex-grow min-w-0 relative">
                         <textarea
                             ref={textareaRef}
@@ -1269,7 +1199,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                             onChange={handleInputChange}
                             onKeyDown={(e) => {
                                 if (showAtMenu && e.key === 'Escape') { setShowAtMenu(false); e.preventDefault(); return; }
-                                handleKeyDown(e);
+                                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); }
                             }}
                             placeholder={MODES.find(m => m.id === mode)?.placeholder || "اسأل TOLZY Copilot..."}
                             rows={1}
@@ -1279,7 +1209,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                             dir="rtl"
                         />
 
-                        {/* @ Menu popup above textarea */}
                         <AnimatePresence>
                             {showAtMenu && (
                                 <motion.div
@@ -1324,10 +1253,8 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                         </AnimatePresence>
                     </div>
 
-                    {/* Trailing Actions */}
                     <div className="flex items-center gap-1.5 flex-shrink-0 mb-0.5 relative">
-                        
-                        {/* MOBILE CONTROLS (lg:hidden) */}
+                        {/* MOBILE CONTROLS */}
                         <div className="flex items-center gap-2 lg:hidden">
                             {input.trim() === '' ? (
                                 <div className="flex items-center gap-1 p-1 rounded-full bg-blue-50/80 dark:bg-blue-900/10 border border-blue-100/50 dark:border-blue-500/10">
@@ -1337,9 +1264,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                             type="button"
                                             title="الميكروفون"
                                             className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                                                isListening
-                                                    ? 'text-red-500 bg-red-500/10 animate-pulse'
-                                                    : 'text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/10'
+                                                isListening ? 'text-red-500 bg-red-500/10 animate-pulse' : 'text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/10'
                                             }`}
                                         >
                                             <span className="material-symbols-outlined text-[18px]">mic</span>
@@ -1347,7 +1272,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                     )}
                                     <button
                                         type="button"
-                                        onClick={() => toast('قريباً: إدخال المحادثات الصوتية الحية! 🎙️', { icon: '✨' })}
+                                        onClick={() => toast('قريباً: إدخل المحادثات الصوتية الحية! 🎙️', { icon: '✨' })}
                                         className="w-8 h-8 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/10"
                                         title="التحليل الصوتي"
                                     >
@@ -1367,9 +1292,8 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                             )}
                         </div>
 
-                        {/* DESKTOP CONTROLS (hidden lg:flex) */}
+                        {/* DESKTOP CONTROLS */}
                         <div className="hidden lg:flex items-center gap-2">
-                            {/* Model Switcher / Mode Picker Pill */}
                             <div className="relative">
                                 <button
                                     onClick={() => setIsModeDropdownOpen(!isModeDropdownOpen)}
@@ -1382,7 +1306,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                     </span>
                                 </button>
 
-                                {/* Mode Dropdown Popover */}
                                 <AnimatePresence>
                                     {isModeDropdownOpen && (
                                         <motion.div
@@ -1403,10 +1326,8 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                                             setIsModeDropdownOpen(false);
                                                             textareaRef.current?.focus();
                                                         }}
-                                                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-right text-xs transition-all ${
-                                                            mode === m.id
-                                                                ? 'bg-blue-500/10 text-blue-500 font-bold dark:bg-blue-500/20'
-                                                                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04]'
+                                                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all ${
+                                                            mode === m.id ? 'bg-blue-500/10 text-blue-500 font-bold dark:bg-blue-500/20' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04]'
                                                         }`}
                                                     >
                                                         <div className="flex items-center gap-2">
@@ -1424,41 +1345,32 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                 </AnimatePresence>
                             </div>
 
-                            {/* Mic Button */}
                             {hasSupport && (
                                 <button
                                     onClick={toggleListening}
                                     type="button"
                                     title={isListening ? 'إيقاف التسجيل' : 'الميكروفون'}
                                     className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-200 ${
-                                        isListening
-                                            ? 'text-red-500 bg-red-500/10 border border-red-500/20 animate-pulse'
-                                            : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-white/[0.06] border border-transparent'
+                                        isListening ? 'text-red-500 bg-red-500/10 border border-red-500/20 animate-pulse' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-white/[0.06] border border-transparent'
                                     }`}
                                 >
                                     <span className="material-symbols-outlined text-[18px] sm:text-[20px]">mic</span>
                                 </button>
                             )}
 
-
-                            {/* Send / Upward Arrow Button */}
                             <button
                                 onClick={() => input.trim() && handleSendMessage()}
                                 disabled={isLoading || !input.trim()}
                                 type="button"
                                 title="إرسال رسالة"
                                 className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-200 ${
-                                    input.trim()
-                                        ? 'bg-blue-500 text-white hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-500/20 active:scale-95'
-                                        : 'bg-transparent text-slate-300 dark:text-slate-650 cursor-not-allowed'
+                                    input.trim() ? 'bg-blue-500 text-white hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-500/20 active:scale-95' : 'bg-transparent text-slate-300 dark:text-slate-650 cursor-not-allowed'
                                 }`}
                             >
                                 <span className="material-symbols-outlined text-[20px] sm:text-[22px] font-bold">arrow_upward</span>
                             </button>
                         </div>
-
                     </div>
-
                 </div>
             </motion.div>
         );
@@ -1467,20 +1379,14 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
     const renderIntegrationsView = () => {
         return (
             <div className="max-w-2xl mx-auto w-full pt-10 pb-20 px-4 text-right animate-in fade-in duration-500" dir="rtl">
-                {/* Header Info */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-5 border-b border-white/5">
                     <div>
                         <div className="flex items-center gap-2.5 justify-start mb-1">
                             <span className="material-symbols-outlined text-[22px] text-slate-400">link</span>
-                            <h1 className="text-xl sm:text-2xl font-black text-white">
-                                ربط التطبيقات والخدمات الذكية
-                            </h1>
+                            <h1 className="text-xl sm:text-2xl font-black text-white">ربط التطبيقات والخدمات الذكية</h1>
                         </div>
-                        <p className="text-xs text-slate-400 font-medium">
-                            قم بتفعيل صلاحيات ربط المساعد البرمجي بحساباتك الخارجية لتسهيل عملك.
-                        </p>
+                        <p className="text-xs text-slate-400 font-medium">قم بتفعيل صلاحيات ربط المساعد البرمجي بحساباتك الخارجية لتسهيل عملك.</p>
                     </div>
-
                     <button
                         onClick={() => setIsIntegrationsOpen(false)}
                         className="flex items-center gap-2 self-start sm:self-auto px-4 py-2 bg-slate-900 border border-white/5 text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl text-xs font-bold transition-all active:scale-95 shadow-sm"
@@ -1490,11 +1396,8 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                     </button>
                 </div>
 
-                {/* Premium Gmail Card */}
                 <div className="relative overflow-hidden bg-slate-950/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 sm:p-8 shadow-2xl">
-                    {/* Interior Glowing orb */}
                     <div className="absolute top-0 right-1/2 translate-x-1/2 w-64 h-64 bg-indigo-500/10 rounded-full blur-[80px] pointer-events-none" />
-
                     <div className="relative z-10 flex flex-col items-center text-center">
                         <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center shadow-inner mb-4 relative group">
                             <div className="absolute inset-0 bg-indigo-500/10 rounded-2xl blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -1516,17 +1419,12 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                     نشط ومتصل
                                 </span>
                             ) : (
-                                <span className="flex items-center gap-1 text-[9px] font-black text-slate-400 bg-white/5 px-2.5 py-0.5 rounded-full border border-white/5">
-                                    غير متصل
-                                </span>
+                                <span className="flex items-center gap-1 text-[9px] font-black text-slate-400 bg-white/5 px-2.5 py-0.5 rounded-full border border-white/5">غير متصل</span>
                             )}
                         </h2>
 
-                        <p className="text-xs text-slate-400 font-medium mb-6 max-w-sm leading-relaxed">
-                            تمكين المساعد من قراءة رسائل البريد الإلكتروني وتلخيصها وصياغة مسودات ردود فورية بالنيابة عنك مباشرة من الشات.
-                        </p>
+                        <p className="text-xs text-slate-400 font-medium mb-6 max-w-sm leading-relaxed">تمكين المساعد من قراءة رسائل البريد الإلكتروني وتلخيصها وصياغة مسودات ردود فورية بالنيابة عنك مباشرة من الشات.</p>
 
-                        {/* checklist */}
                         <div className="w-full max-w-sm bg-slate-900/40 border border-white/5 rounded-2xl p-4.5 mb-6 text-right">
                             <span className="text-[10px] font-black text-slate-500 mb-2.5 block text-right uppercase">مميزات ربط البريد الإلكتروني:</span>
                             <ul className="space-y-2.5">
@@ -1545,16 +1443,11 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                             </ul>
                         </div>
 
-                        {/* active profile info */}
                         {isGmailConnected && (
                             <div className="w-full max-w-sm flex flex-col gap-2.5 mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
                                 <div className="flex items-center gap-3 p-3 bg-slate-900/60 border border-white/5 rounded-2xl justify-start">
                                     <div className="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-xs shadow-inner overflow-hidden shrink-0">
-                                        {user?.photoURL ? (
-                                            <img src={user.photoURL} alt="User" className="w-full h-full object-cover" />
-                                        ) : (
-                                            <span className="uppercase font-black">{getUserInitials().slice(0, 1)}</span>
-                                        )}
+                                        {user?.photoURL ? <img src={user.photoURL} alt="User" className="w-full h-full object-cover" /> : <span className="uppercase font-black">{getUserInitials().slice(0, 1)}</span>}
                                     </div>
                                     <div className="flex-1 min-w-0 text-right">
                                         <p className="text-xs font-bold text-slate-200 truncate">{userData?.displayName || user?.displayName || 'مستخدم TOLZY'}</p>
@@ -1565,7 +1458,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                             </div>
                         )}
 
-                        {/* Actions */}
                         <div className="w-full max-w-sm">
                             {isGmailConnected ? (
                                 <button
@@ -1590,7 +1482,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                             )}
                         </div>
 
-                        {/* Privacy note */}
                         <div className="mt-5 flex items-center justify-center gap-1.5 text-[9px] text-slate-500 select-none">
                             <span>🔒</span>
                             <span>بياناتك وصلاحيات المزامنة مشفرة بالكامل لضمان سرية خصوصيتك.</span>
@@ -1612,12 +1503,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                 localStorage.setItem('tolzy_gmail_connected', 'true');
                 setIsConnectingGmail(false);
                 toast.success('تم ربط حساب Gmail بنجاح! 🚀', {
-                    style: {
-                        borderRadius: '16px',
-                        background: '#6366f1',
-                        color: '#fff',
-                        fontWeight: 'bold'
-                    }
+                    style: { borderRadius: '16px', background: '#6366f1', color: '#fff', fontWeight: 'bold' }
                 });
             }, 2000);
         };
@@ -1625,16 +1511,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
         return (
             <AnimatePresence>
                 <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
-                    {/* Backdrop with frosted blur */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={() => !isAuthLoading && setIsConnectingGmail(false)}
-                        className="fixed inset-0 bg-black/70 backdrop-blur-sm"
-                    />
-
-                    {/* Dialog Container */}
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => !isAuthLoading && setIsConnectingGmail(false)} className="fixed inset-0 bg-black/70 backdrop-blur-sm" />
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95, y: 15 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1643,7 +1520,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                         dir="rtl"
                     >
                         <div className="p-6 pb-4 flex flex-col items-center text-center border-b border-white/5 bg-slate-950/40">
-                            {/* Google colorful G logo */}
                             <svg className="w-12 h-12 mb-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -1664,14 +1540,9 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                             ) : (
                                 <>
                                     <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-2 text-right">الحساب الحالي للتكامل:</span>
-                                    
                                     <div className="flex items-center gap-3 p-3 bg-slate-950/60 border border-white/5 rounded-2xl mb-5 text-right justify-start">
                                         <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-sm shadow-inner relative overflow-hidden border border-emerald-600/20 shrink-0">
-                                            {user?.photoURL ? (
-                                                <img src={user.photoURL} alt="User" className="w-full h-full object-cover" />
-                                            ) : (
-                                                <span className="uppercase font-black">{getUserInitials().slice(0, 1)}</span>
-                                            )}
+                                            {user?.photoURL ? <img src={user.photoURL} alt="User" className="w-full h-full object-cover" /> : <span className="uppercase font-black">{getUserInitials().slice(0, 1)}</span>}
                                         </div>
                                         <div className="flex-1 min-w-0 text-right">
                                             <p className="text-xs font-bold text-slate-200 truncate">{userData?.displayName || user?.displayName || 'مستخدم TOLZY'}</p>
@@ -1680,18 +1551,8 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                     </div>
 
                                     <div className="flex gap-3 mt-6">
-                                        <button
-                                            onClick={handleAllow}
-                                            className="flex-1 py-2.5 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-xs font-bold transition-all active:scale-[0.98]"
-                                        >
-                                            السماح بالربط
-                                        </button>
-                                        <button
-                                            onClick={() => setIsConnectingGmail(false)}
-                                            className="flex-1 py-2.5 px-4 bg-white/5 hover:bg-white/10 text-slate-350 rounded-xl text-xs font-bold transition-all border border-white/5 active:scale-[0.98]"
-                                        >
-                                            إلغاء الأمر
-                                        </button>
+                                        <button onClick={handleAllow} className="flex-1 py-2.5 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-xs font-bold transition-all active:scale-[0.98]">السماح بالربط</button>
+                                        <button onClick={() => setIsConnectingGmail(false)} className="flex-1 py-2.5 px-4 bg-white/5 hover:bg-white/10 text-slate-350 rounded-xl text-xs font-bold transition-all border border-white/5 active:scale-[0.98]">إلغاء الأمر</button>
                                     </div>
                                 </>
                             )}
@@ -1705,7 +1566,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
     if (!user && showGuestOverlay) {
         return (
             <div className="flex h-[100dvh] w-full items-center justify-center bg-white dark:bg-[#0a0a0a] text-slate-800 dark:text-slate-100 overflow-hidden dir-rtl p-4 relative font-sans animate-in fade-in duration-500" dir="rtl">
-                {/* Center card */}
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95, y: 15 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1713,44 +1573,25 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                     className="relative z-10 w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden"
                 >
                     <div className="flex flex-col items-center text-center relative z-10">
-                        {/* Logo Sparkle */}
                         <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shadow-inner mb-6 relative">
                             <svg className="w-8 h-8 text-blue-500 animate-pulse" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M12 3C12 3 12 9 6 12C12 15 12 21 12 21C12 21 12 15 18 12C12 9 12 3 12 3Z" fill="currentColor" />
                             </svg>
                         </div>
 
-                        {/* Headline */}
-                        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2">
-                            أهلاً بك في <span className="text-blue-500 font-sans font-black">TOLZY Copilot</span> ✨
-                        </h1>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mb-6 leading-relaxed font-medium">
-                            مساعدك البرمجي والتعليمي الفائق بالذكاء الاصطناعي. ابدأ رحلتك التفاعلية واقضِ على المشكلات البرمجية فوراً وبكل سهولة.
-                        </p>
+                        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2">أهلاً بك في <span className="text-blue-500 font-sans font-black">TOLZY Copilot</span> ✨</h1>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mb-6 leading-relaxed font-medium">مساعدك البرمجي والتعليمي الفائق بالذكاء الاصطناعي. ابدأ رحلتك التفاعلية واقضِ على المشكلات البرمجية فوراً وبكل سهولة.</p>
 
-                        {/* Action Buttons */}
                         <div className="flex flex-col gap-2.5 w-full justify-center">
-                            <Link
-                                href="/auth"
-                                className="w-full py-3 px-5 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-500/10 active:scale-[0.98] transition-all text-center flex items-center justify-center gap-2 font-sans"
-                            >
+                            <Link href="/auth" className="w-full py-3 px-5 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-500/10 active:scale-[0.98] transition-all text-center flex items-center justify-center gap-2 font-sans">
                                 <span className="material-symbols-outlined text-[16px]">login</span>
                                 <span>سجل الدخول / إنشاء حساب مجاني</span>
                             </Link>
                             
-                            <button
-                                onClick={() => setShowGuestOverlay(false)}
-                                className="w-full py-3 px-5 rounded-2xl bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white font-bold text-xs sm:text-sm transition-all active:scale-[0.98] text-center font-sans"
-                            >
-                                استكشف الواجهة كزائر 👁️
-                            </button>
+                            <button onClick={() => setShowGuestOverlay(false)} className="w-full py-3 px-5 rounded-2xl bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white font-bold text-xs sm:text-sm transition-all active:scale-[0.98] text-center font-sans">استكشف الواجهة كزائر 👁️</button>
                         </div>
 
-                        {/* Back to Home Link */}
-                        <Link
-                            href="/"
-                            className="mt-5 flex items-center gap-1.5 text-[11px] text-slate-400 hover:text-blue-500 transition-colors justify-center font-sans font-medium"
-                        >
+                        <Link href="/" className="mt-5 flex items-center gap-1.5 text-[11px] text-slate-400 hover:text-blue-500 transition-colors justify-center font-sans font-medium">
                             <span className="material-symbols-outlined text-[14px]">home</span>
                             <span>العودة إلى الصفحة الرئيسية</span>
                         </Link>
@@ -1766,9 +1607,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                 
                 {/* ── Vertical Navigation Dock (Desktop Only) ── */}
                 <div className="hidden lg:flex fixed right-0 top-0 bottom-0 w-16 bg-white dark:bg-[#0c0c0e] border-l border-slate-200 dark:border-white/5 flex-col justify-between py-6 items-center z-[110] shadow-sm select-none" dir="rtl">
-                    {/* Top Group */}
                     <div className="flex flex-col gap-6 items-center w-full">
-                        {/* Tolzy Icon Badge - Clicking toggles sidebar */}
                         <button
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                             className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20 mb-2 hover:bg-blue-500/20 active:scale-95 transition-all group"
@@ -1780,19 +1619,12 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                         </button>
                     </div>
 
-                    {/* Bottom Group */}
                     <div className="flex flex-col gap-5 items-center w-full">
-                        {/* Icon 4: Diamond (Account Popover Toggle) */}
                         <div className="relative group">
                             <button
-                                onClick={() => {
-                                    setIsAccountPopoverOpen(!isAccountPopoverOpen);
-                                    setIsSettingsPopoverOpen(false);
-                                }}
+                                onClick={() => { setIsAccountPopoverOpen(!isAccountPopoverOpen); setIsSettingsPopoverOpen(false); }}
                                 className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all duration-200 active:scale-95 ${
-                                    isAccountPopoverOpen
-                                        ? 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400'
-                                        : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.05]'
+                                    isAccountPopoverOpen ? 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.05]'
                                 }`}
                                 title="الحساب الشخصي"
                             >
@@ -1802,23 +1634,14 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M2 9h20" />
                                 </svg>
                             </button>
-                            {/* Tooltip */}
-                            <span className="absolute right-14 top-1/2 -translate-y-1/2 scale-0 group-hover:scale-100 transition-all origin-right bg-slate-955 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg whitespace-nowrap shadow-xl border border-white/5 z-50">
-                                الحساب الشخصي
-                            </span>
+                            <span className="absolute right-14 top-1/2 -translate-y-1/2 scale-0 group-hover:scale-100 transition-all origin-right bg-slate-955 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg whitespace-nowrap shadow-xl border border-white/5 z-50">الحساب الشخصي</span>
                         </div>
 
-                        {/* Icon 5: Settings / Gear Outline (Settings Popover Toggle) */}
                         <div className="relative group">
                             <button
-                                onClick={() => {
-                                    setIsSettingsPopoverOpen(!isSettingsPopoverOpen);
-                                    setIsAccountPopoverOpen(false);
-                                }}
+                                onClick={() => { setIsSettingsPopoverOpen(!isSettingsPopoverOpen); setIsAccountPopoverOpen(false); }}
                                 className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all duration-200 active:scale-95 ${
-                                    isSettingsPopoverOpen
-                                        ? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white'
-                                        : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.05]'
+                                    isSettingsPopoverOpen ? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.05]'
                                 }`}
                                 title="الإعدادات"
                             >
@@ -1827,26 +1650,15 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
                             </button>
-                            {/* Tooltip */}
-                            <span className="absolute right-14 top-1/2 -translate-y-1/2 scale-0 group-hover:scale-100 transition-all origin-right bg-slate-955 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg whitespace-nowrap shadow-xl border border-white/5 z-50">
-                                الإعدادات
-                            </span>
+                            <span className="absolute right-14 top-1/2 -translate-y-1/2 scale-0 group-hover:scale-100 transition-all origin-right bg-slate-955 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg whitespace-nowrap shadow-xl border border-white/5 z-50">الإعدادات</span>
                         </div>
                     </div>
                 </div>
 
-                {/* Click outside backdrop container */}
                 {(isAccountPopoverOpen || isSettingsPopoverOpen) && (
-                    <div
-                        className="fixed inset-0 z-40 bg-transparent"
-                        onClick={() => {
-                            setIsAccountPopoverOpen(false);
-                            setIsSettingsPopoverOpen(false);
-                        }}
-                    />
+                    <div className="fixed inset-0 z-40 bg-transparent" onClick={() => { setIsAccountPopoverOpen(false); setIsSettingsPopoverOpen(false); }} />
                 )}
 
-                {/* Popovers placed next to the vertical dock on desktop and under top-left controls on mobile */}
                 <AnimatePresence>
                     {isSettingsPopoverOpen && (
                         <motion.div
@@ -1857,10 +1669,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                             dir="rtl"
                         >
                             <button
-                                onClick={() => {
-                                    deleteAllConversations();
-                                    setIsSettingsPopoverOpen(false);
-                                }}
+                                onClick={() => { deleteAllConversations(); setIsSettingsPopoverOpen(false); }}
                                 className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-red-500/10 text-red-500 dark:text-red-400 text-xs font-bold transition-all text-right duration-200"
                             >
                                 <span className="material-symbols-outlined text-[16px]">delete</span>
@@ -1901,12 +1710,8 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                     )}
                 </AnimatePresence>
 
-                {/* Mobile sidebar overlay backdrop */}
                 {isSidebarOpen && (
-                    <div 
-                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[90] lg:hidden"
-                        onClick={() => setIsSidebarOpen(false)}
-                    />
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[90] lg:hidden" onClick={() => setIsSidebarOpen(false)} />
                 )}
 
                 {/* ── Collapsible Sidebar (Timeline layout) ── */}
@@ -1919,7 +1724,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                             transition={{ type: "spring", stiffness: 350, damping: 30 }}
                             className="fixed right-0 lg:right-16 top-0 z-[100] h-full w-[280px] bg-white dark:bg-[#0c0c0e] border-l border-slate-200 dark:border-white/5 flex flex-col shadow-2xl lg:shadow-none"
                         >
-                            {/* Header: Title */}
                             <div className="p-4 flex items-center justify-between border-b border-slate-100 dark:border-white/5">
                                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">أرشيف المحادثات</span>
                                 <button
@@ -1931,13 +1735,9 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                 </button>
                             </div>
 
-                            {/* New Chat Button in Sidebar */}
                             <div className="p-3 border-b border-slate-100 dark:border-white/5">
                                 <button
-                                    onClick={() => {
-                                        startNewChat();
-                                        if (window.innerWidth < 1024) setIsSidebarOpen(false);
-                                    }}
+                                    onClick={() => { startNewChat(); if (window.innerWidth < 1024) setIsSidebarOpen(false); }}
                                     className="w-full py-2.5 px-4 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all duration-200 active:scale-95 shadow-md shadow-blue-500/10"
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -1948,7 +1748,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                 </button>
                             </div>
 
-                            {/* Timeline Grouped Conversations List */}
                             <div className="flex-1 overflow-y-auto overflow-x-hidden px-3.5 py-3 custom-scrollbar scrollbar-hide">
                                 {groupOrder.map(label => {
                                     const items = groupedConversations[label];
@@ -1969,14 +1768,10 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                                         `}
                                                     >
                                                         <span className="truncate text-xs flex-1 ml-2 text-right font-medium">{conv.title}</span>
-
-                                                        {/* Delete specific conversation */}
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                if (window.confirm('هل أنت متأكد من حذف هذه المحادثة نهائياً؟')) {
-                                                                    deleteConversation(conv.id);
-                                                                }
+                                                                if (window.confirm('هل أنت متأكد من حذف هذه المحادثة نهائياً؟')) { deleteConversation(conv.id); }
                                                             }}
                                                             className="opacity-0 group-hover:opacity-100 p-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/5 hover:bg-red-500/20 text-slate-405 hover:text-red-400 rounded-lg transition-all active:scale-90"
                                                             title="حذف المحادثة"
@@ -1999,7 +1794,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                     
                     {/* Mobile Gemini-Style Header */}
                     <div className="flex lg:hidden items-center justify-between h-14 w-full border-b border-slate-200/40 dark:border-white/[0.05] px-4 relative z-40 bg-[#FDFDFD]/80 dark:bg-[#050505]/80 backdrop-blur-md">
-                        {/* Hamburger menu button on Left */}
                         <button
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                             className="w-10 h-10 flex items-center justify-center text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-white/5 active:scale-95 transition-all rounded-full"
@@ -2010,7 +1804,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                             </svg>
                         </button>
 
-                        {/* Model/Mode Selector in Center */}
                         <div className="relative">
                             <button
                                 onClick={() => setIsModeDropdownOpen(!isModeDropdownOpen)}
@@ -2022,7 +1815,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                 </span>
                             </button>
 
-                            {/* Mode Dropdown Popover */}
                             <AnimatePresence>
                                 {isModeDropdownOpen && (
                                     <motion.div
@@ -2044,9 +1836,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                                         textareaRef.current?.focus();
                                                     }}
                                                     className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all ${
-                                                        mode === m.id
-                                                            ? 'bg-blue-500/10 text-blue-500 font-bold dark:bg-blue-500/20'
-                                                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04]'
+                                                        mode === m.id ? 'bg-blue-500/10 text-blue-500 font-bold dark:bg-blue-500/20' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04]'
                                                     }`}
                                                 >
                                                     <div className="flex items-center gap-2">
@@ -2064,12 +1854,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                             </AnimatePresence>
                         </div>
 
-                        {/* Sparkly Edit/New Chat button on Right */}
-                        <button
-                            onClick={startNewChat}
-                            className="w-9 h-9 rounded-full border border-dashed border-slate-300 dark:border-white/20 flex items-center justify-center text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-white/5 active:scale-95 transition-all"
-                            title="محادثة جديدة"
-                        >
+                        <button onClick={startNewChat} className="w-9 h-9 rounded-full border border-dashed border-slate-300 dark:border-white/20 flex items-center justify-center text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-white/5 active:scale-95 transition-all" title="محادثة جديدة">
                             <span className="material-symbols-outlined text-[18px]">edit</span>
                         </button>
                     </div>
@@ -2087,28 +1872,25 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
 
                     {/* Messages Area / Welcome Screen / Integrations View */}
                     {isIntegrationsOpen ? (
-                        <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pb-4 flex flex-col relative z-10 pt-20">
+                        <div className="flex-1 min-h-[100dvh] overflow-y-auto overflow-x-hidden px-4 pb-4 flex flex-col relative z-10 pt-20">
                             {renderIntegrationsView()}
                         </div>
                     ) : (
                         <>
-                            <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pb-4 flex flex-col relative z-10 scrollbar-thin scrollbar-thumb-white/5 scrollbar-track-transparent">
+                            <div className="flex-1 min-h-[100dvh] overflow-y-auto overflow-x-hidden px-4 pb-4 flex flex-col relative z-10 scrollbar-thin scrollbar-thumb-white/5 scrollbar-track-transparent">
                                 {messages.length === 0 ? (
-                                    /* ── Welcome Screen ── */
-                                    <div className="flex-1 flex flex-col h-full justify-center">
+                                    <div className="flex-1 flex flex-col h-full justify-center min-h-[calc(100dvh-80px)]">
                                         <WelcomeScreen
                                             onQuickAction={(text) => handleSendMessage(text)}
                                             userName={userData?.displayName || user?.displayName || undefined}
                                         >
-                                            {/* Centered light blue input pill - hidden on mobile (since it's at the bottom) */}
-                                            <div className="hidden lg:block w-full max-w-2xl mx-auto mt-6">
+                                            <div className="w-full max-w-2xl mx-auto mt-6 px-4">
                                                 {renderInputPill(true)}
                                             </div>
                                         </WelcomeScreen>
                                     </div>
                                 ) : (
-                                    /* Messages stream */
-                                    <div className="max-w-3xl mx-auto space-y-6 pt-24 pb-48 w-full">
+                                    <div className="max-w-3xl mx-auto space-y-5 sm:space-y-6 pt-6 sm:pt-24 pb-36 sm:pb-48 w-full">
                                         {messages.map((msg) => (
                                             <MessageItem
                                                 key={msg.id}
@@ -2117,21 +1899,18 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                                 onResend={(content) => handleSendMessage(content)}
                                             />
                                         ))}
-
                                         <div ref={messagesEndRef} className="h-4" />
                                     </div>
                                 )}
                             </div>
 
-                            {/* Floating bottom capsule Area */}
-                            <div className={`absolute bottom-[56px] md:bottom-0 left-0 right-0 z-30 px-4 pb-4 sm:pb-6 pt-16 bg-gradient-to-t from-white via-white/85 to-transparent dark:from-[#06080f] dark:via-[#06080f]/85 dark:to-transparent pointer-events-none ${messages.length === 0 ? 'lg:hidden' : ''}`}>
-                                <div className="max-w-3xl mx-auto w-full pointer-events-auto flex flex-col gap-3">
-                                    
+                            {/* Floating bottom capsule Area (Fixed UI Solution) */}
+                            <div className={`fixed bottom-0 left-0 right-0 z-30 px-4 pb-4 lg:pb-6 pt-10 bg-gradient-to-t from-white via-white/95 to-transparent dark:from-[#06080f] dark:via-[#06080f]/95 dark:to-transparent pointer-events-none lg:pr-16 start-0 transition-all duration-350 ${messages.length === 0 ? 'hidden' : ''}`} style={{ paddingRight: isSidebarOpen && window.innerWidth >= 1024 ? '344px' : '' }}>
+                                <div className="max-w-3xl mx-auto w-full pointer-events-auto flex flex-col gap-2.5">
                                     {renderInputPill(false)}
                                     
-                                    {/* Disclaimer */}
-                                    <div className="text-center mt-1.5">
-                                        <p className="text-[10px] text-slate-650 dark:text-slate-600 font-medium tracking-tight">
+                                    <div className="text-center">
+                                        <p className="text-[10px] text-slate-450 dark:text-slate-500 font-medium tracking-tight">
                                             TOLZY Copilot <span className="opacity-60">قد يخطئ أحياناً، يرجى التحقق من المعلومات البرمجية المهمة.</span>
                                         </p>
                                     </div>
@@ -2140,7 +1919,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                         </>
                     )}
 
-                    {/* Google Auth Dialog Modal */}
                     {renderGoogleAuthModal()}
 
                 </main>
