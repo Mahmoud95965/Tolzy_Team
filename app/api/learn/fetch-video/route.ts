@@ -19,6 +19,69 @@ export async function OPTIONS() {
     return NextResponse.json({}, { headers: corsHeaders() });
 }
 
+// Custom Fetch wrapper using Axios to support proxy routing
+async function customProxyFetch(url: string, init?: any): Promise<Response> {
+    const proxyUrl = process.env.YOUTUBE_PROXY_URL;
+    
+    // If no proxy is set, use standard global fetch directly
+    if (!proxyUrl) {
+        return fetch(url, init);
+    }
+
+    let proxyConfig = undefined;
+    try {
+        const parsed = new URL(proxyUrl);
+        proxyConfig = {
+            protocol: parsed.protocol.replace(':', ''),
+            host: parsed.hostname,
+            port: parseInt(parsed.port || (parsed.protocol === 'https:' ? '443' : '80')),
+            auth: parsed.username ? {
+                username: decodeURIComponent(parsed.username),
+                password: decodeURIComponent(parsed.password)
+            } : undefined
+        };
+    } catch (e) {
+        console.error('Invalid YOUTUBE_PROXY_URL format:', e);
+        return fetch(url, init);
+    }
+
+    // Convert Headers object to plain object
+    const headers = init?.headers || {};
+    let reqHeaders: Record<string, string> = {};
+    if (headers instanceof Headers) {
+        headers.forEach((value, key) => {
+            reqHeaders[key] = value;
+        });
+    } else if (typeof headers === 'object') {
+        reqHeaders = { ...headers };
+    }
+
+    try {
+        const response = await axios({
+            method: init?.method || 'GET',
+            url: url,
+            data: init?.body,
+            headers: reqHeaders,
+            proxy: proxyConfig,
+            validateStatus: () => true,
+            responseType: 'text',
+            timeout: 10000
+        });
+
+        return {
+            ok: response.status >= 200 && response.status < 300,
+            status: response.status,
+            statusText: response.statusText,
+            headers: new Headers(response.headers as any),
+            text: async () => response.data,
+            json: async () => typeof response.data === 'string' ? JSON.parse(response.data) : response.data
+        } as unknown as Response;
+    } catch (err: any) {
+        console.error('Proxy fetch failed:', err.message);
+        throw err;
+    }
+}
+
 // Extract YouTube Video ID
 function extractVideoId(url: string): string | null {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
@@ -224,7 +287,9 @@ export async function POST(req: NextRequest) {
         // 2. Fetch Transcript
         let transcriptSegments: TranscriptSegment[] = [];
         try {
-            transcriptSegments = await YoutubeTranscript.fetchTranscript(videoId);
+            transcriptSegments = await YoutubeTranscript.fetchTranscript(videoId, {
+                fetch: customProxyFetch
+            });
         } catch (transcriptError: any) {
             console.error('Transcript fetch failed for video:', videoId, transcriptError);
             
@@ -262,9 +327,29 @@ export async function POST(req: NextRequest) {
 
         // Scrape page first as reliable zero-key fallback
         try {
+            const proxyUrl = process.env.YOUTUBE_PROXY_URL;
+            let proxyConfig = undefined;
+            if (proxyUrl) {
+                try {
+                    const parsed = new URL(proxyUrl);
+                    proxyConfig = {
+                        protocol: parsed.protocol.replace(':', ''),
+                        host: parsed.hostname,
+                        port: parseInt(parsed.port || (parsed.protocol === 'https:' ? '443' : '80')),
+                        auth: parsed.username ? {
+                            username: decodeURIComponent(parsed.username),
+                            password: decodeURIComponent(parsed.password)
+                        } : undefined
+                    };
+                } catch (e) {
+                    console.error('Invalid YOUTUBE_PROXY_URL format for scraping:', e);
+                }
+            }
+
             const response = await axios.get(`https://www.youtube.com/watch?v=${videoId}`, {
                 headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36' },
-                timeout: 8000
+                timeout: 8000,
+                proxy: proxyConfig
             });
             const html = response.data;
             const $ = cheerio.load(html);
