@@ -1606,155 +1606,61 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
 
     return (
         <>
-            <div className="flex h-[100dvh] bg-[radial-gradient(circle_at_50%_65%,_#e2f0fd_0%,_#f0f7fe_35%,_#f8fafc_70%,_#ffffff_100%)] dark:bg-[radial-gradient(circle_at_50%_65%,_rgba(59,130,246,0.08)_0%,_rgba(15,23,42,0)_60%)] dark:bg-[#06080f] text-slate-800 dark:text-slate-100 overflow-hidden dir-rtl transition-colors duration-300 relative font-sans" dir="rtl">
-                
-                {/* ── Vertical Navigation Dock (Desktop Only) ── */}
-                <div className="hidden lg:flex fixed right-0 top-0 bottom-0 w-16 bg-white dark:bg-[#0c0c0e] border-l border-slate-200 dark:border-white/5 flex-col justify-between py-6 items-center z-[110] shadow-sm select-none" dir="rtl">
-                    <div className="flex flex-col gap-6 items-center w-full">
-                        <button
-                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20 mb-2 hover:bg-blue-500/20 active:scale-95 transition-all group"
-                            title={isSidebarOpen ? "إغلاق الأرشيف" : "فتح الأرشيف - القائمة الجانبية"}
-                        >
-                            <svg className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 3C12 3 12 9 6 12C12 15 12 21 12 21C12 21 12 15 18 12C12 9 12 3 12 3Z" fill="currentColor" />
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div className="flex flex-col gap-5 items-center w-full">
-                        <div className="relative group">
-                            <button
-                                onClick={() => { setIsAccountPopoverOpen(!isAccountPopoverOpen); setIsSettingsPopoverOpen(false); }}
-                                className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all duration-200 active:scale-95 ${
-                                    isAccountPopoverOpen ? 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.05]'
-                                }`}
-                                title="الحساب الشخصي"
-                            >
-                                <svg className="w-[22px] h-[22px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 3h12l4 6-10 12L2 9z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M11 3L8 9l4 12 4-12-3-6" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M2 9h20" />
-                                </svg>
-                            </button>
-                            <span className="absolute right-14 top-1/2 -translate-y-1/2 scale-0 group-hover:scale-100 transition-all origin-right bg-slate-955 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg whitespace-nowrap shadow-xl border border-white/5 z-50">الحساب الشخصي</span>
-                        </div>
-
-                        <div className="relative group">
-                            <button
-                                onClick={() => { setIsSettingsPopoverOpen(!isSettingsPopoverOpen); setIsAccountPopoverOpen(false); }}
-                                className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all duration-200 active:scale-95 ${
-                                    isSettingsPopoverOpen ? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.05]'
-                                }`}
-                                title="الإعدادات"
-                            >
-                                <svg className="w-[22px] h-[22px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                            </button>
-                            <span className="absolute right-14 top-1/2 -translate-y-1/2 scale-0 group-hover:scale-100 transition-all origin-right bg-slate-955 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg whitespace-nowrap shadow-xl border border-white/5 z-50">الإعدادات</span>
-                        </div>
-                    </div>
+            <div
+                className="flex h-[100dvh] bg-white dark:bg-[#070a12] text-slate-800 dark:text-slate-100 overflow-hidden transition-colors duration-300 relative font-sans"
+                dir="rtl"
+            >
+                {/* ── Ambient Background Glow ── */}
+                <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+                    <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-blue-500/5 dark:bg-blue-600/8 blur-[120px]" />
+                    <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-500/5 dark:bg-indigo-600/6 blur-[100px]" />
                 </div>
 
-                {(isAccountPopoverOpen || isSettingsPopoverOpen) && (
-                    <div className="fixed inset-0 z-40 bg-transparent" onClick={() => { setIsAccountPopoverOpen(false); setIsSettingsPopoverOpen(false); }} />
-                )}
-
-                <AnimatePresence>
-                    {isSettingsPopoverOpen && (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                            className="fixed lg:right-20 lg:bottom-6 lg:top-auto lg:left-auto left-5 top-20 w-52 bg-white dark:bg-[#0c0c0e] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl p-1.5 z-[120] overflow-hidden"
-                            dir="rtl"
-                        >
-                            <button
-                                onClick={() => { deleteAllConversations(); setIsSettingsPopoverOpen(false); }}
-                                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-red-500/10 text-red-500 dark:text-red-400 text-xs font-bold transition-all text-right duration-200"
-                            >
-                                <span className="material-symbols-outlined text-[16px]">delete</span>
-                                <span className="flex-1 text-right font-semibold">حذف السجل بالكامل</span>
-                            </button>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                <AnimatePresence>
-                    {isAccountPopoverOpen && (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                            className="fixed lg:right-20 lg:bottom-24 lg:top-auto lg:left-auto left-5 top-20 w-64 bg-white dark:bg-[#0c0c0e] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl p-5 z-[120]"
-                            dir="rtl"
-                        >
-                            <div className="flex flex-col items-center text-center">
-                                <div className="w-12 h-12 rounded-full bg-blue-500 text-white flex items-center justify-center overflow-hidden mb-3 border border-slate-200 dark:border-slate-800 shadow-inner">
-                                    {user?.photoURL ? (
-                                        <Image src={user.photoURL} alt="User" width={48} height={48} className="object-cover rounded-full" />
-                                    ) : (
-                                        <span className="text-base font-black">{getUserInitials().slice(0, 1)}</span>
-                                    )}
-                                </div>
-                                <h4 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 mb-0.5">{userData?.displayName || 'مستخدم TOLZY'}</h4>
-                                <p className="text-[10px] text-slate-500 mb-4">{user?.email}</p>
-
-                                <div className="w-full border-t border-slate-100 dark:border-white/5 pt-4 space-y-1">
-                                    <button onClick={() => supabase.auth.signOut()} className="w-full flex items-center justify-center gap-2 py-2 px-3 text-slate-500 hover:text-red-500 hover:bg-red-500/5 dark:text-slate-400 dark:hover:text-red-400 dark:hover:bg-red-500/5 text-xs font-bold rounded-xl transition-all duration-200 active:scale-95">
-                                        <span className="material-symbols-outlined text-[14px]">logout</span>
-                                        <span className="font-bold">تسجيل الخروج</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
+                {/* ── Sidebar Backdrop ── */}
                 {isSidebarOpen && (
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[90] lg:hidden" onClick={() => setIsSidebarOpen(false)} />
+                    <div
+                        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[90]"
+                        onClick={() => setIsSidebarOpen(false)}
+                    />
                 )}
 
-                {/* ── Collapsible Sidebar (Timeline layout) ── */}
+                {/* ── Collapsible Sidebar ── */}
                 <AnimatePresence initial={false}>
                     {isSidebarOpen && (
                         <motion.div
                             initial={{ x: '100%', opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: '100%', opacity: 0 }}
-                            transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                            className="fixed right-0 lg:right-16 top-0 z-[100] h-full w-[280px] bg-white dark:bg-[#0c0c0e] border-l border-slate-200 dark:border-white/5 flex flex-col shadow-2xl lg:shadow-none"
+                            transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                            className="fixed right-0 top-0 z-[100] h-full w-[290px] bg-white dark:bg-[#0c0e16] border-l border-slate-200 dark:border-white/[0.06] flex flex-col shadow-2xl"
                         >
-                            <div className="p-4 flex items-center justify-between border-b border-slate-100 dark:border-white/5">
-                                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">أرشيف المحادثات</span>
+                            {/* Sidebar Header */}
+                            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-white/[0.05]">
+                                <span className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">أرشيف المحادثات</span>
                                 <button
                                     onClick={() => setIsSidebarOpen(false)}
-                                    className="w-7 h-7 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-colors text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white border border-transparent hover:border-slate-200 dark:hover:border-white/5"
-                                    title="إغلاق"
+                                    className="w-7 h-7 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-500 dark:text-slate-400 transition-all"
                                 >
                                     <span className="material-symbols-outlined text-[16px]">close</span>
                                 </button>
                             </div>
 
-                            <div className="p-3 border-b border-slate-100 dark:border-white/5">
+                            {/* New Chat Button */}
+                            <div className="px-4 py-3 border-b border-slate-100 dark:border-white/[0.04]">
                                 <button
-                                    onClick={() => { startNewChat(); if (window.innerWidth < 1024) setIsSidebarOpen(false); }}
-                                    className="w-full py-2.5 px-4 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all duration-200 active:scale-95 shadow-md shadow-blue-500/10"
+                                    onClick={() => { startNewChat(); setIsSidebarOpen(false); }}
+                                    className="w-full py-2.5 px-4 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md shadow-blue-500/20"
                                 >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                        <circle cx="12" cy="12" r="10" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v8m-4-4h8" />
-                                    </svg>
+                                    <span className="material-symbols-outlined text-[16px]">edit</span>
                                     <span>محادثة جديدة</span>
                                 </button>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto overflow-x-hidden px-3.5 py-3 custom-scrollbar scrollbar-hide">
+                            {/* Conversations List */}
+                            <div className="flex-1 overflow-y-auto px-3 py-3 scrollbar-hide">
                                 {groupOrder.map(label => {
                                     const items = groupedConversations[label];
-                                    if (!items || items.length === 0) return null;
+                                    if (!items?.length) return null;
                                     return (
                                         <div key={label} className="mb-5">
                                             <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 px-3 mb-2 uppercase">{label}</h3>
@@ -1765,19 +1671,17 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                                         onClick={() => loadConversation(conv)}
                                                         className={`group relative flex items-center justify-between px-3.5 py-2.5 rounded-xl cursor-pointer transition-all border
                                                             ${currentConversationId === conv.id
-                                                                ? 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-white font-bold'
-                                                                : 'hover:bg-slate-50 dark:hover:bg-white/5 border-transparent hover:border-slate-200 dark:hover:border-white/5 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-                                                            }
-                                                        `}
+                                                                ? 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400 font-bold'
+                                                                : 'hover:bg-slate-50 dark:hover:bg-white/[0.04] border-transparent text-slate-600 dark:text-slate-400'
+                                                            }`}
                                                     >
                                                         <span className="truncate text-xs flex-1 ml-2 text-right font-medium">{conv.title}</span>
                                                         <button
-                                                            onClick={(e) => {
+                                                            onClick={e => {
                                                                 e.stopPropagation();
-                                                                if (window.confirm('هل أنت متأكد من حذف هذه المحادثة نهائياً؟')) { deleteConversation(conv.id); }
+                                                                if (window.confirm('هل تريد حذف هذه المحادثة؟')) deleteConversation(conv.id);
                                                             }}
-                                                            className="opacity-0 group-hover:opacity-100 p-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/5 hover:bg-red-500/20 text-slate-405 hover:text-red-400 rounded-lg transition-all active:scale-90"
-                                                            title="حذف المحادثة"
+                                                            className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/10 text-slate-400 hover:text-red-400 rounded-lg transition-all"
                                                         >
                                                             <span className="material-symbols-outlined text-[14px]">delete</span>
                                                         </button>
@@ -1788,113 +1692,184 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                     );
                                 })}
                             </div>
+
+                            {/* Sidebar Footer */}
+                            <div className="px-4 py-4 border-t border-slate-100 dark:border-white/[0.05]">
+                                <button
+                                    onClick={() => { deleteAllConversations(); setIsSidebarOpen(false); }}
+                                    className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl hover:bg-red-500/10 text-red-400 text-xs font-bold transition-all"
+                                >
+                                    <span className="material-symbols-outlined text-[15px]">delete_sweep</span>
+                                    <span>مسح كل السجل</span>
+                                </button>
+                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
 
-                {/* ── Main Chat Screen Area ── */}
-                <main className={`flex-1 flex flex-col relative h-full w-full overflow-hidden transition-all duration-300 lg:pr-16 ${isSidebarOpen ? 'lg:pr-[344px]' : ''}`}>
-                    
-                    {/* Mobile Gemini-Style Header */}
-                    <div className="flex lg:hidden items-center justify-between h-14 w-full border-b border-slate-200/40 dark:border-white/[0.05] px-4 relative z-40 bg-[#FDFDFD]/80 dark:bg-[#050505]/80 backdrop-blur-md">
-                        <button
-                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className="w-10 h-10 flex items-center justify-center text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-white/5 active:scale-95 transition-all rounded-full"
-                            title={isSidebarOpen ? "إغلاق القائمة" : "فتح القائمة الجانبية"}
-                        >
-                            <svg className="w-6 h-6 text-slate-800 dark:text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h16M4 16h16" />
-                            </svg>
-                        </button>
+                {/* Popover Backdrops */}
+                {(isAccountPopoverOpen || isSettingsPopoverOpen) && (
+                    <div className="fixed inset-0 z-40" onClick={() => { setIsAccountPopoverOpen(false); setIsSettingsPopoverOpen(false); }} />
+                )}
 
-                        <div className="relative">
+                <AnimatePresence>
+                    {isSettingsPopoverOpen && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 8 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 8 }}
+                            className="fixed left-4 top-16 w-52 bg-white dark:bg-[#0c0e16] border border-slate-200 dark:border-white/[0.08] rounded-2xl shadow-2xl p-1.5 z-[120]"
+                            dir="rtl"
+                        >
+                            <button
+                                onClick={() => { deleteAllConversations(); setIsSettingsPopoverOpen(false); }}
+                                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-red-500/10 text-red-400 text-xs font-bold transition-all"
+                            >
+                                <span className="material-symbols-outlined text-[16px]">delete</span>
+                                <span>حذف السجل بالكامل</span>
+                            </button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                <AnimatePresence>
+                    {isAccountPopoverOpen && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 8 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 8 }}
+                            className="fixed left-4 top-16 w-64 bg-white dark:bg-[#0c0e16] border border-slate-200 dark:border-white/[0.08] rounded-2xl shadow-2xl p-5 z-[120]"
+                            dir="rtl"
+                        >
+                            <div className="flex flex-col items-center text-center">
+                                <div className="w-12 h-12 rounded-full bg-blue-500 text-white flex items-center justify-center overflow-hidden mb-3 border border-blue-400/30">
+                                    {user?.photoURL ? (
+                                        <Image src={user.photoURL} alt="User" width={48} height={48} className="object-cover rounded-full" />
+                                    ) : (
+                                        <span className="text-base font-black">{getUserInitials().slice(0, 1)}</span>
+                                    )}
+                                </div>
+                                <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-0.5">{userData?.displayName || 'مستخدم TOLZY'}</h4>
+                                <p className="text-[10px] text-slate-500 mb-4">{user?.email}</p>
+                                <div className="w-full border-t border-slate-100 dark:border-white/[0.05] pt-3">
+                                    <button
+                                        onClick={() => supabase.auth.signOut()}
+                                        className="w-full flex items-center justify-center gap-2 py-2 px-3 hover:text-red-400 hover:bg-red-500/5 text-slate-500 dark:text-slate-400 text-xs font-bold rounded-xl transition-all"
+                                    >
+                                        <span className="material-symbols-outlined text-[14px]">logout</span>
+                                        <span>تسجيل الخروج</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* ── Main Chat Area ── */}
+                <main className="flex-1 flex flex-col relative h-full w-full overflow-hidden z-10">
+
+                    {/* ── Premium Header ── */}
+                    <header className="flex items-center justify-between h-14 px-4 sm:px-5 border-b border-slate-200/60 dark:border-white/[0.05] bg-white/80 dark:bg-[#070a12]/90 backdrop-blur-xl z-40 flex-shrink-0">
+                        {/* Left: Archive + New Chat */}
+                        <div className="flex items-center gap-1.5">
+                            <button
+                                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                                className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-600 dark:text-slate-400 transition-all active:scale-95"
+                                title="أرشيف المحادثات"
+                            >
+                                <span className="material-symbols-outlined text-[20px]">menu</span>
+                            </button>
+                            <button
+                                onClick={startNewChat}
+                                className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-600 dark:text-slate-400 transition-all active:scale-95"
+                                title="محادثة جديدة"
+                            >
+                                <span className="material-symbols-outlined text-[20px]">edit_square</span>
+                            </button>
+                        </div>
+
+                        {/* Center: Brand */}
+                        <div className="flex items-center gap-2 select-none">
+                            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/25">
+                                <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 3C12 3 12 9 6 12C12 15 12 21 12 21C12 21 12 15 18 12C12 9 12 3 12 3Z" fill="currentColor" />
+                                </svg>
+                            </div>
+                            <span className="text-sm font-black text-slate-900 dark:text-white tracking-tight">TOLZY <span className="text-blue-500">Copilot</span></span>
+                        </div>
+
+                        {/* Right: Mode indicator + Account */}
+                        <div className="flex items-center gap-1.5">
                             <button
                                 onClick={() => setIsModeDropdownOpen(!isModeDropdownOpen)}
-                                className="flex items-center gap-1 text-slate-800 dark:text-white text-sm font-black hover:bg-slate-100 dark:hover:bg-white/5 px-3 py-1.5 rounded-xl transition-all select-none"
+                                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.06] border border-slate-200 dark:border-white/[0.06] transition-all"
                             >
                                 <span>{MODES.find(m => m.id === mode)?.label || 'عام'}</span>
-                                <span className="material-symbols-outlined text-[16px] transition-transform duration-200" style={{ transform: isModeDropdownOpen ? 'rotate(180deg)' : 'none' }}>
-                                    keyboard_arrow_down
-                                </span>
+                                <span className="material-symbols-outlined text-[14px]">keyboard_arrow_down</span>
                             </button>
 
                             <AnimatePresence>
                                 {isModeDropdownOpen && (
                                     <motion.div
-                                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                        initial={{ opacity: 0, scale: 0.95, y: 6 }}
                                         animate={{ opacity: 1, scale: 1, y: 0 }}
-                                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-44 bg-white dark:bg-[#131314] border border-slate-200 dark:border-white/[0.08] rounded-2xl shadow-2xl p-1.5 z-50 overflow-hidden"
+                                        exit={{ opacity: 0, scale: 0.95, y: 6 }}
+                                        className="fixed left-1/2 -translate-x-1/2 top-16 w-44 bg-white dark:bg-[#0e1119] border border-slate-200 dark:border-white/[0.08] rounded-2xl shadow-2xl p-1.5 z-50"
+                                        dir="rtl"
                                     >
-                                        <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-white/[0.04] mb-1 text-center">
-                                            <span className="text-[10px] font-bold text-slate-400 block">وضع المحادثة</span>
-                                        </div>
-                                        <div className="space-y-0.5">
-                                            {MODES.map((m) => (
-                                                <button
-                                                    key={m.id}
-                                                    onClick={() => {
-                                                        setMode(m.id as CopilotMode);
-                                                        setIsModeDropdownOpen(false);
-                                                        textareaRef.current?.focus();
-                                                    }}
-                                                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all ${
-                                                        mode === m.id ? 'bg-blue-500/10 text-blue-500 font-bold dark:bg-blue-500/20' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04]'
-                                                    }`}
-                                                >
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-slate-400 dark:text-slate-500 flex items-center">{m.icon}</span>
-                                                        <span>{m.label}</span>
-                                                    </div>
-                                                    {mode === m.id && (
-                                                        <span className="material-symbols-outlined text-[14px] text-blue-500">check</span>
-                                                    )}
-                                                </button>
-                                            ))}
-                                        </div>
+                                        {MODES.map(m => (
+                                            <button
+                                                key={m.id}
+                                                onClick={() => { setMode(m.id as CopilotMode); setIsModeDropdownOpen(false); textareaRef.current?.focus(); }}
+                                                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all ${mode === m.id ? 'bg-blue-500/10 text-blue-500 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04]'}`}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-slate-400 flex items-center">{m.icon}</span>
+                                                    <span>{m.label}</span>
+                                                </div>
+                                                {mode === m.id && <span className="material-symbols-outlined text-[13px]">check</span>}
+                                            </button>
+                                        ))}
                                     </motion.div>
                                 )}
                             </AnimatePresence>
+
+                            <button
+                                onClick={() => { setIsAccountPopoverOpen(!isAccountPopoverOpen); setIsSettingsPopoverOpen(false); }}
+                                className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center overflow-hidden border-2 border-blue-400/30 transition-all active:scale-90 hover:ring-2 hover:ring-blue-500/30"
+                                title="الحساب الشخصي"
+                            >
+                                {user?.photoURL ? (
+                                    <Image src={user.photoURL} alt="User" width={32} height={32} className="object-cover" />
+                                ) : (
+                                    <span className="text-[11px] font-black">{getUserInitials().slice(0, 1)}</span>
+                                )}
+                            </button>
                         </div>
+                    </header>
 
-                        <button onClick={startNewChat} className="w-9 h-9 rounded-full border border-dashed border-slate-300 dark:border-white/20 flex items-center justify-center text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-white/5 active:scale-95 transition-all" title="محادثة جديدة">
-                            <span className="material-symbols-outlined text-[18px]">edit</span>
-                        </button>
-                    </div>
-
-                    {/* Desktop Floating Brand Logo Button */}
-                    <button
-                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                        className="hidden lg:flex absolute top-5 right-5 z-40 w-10 h-10 rounded-xl bg-white/70 dark:bg-[#0c0c0e]/70 border border-slate-200/50 dark:border-white/5 backdrop-blur-md items-center justify-center text-blue-500 hover:text-blue-600 active:scale-95 shadow-sm transition-all group"
-                        title={isSidebarOpen ? "إغلاق الأرشيف" : "فتح الأرشيف - القائمة الجانبية"}
-                    >
-                        <svg className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 3C12 3 12 9 6 12C12 15 12 21 12 21C12 21 12 15 18 12C12 9 12 3 12 3Z" fill="currentColor" />
-                        </svg>
-                    </button>
-
-                    {/* Messages Area / Welcome Screen / Integrations View */}
+                    {/* ── Messages / Welcome / Integrations ── */}
                     {isIntegrationsOpen ? (
-                        <div className="flex-1 min-h-[100dvh] overflow-y-auto overflow-x-hidden px-4 pb-4 flex flex-col relative z-10 pt-20">
+                        <div className="flex-1 overflow-y-auto px-4 pb-4 flex flex-col z-10">
                             {renderIntegrationsView()}
                         </div>
                     ) : (
                         <>
-                            <div className="flex-1 min-h-[100dvh] overflow-y-auto overflow-x-hidden px-4 pb-4 flex flex-col relative z-10 scrollbar-thin scrollbar-thumb-white/5 scrollbar-track-transparent">
+                            <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 flex flex-col relative z-10 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-white/[0.05] scrollbar-track-transparent">
                                 {messages.length === 0 ? (
-                                    <div className="flex-1 flex flex-col h-full justify-center min-h-[calc(100dvh-80px)]">
+                                    <div className="flex-1 flex flex-col h-full justify-center min-h-[calc(100dvh-160px)]">
                                         <WelcomeScreen
                                             onQuickAction={(text) => handleSendMessage(text)}
                                             userName={userData?.displayName || user?.displayName || undefined}
                                         >
-                                            <div className="w-full max-w-2xl mx-auto mt-6 px-4">
+                                            <div className="w-full max-w-2xl mx-auto mt-6 px-2">
                                                 {renderInputPill(true)}
                                             </div>
                                         </WelcomeScreen>
                                     </div>
                                 ) : (
-                                    <div className="max-w-3xl mx-auto space-y-5 sm:space-y-6 pt-6 sm:pt-24 pb-36 sm:pb-48 w-full">
-                                        {messages.map((msg) => (
+                                    <div className="max-w-3xl mx-auto space-y-0 pt-6 pb-44 w-full">
+                                        {messages.map(msg => (
                                             <MessageItem
                                                 key={msg.id}
                                                 msg={msg}
@@ -1902,28 +1877,45 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                                 onResend={(content) => handleSendMessage(content)}
                                             />
                                         ))}
-                                        <div ref={messagesEndRef} className="h-4" />
+                                        <div ref={messagesEndRef} className="h-1" />
                                     </div>
                                 )}
                             </div>
 
-                            {/* Floating bottom capsule Area (Fixed UI Solution) */}
-                            <div className={`fixed bottom-0 left-0 right-0 z-30 px-4 pb-4 lg:pb-6 pt-10 bg-gradient-to-t from-white via-white/95 to-transparent dark:from-[#06080f] dark:via-[#06080f]/95 dark:to-transparent pointer-events-none lg:pr-16 start-0 transition-all duration-350 ${messages.length === 0 ? 'hidden' : ''}`} style={{ paddingRight: isSidebarOpen && window.innerWidth >= 1024 ? '344px' : '' }}>
-                                <div className="max-w-3xl mx-auto w-full pointer-events-auto flex flex-col gap-2.5">
-                                    {renderInputPill(false)}
-                                    
-                                    <div className="text-center">
-                                        <p className="text-[10px] text-slate-450 dark:text-slate-500 font-medium tracking-tight">
-                                            TOLZY Copilot <span className="opacity-60">قد يخطئ أحياناً، يرجى التحقق من المعلومات البرمجية المهمة.</span>
+                            {/* ── Sticky Bottom Input Bar ── */}
+                            {messages.length > 0 && (
+                                <div className="fixed bottom-0 left-0 right-0 z-30 px-4 pb-5 pt-12 bg-gradient-to-t from-white via-white/95 dark:from-[#070a12] dark:via-[#070a12]/95 to-transparent pointer-events-none">
+                                    <div className="max-w-3xl mx-auto w-full pointer-events-auto flex flex-col gap-2">
+                                        {/* Mode Pills Row */}
+                                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                                            {MODES.map(m => (
+                                                <button
+                                                    key={m.id}
+                                                    onClick={() => setMode(m.id as CopilotMode)}
+                                                    className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all border ${
+                                                        mode === m.id
+                                                            ? 'bg-blue-500 text-white border-blue-500 shadow-md shadow-blue-500/20'
+                                                            : 'bg-white dark:bg-white/[0.04] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/[0.12]'
+                                                    }`}
+                                                >
+                                                    <span className="flex items-center">{m.icon}</span>
+                                                    <span>{m.label}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        {renderInputPill(false)}
+
+                                        <p className="text-center text-[10px] text-slate-400 dark:text-slate-600 font-medium">
+                                            TOLZY Copilot قد يخطئ أحياناً. يرجى التحقق من المعلومات المهمة.
                                         </p>
                                     </div>
                                 </div>
-                            </div>
+                            )}
                         </>
                     )}
 
                     {renderGoogleAuthModal()}
-
                 </main>
             </div>
         </>

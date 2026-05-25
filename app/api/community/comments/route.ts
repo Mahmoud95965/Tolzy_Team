@@ -62,14 +62,13 @@ export async function POST(req: NextRequest) {
 
     const supabase = getSupabaseClient();
 
-    // 1. Insert comment
+    // 1. Insert comment (author_avatar excluded — column may not exist in schema cache)
     const { data: comment, error: insertError } = await supabase
       .from('prompt_comments')
       .insert({
         prompt_id,
         author_uid,
         author_name,
-        author_avatar,
         content: content.trim()
       })
       .select()

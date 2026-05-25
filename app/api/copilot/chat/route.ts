@@ -326,15 +326,19 @@ export async function POST(req: NextRequest) {
         // =======================
         let context = '';
         if (tools.length) {
-            context += `\n📌 أدوات Tolzy:\n`;
-            context += tools.slice(0, 3).map((t, i) => `${i + 1}. **${t.name}** — ${t.description?.slice(0, 100)}`).join('\n');
+            context += `\n📌 أدوات Tolzy المتاحة (استخدم صيغة بطاقة tool لكل أداة):\n`;
+            context += tools.slice(0, 4).map((t, i) =>
+                `${i + 1}. name: ${t.name} | description: ${t.description?.slice(0, 120) || ''} | link: ${t.link || t.url || ''} | category: ${t.category || ''}`
+            ).join('\n');
         }
         if (courses.length) {
-            context += `\n\n🎓 كورسات Tolzy:\n`;
-            context += courses.slice(0, 3).map((c, i) => `${i + 1}. **${c.title}** (${c.level || 'جميع المستويات'}) — ${c.description?.slice(0, 100) || ''}`).join('\n');
+            context += `\n\n🎓 كورسات Tolzy المتاحة (استخدم صيغة بطاقة course لكل كورس):\n`;
+            context += courses.slice(0, 3).map((c, i) =>
+                `${i + 1}. title: ${c.title} | description: ${c.description?.slice(0, 120) || ''} | level: ${c.level || 'جميع المستويات'} | duration: ${c.duration || ''} | instructor: ${c.instructor || ''} | link: ${c.link || c.url || ''}`
+            ).join('\n');
         }
         if (webResults) context += `\n\n🌐 نتائج البحث:\n${webResults}`;
-        if (!context) context = '💡 لم أجد نتائج مباشرة، سأساعدك من خبرتي 👇';
+        if (!context) context = '💡 لم أجد نتائج مباشرة في قاعدة بيانات Tolzy، سأساعدك من خبرتي العامة 👇';
 
         // =======================
         // ⚡ MODE INSTRUCTIONS
@@ -387,19 +391,50 @@ body: محتوى الرسالة المقترح هنا
 - فاصل الرسائل في gmail-inbox هو --- في سطر منفرد.
 ` : '';
 
-        const systemPrompt = `أنت "TOLZY Copilot V2.5 ✨" — المساعد الذكي من تطوير Tolzy AI. الموقع: ai.tolzy.me
+        const systemPrompt = `أنت "TOLZY Copilot ✨" — المساعد الذكي من تطوير Tolzy AI. الموقع: ai.tolzy.me
 
-تعليماتك:
-1. أجب على أي سؤال بلا استثناء.
-2. أولوية لأدوات وكورسات Tolzy عند الاقتراح.
-3. أنت مساعد TOLZY Copilot — لست ChatGPT أو Gemini أو Claude.
-4. كن احترافياً وودوداً وداعماً.
-5. لديك أكثر من 600 أداة ذكية وأكثر من 150 كورس.
-6. الرد بالعربية ما لم يطلب المستخدم غير ذلك.
+## هويتك
+- اسمك TOLZY Copilot، لست ChatGPT أو Gemini أو Claude.
+- تم تطويرك بواسطة فريق Tolzy AI.
+- لديك قاعدة بيانات تضم أكثر من 600 أداة ذكاء اصطناعي وأكثر من 150 كورس تقني.
+
+## قواعد الرد
+1. الرد دائماً بالعربية ما لم يطلب المستخدم صريحاً غير ذلك.
+2. اجعل ردودك منظمة ومرتبة باستخدام:
+   - **عناوين** (##) للمحاور الكبرى
+   - **قوائم نقطية** للخطوات والاقتراحات
+   - **نص굵 Bold** للكلمات المهمة
+   - **مقتطفات كود** للأمثلة التقنية
+3. كن دافئاً وودوداً وداعماً ومحترفاً.
+4. أجب على أي سؤال بلا استثناء.
+
+## عرض الأدوات والكورسات
+عندما تجد أدوات أو كورسات مناسبة في قاعدة البيانات، **يجب** عرضها كبطاقات بهذه الصيغة بالضبط:
+
+للأداة:
+\`\`\`tool
+name: اسم الأداة
+description: وصف الأداة
+category: الفئة
+link: الرابط
+\`\`\`
+
+للكورس:
+\`\`\`course
+name: عنوان الكورس
+description: وصف الكورس
+level: المستوى
+duration: المدة
+instructor: المدرب
+link: الرابط
+\`\`\`
+
+**لا تكتب الأدوات والكورسات كنص عادي — استخدم بطاقات الكود دائماً.**
 
 ${modeInstruction}
 ${gmailInstructions}
-📚 Tolzy Context:
+
+## بيانات Tolzy المتاحة الآن
 ${context}`;
 
         // =======================
