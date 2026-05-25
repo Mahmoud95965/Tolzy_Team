@@ -227,10 +227,25 @@ export async function POST(req: NextRequest) {
             transcriptSegments = await YoutubeTranscript.fetchTranscript(videoId);
         } catch (transcriptError: any) {
             console.error('Transcript fetch failed for video:', videoId, transcriptError);
+            
+            const errMsg = transcriptError?.message || '';
+            let userFriendlyError = 'لم نتمكن من جلب النص التلقائي لهذا الفيديو. يرجى التأكد من أن الفيديو يحتوي على ترجمة/نص تلقائي (Subtitles/Transcript) مفعل.';
+            
+            if (errMsg.includes('unavailable') || errMsg.includes('no longer available')) {
+                userFriendlyError = 'عذراً، هذا الفيديو غير متوفر (قد يكون خاصاً، غير مدرج، أو تم حذفه).';
+            } else if (errMsg.includes('disabled') || errMsg.includes('Disabled')) {
+                userFriendlyError = 'الترجمة أو النص التلقائي غير مفعل لهذا الفيديو من قبل صاحب القناة.';
+            } else if (errMsg.includes('too many requests') || errMsg.includes('captcha')) {
+                userFriendlyError = 'تم حظر الطلب مؤقتاً من قِبل يوتيوب بسبب كثرة الطلبات. يرجى إعادة المحاولة لاحقاً.';
+            } else if (errMsg.includes('No transcripts are available')) {
+                userFriendlyError = 'لا يوجد نص تلقائي أو ترجمة متوفرة لهذا الفيديو على يوتيوب.';
+            }
+
             return NextResponse.json({ 
-                error: 'لم نتمكن من جلب النص التلقائي لهذا الفيديو. يرجى التأكد من أن الفيديو يحتوي على ترجمة/نص تلقائي (Subtitles/Transcript) مفعل.' 
+                error: userFriendlyError
             }, { status: 400, headers: corsHeaders() });
         }
+
 
         if (!transcriptSegments || transcriptSegments.length === 0) {
             return NextResponse.json({ 
