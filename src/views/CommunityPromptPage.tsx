@@ -23,8 +23,8 @@ import { POST_TYPE_CONFIG } from '../types/community';
 import Link from 'next/link';
 
 const SORT_TABS: { key: FeedSortMode; label: string; icon: React.ReactNode }[] = [
-  { key: 'trending', label: 'رائج', icon: <TrendingUp size={16} /> },
   { key: 'latest', label: 'الأحدث', icon: <Clock size={16} /> },
+  { key: 'trending', label: 'رائج', icon: <TrendingUp size={16} /> },
   { key: 'top', label: 'الأفضل', icon: <ArrowUp size={16} /> },
 ];
 
@@ -37,7 +37,7 @@ const CommunityPromptPage: React.FC = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
-  const [sort, setSort] = useState<FeedSortMode>('trending');
+  const [sort, setSort] = useState<FeedSortMode>('latest');
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [activeType, setActiveType] = useState<PostType | null>(null);
 
@@ -45,7 +45,7 @@ const CommunityPromptPage: React.FC = () => {
   const [tags, setTags] = useState<(PromptTag & { prompts_count?: number })[]>([]);
 
   // Comments state
-  const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
+  const [activeCommentsPostId, setActiveCommentsPostId] = useState<string | null>(null);
   const [commentsMap, setCommentsMap] = useState<Record<string, PromptComment[]>>({});
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
   const [loadingComments, setLoadingComments] = useState<Set<string>>(new Set());
@@ -62,10 +62,11 @@ const CommunityPromptPage: React.FC = () => {
   // Header nav
   const [activeSection, setActiveSection] = useState<'posts' | 'creators' | 'about'>('posts');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchInitialized, setIsSearchInitialized] = useState(false);
   
   // Mobile Search
   const [showMobileSearch, setShowMobileSearch] = useState(false);
-  const [recentSearches, setRecentSearches] = useState<string[]>(['تصميم واجهات', 'برومبت تسويق', 'مساعد مبرمج', 'تحليل بيانات']);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
   // Sidebar
   const [trendingTags, setTrendingTags] = useState<(PromptTag & { count: number })[]>([]);
@@ -178,6 +179,57 @@ const CommunityPromptPage: React.FC = () => {
       fetchUserState(prompts.map(p => p.id));
     }
   }, [prompts.length, fetchUserState]);
+
+  // Load saved search query + recent searches on mount / user change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const searchKey   = user?.uid ? `lastSearch_${user.uid}`   : 'lastSearch_guest';
+      const recentsKey  = user?.uid ? `recentSearches_${user.uid}` : 'recentSearches_guest';
+      const savedQuery   = localStorage.getItem(searchKey);
+      const savedRecents = localStorage.getItem(recentsKey);
+      if (savedQuery)   setSearchQuery(savedQuery);
+      if (savedRecents) {
+        try { setRecentSearches(JSON.parse(savedRecents)); } catch {}
+      }
+      setIsSearchInitialized(true);
+    }
+  }, [user?.uid]);
+
+  // Persist search query on every change
+  useEffect(() => {
+    if (isSearchInitialized && typeof window !== 'undefined') {
+      const searchKey = user?.uid ? `lastSearch_${user.uid}` : 'lastSearch_guest';
+      localStorage.setItem(searchKey, searchQuery);
+    }
+  }, [searchQuery, user?.uid, isSearchInitialized]);
+
+  // Helper: push a term to recentSearches (max 8) and persist
+  const saveRecentSearch = (term: string) => {
+    if (!term.trim()) return;
+    const recentsKey = user?.uid ? `recentSearches_${user.uid}` : 'recentSearches_guest';
+    setRecentSearches(prev => {
+      const next = [term.trim(), ...prev.filter(t => t !== term.trim())].slice(0, 8);
+      localStorage.setItem(recentsKey, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  // Helper: remove a single recent search term
+  const removeRecentSearch = (term: string) => {
+    const recentsKey = user?.uid ? `recentSearches_${user.uid}` : 'recentSearches_guest';
+    setRecentSearches(prev => {
+      const next = prev.filter(t => t !== term);
+      localStorage.setItem(recentsKey, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  // Helper: clear all recent searches
+  const clearRecentSearches = () => {
+    const recentsKey = user?.uid ? `recentSearches_${user.uid}` : 'recentSearches_guest';
+    setRecentSearches([]);
+    localStorage.removeItem(recentsKey);
+  };
 
   // ─── Handlers ──────────────────────────────────────────────
   const handleSortChange = (newSort: FeedSortMode) => {
@@ -324,32 +376,28 @@ const CommunityPromptPage: React.FC = () => {
   };
 
   const toggleComments = async (promptId: string) => {
-    const isExpanded = expandedComments.has(promptId);
-    if (isExpanded) {
-      setExpandedComments(prev => { const n = new Set(prev); n.delete(promptId); return n; });
-      return;
-    }
+    setActiveCommentsPostId(promptId);
 
-    setLoadingComments(prev => new Set(prev).add(promptId));
-    
-    try {
-      const { data, error } = await supabase
-        .from('prompt_comments')
-        .select('*')
-        .eq('prompt_id', promptId)
-        .order('created_at', { ascending: true });
+    // Fetch comments if they are not already fetched
+    if (!commentsMap[promptId] || commentsMap[promptId].length === 0) {
+      setLoadingComments(prev => new Set(prev).add(promptId));
+      try {
+        const res = await fetch(`/api/community/comments?prompt_id=${promptId}`);
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || 'Failed to fetch comments');
+        }
+        const { data } = await res.json();
 
-      if (error) throw error;
-
-      if (data) {
-        setCommentsMap(prev => ({ ...prev, [promptId]: data }));
+        if (data) {
+          setCommentsMap(prev => ({ ...prev, [promptId]: data }));
+        }
+      } catch (err) {
+        console.error('Failed to fetch comments:', err);
+        toast.error('حدث خطأ أثناء جلب التعليقات');
+      } finally {
+        setLoadingComments(prev => { const n = new Set(prev); n.delete(promptId); return n; });
       }
-      setExpandedComments(prev => new Set(prev).add(promptId));
-    } catch (err) {
-      console.error('Failed to fetch comments:', err);
-      toast.error('حدث خطأ أثناء جلب التعليقات');
-    } finally {
-      setLoadingComments(prev => { const n = new Set(prev); n.delete(promptId); return n; });
     }
   };
 
@@ -359,28 +407,33 @@ const CommunityPromptPage: React.FC = () => {
     if (!text) return;
 
     try {
-      const { data, error } = await supabase.from('prompt_comments').insert({
-        prompt_id: promptId,
-        author_uid: user.uid,
-        author_name: user.displayName || 'مستخدم',
-        author_avatar: user.photoURL || null,
-        content: text
-      }).select().single();
+      const res = await fetch('/api/community/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt_id: promptId,
+          author_uid: user.uid,
+          author_name: user.displayName || 'مستخدم',
+          author_avatar: user.photoURL || null,
+          content: text
+        })
+      });
 
-      if (error) throw error;
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to add comment');
+      }
+
+      const { data } = await res.json();
 
       if (data) {
         setCommentsMap(prev => ({ ...prev, [promptId]: [...(prev[promptId] || []), data] }));
         setCommentInputs(prev => ({ ...prev, [promptId]: '' }));
         
-        // Update comment count
-        const prompt = prompts.find(p => p.id === promptId);
-        if (prompt) {
-          await supabase.from('community_prompts').update({ comments_count: (prompt.comments_count || 0) + 1 }).eq('id', promptId);
-          setPrompts(prev => prev.map(p => p.id === promptId ? { ...p, comments_count: (p.comments_count || 0) + 1 } : p));
-        }
+        // Update comment count in local client state
+        setPrompts(prev => prev.map(p => p.id === promptId ? { ...p, comments_count: (p.comments_count || 0) + 1 } : p));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to add comment:', err);
       toast.error('حدث خطأ أثناء إضافة التعليق');
     }
@@ -391,8 +444,14 @@ const CommunityPromptPage: React.FC = () => {
     if (!confirm('هل أنت متأكد من حذف هذا التعليق؟')) return;
 
     try {
-      const { error } = await supabase.from('prompt_comments').delete().eq('id', commentId).eq('author_uid', user.uid);
-      if (error) throw error;
+      const res = await fetch(`/api/community/comments?id=${commentId}&prompt_id=${promptId}&author_uid=${user.uid}`, {
+        method: 'DELETE'
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to delete comment');
+      }
       
       toast.success('تم حذف التعليق');
       setCommentsMap(prev => ({
@@ -400,12 +459,8 @@ const CommunityPromptPage: React.FC = () => {
         [promptId]: (prev[promptId] || []).filter(c => c.id !== commentId)
       }));
       
-      const prompt = prompts.find(p => p.id === promptId);
-      if (prompt) {
-        await supabase.from('community_prompts').update({ comments_count: Math.max(0, (prompt.comments_count || 0) - 1) }).eq('id', promptId);
-        setPrompts(prev => prev.map(p => p.id === promptId ? { ...p, comments_count: Math.max(0, (p.comments_count || 0) - 1) } : p));
-      }
-    } catch (err) {
+      setPrompts(prev => prev.map(p => p.id === promptId ? { ...p, comments_count: Math.max(0, (p.comments_count || 0) - 1) } : p));
+    } catch (err: any) {
       console.error('Failed to delete comment:', err);
       toast.error('حدث خطأ أثناء حذف التعليق');
     }
@@ -419,11 +474,20 @@ const CommunityPromptPage: React.FC = () => {
   const handleSaveCommentEdit = async (commentId: string, promptId: string) => {
     if (!user) return;
     try {
-      const { error } = await supabase.from('prompt_comments').update({
-        content: editCommentContent.trim()
-      }).eq('id', commentId).eq('author_uid', user.uid);
+      const res = await fetch('/api/community/comments', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: commentId,
+          author_uid: user.uid,
+          content: editCommentContent.trim()
+        })
+      });
 
-      if (error) throw error;
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to edit comment');
+      }
 
       toast.success('تم تعديل التعليق');
       setCommentsMap(prev => ({
@@ -431,7 +495,7 @@ const CommunityPromptPage: React.FC = () => {
         [promptId]: (prev[promptId] || []).map(c => c.id === commentId ? { ...c, content: editCommentContent.trim() } : c)
       }));
       setEditingCommentId(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to save comment edit:', err);
       toast.error('حدث خطأ أثناء تعديل التعليق');
     }
@@ -453,6 +517,11 @@ const CommunityPromptPage: React.FC = () => {
     if (num >= 1_000) return (num / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
     return String(num);
   };
+
+  // Filter prompts by search query (matching the main title field)
+  const filteredPrompts = searchQuery.trim()
+    ? prompts.filter(p => (p.title || '').toLowerCase().includes(searchQuery.trim().toLowerCase()))
+    : prompts;
 
   return (
     <PageLayout hideNavbar hideFooter navbarOffset={false}>
@@ -515,9 +584,19 @@ const CommunityPromptPage: React.FC = () => {
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && searchQuery.trim()) saveRecentSearch(searchQuery); }}
                 placeholder="ابحث في المجتمع..."
-                className="w-full bg-slate-100/70 dark:bg-white/[0.05] text-slate-900 dark:text-white text-sm font-medium pr-10 pl-4 py-2 sm:py-2.5 rounded-full border border-slate-200/50 dark:border-white/5 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/50 focus:bg-white dark:focus:bg-[#0a0a0a] transition-all placeholder:text-slate-400 shadow-inner"
+                className="w-full bg-slate-100/70 dark:bg-white/[0.05] text-slate-900 dark:text-white text-sm font-medium pr-10 pl-8 py-2 sm:py-2.5 rounded-full border border-slate-200/50 dark:border-white/5 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/50 focus:bg-white dark:focus:bg-[#0a0a0a] transition-all placeholder:text-slate-400 shadow-inner"
               />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-all"
+                  title="مسح البحث"
+                >
+                  <X size={13} strokeWidth={2.5} />
+                </button>
+              )}
             </div>
 
             {/* Search Icon - Mobile */}
@@ -612,8 +691,14 @@ const CommunityPromptPage: React.FC = () => {
                   <p className="text-slate-500 font-black text-lg">لا توجد منشورات بعد</p>
                   <p className="text-slate-400 text-sm mt-1">كن أول من يشارك مع المجتمع!</p>
                 </div>
+              ) : filteredPrompts.length === 0 ? (
+                <div className="text-center py-20 bg-white dark:bg-[#0d1117] rounded-xl shadow-sm border border-slate-200/60 dark:border-white/[0.05] animate-in fade-in duration-300">
+                  <Sparkles size={48} className="mx-auto text-[#0866ff] mb-4 opacity-75 animate-pulse" />
+                  <p className="text-slate-700 dark:text-slate-350 font-black text-lg">جرب التصفح افضل لك</p>
+                  <p className="text-slate-400 text-sm mt-1.5">لم نجد أي منشورات تطابق العنوان: "{searchQuery}"</p>
+                </div>
               ) : (
-                prompts.map(prompt => (
+                filteredPrompts.map(prompt => (
                   <div key={prompt.id} className="space-y-3">
                     <PromptCard
                       prompt={prompt}
@@ -624,111 +709,6 @@ const CommunityPromptPage: React.FC = () => {
                       onShare={handleShare}
                       onDelete={handleDelete}
                     />
-
-                    <AnimatePresence>
-                      {expandedComments.has(prompt.id) && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                          animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
-                          exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                          transition={{ duration: 0.25 }}
-                          className="bg-white dark:bg-[#242526] rounded-2xl border border-gray-150 dark:border-gray-700/60 p-4 shadow-sm space-y-4 overflow-hidden"
-                        >
-                          {/* Quick Reply */}
-                          <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-full shrink-0 ${user ? getAvatarColor(user.displayName || 'م') : 'bg-slate-350'} flex items-center justify-center text-white font-bold text-sm shadow-inner`}>
-                              {user?.displayName?.[0] || 'م'}
-                            </div>
-                            <div className="flex-1 relative">
-                              <input
-                                type="text"
-                                value={commentInputs[prompt.id] || ''}
-                                onChange={e => setCommentInputs(prev => ({ ...prev, [prompt.id]: e.target.value }))}
-                                onKeyDown={e => e.key === 'Enter' && handleAddComment(prompt.id)}
-                                placeholder="اكتب تعليقاً..."
-                                className="w-full bg-slate-100/70 dark:bg-[#18191a] border border-transparent dark:border-white/5 rounded-full py-2.5 pr-10 pl-4 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-indigo-500/50 transition-all duration-300 shadow-inner"
-                              />
-                              <button
-                                onClick={() => handleAddComment(prompt.id)}
-                                disabled={!commentInputs[prompt.id]?.trim()}
-                                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-indigo-500 disabled:text-slate-350 dark:disabled:text-slate-650 transition-all hover:scale-110 active:scale-95"
-                              >
-                                <Send size={15} className="rtl:-scale-x-100 shrink-0" />
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Comments List */}
-                          {loadingComments.has(prompt.id) ? (
-                            <div className="flex justify-center py-6">
-                              <Loader2 className="w-5 h-5 animate-spin text-indigo-500 shrink-0" />
-                            </div>
-                          ) : (
-                            <>
-                              {(commentsMap[prompt.id] || []).length === 0 && (
-                                <div className="text-center py-6 flex flex-col items-center gap-2 bg-slate-50/50 dark:bg-white/[0.01] rounded-2xl border border-dashed border-slate-200/60 dark:border-white/5 animate-in fade-in duration-300">
-                                  <MessageSquare size={20} className="text-slate-350 dark:text-slate-600 animate-pulse shrink-0" />
-                                  <p className="text-slate-400 dark:text-slate-550 text-xs font-bold">لا توجد تعليقات بعد. كن أول من يشارك برأيه!</p>
-                                </div>
-                              )}
-                              <div className="space-y-4 max-h-[320px] overflow-y-auto pr-1">
-                                {(commentsMap[prompt.id] || []).map(c => (
-                                  <div key={c.id} className="flex items-start gap-3 group/comment animate-in fade-in slide-in-from-top-1 duration-300">
-                                    <div className={`w-8 h-8 rounded-full ${getAvatarColor(c.author_name)} flex items-center justify-center text-white font-black text-xs shrink-0 shadow-sm`}>
-                                      {c.author_name[0]}
-                                    </div>
-                                    <div className="flex-1 bg-slate-50/70 dark:bg-white/[0.02] border border-slate-100/50 dark:border-white/[0.03] rounded-2xl px-4 py-3 hover:bg-slate-100/50 dark:hover:bg-white/[0.04] transition-all duration-300 hover:shadow-sm">
-                                      <div className="flex items-center justify-between mb-1.5">
-                                        <div className="flex items-center gap-2">
-                                          <span className="font-bold text-xs sm:text-sm text-slate-800 dark:text-white leading-none">{c.author_name}</span>
-                                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">{timeAgo(c.created_at)}</span>
-                                        </div>
-                                        {user?.uid === c.author_uid && (
-                                          <div className="flex items-center gap-1.5 opacity-0 group-hover/comment:opacity-100 transition-opacity duration-300">
-                                            <button 
-                                              onClick={() => startEditingComment(c)} 
-                                              className="p-1 text-slate-400 hover:text-indigo-500 transition-colors rounded hover:bg-slate-100 dark:hover:bg-white/5"
-                                              title="تعديل"
-                                            >
-                                              <Edit2 size={12} />
-                                            </button>
-                                            <button 
-                                              onClick={() => handleDeleteComment(c.id, prompt.id)} 
-                                              className="p-1 text-slate-400 hover:text-red-500 transition-colors rounded hover:bg-slate-100 dark:hover:bg-white/5"
-                                              title="حذف"
-                                            >
-                                              <Trash2 size={12} />
-                                            </button>
-                                          </div>
-                                        )}
-                                      </div>
-                                      {editingCommentId === c.id ? (
-                                        <div className="mt-1 space-y-2">
-                                          <input
-                                            type="text"
-                                            value={editCommentContent}
-                                            onChange={e => setEditCommentContent(e.target.value)}
-                                            onKeyDown={e => e.key === 'Enter' && handleSaveCommentEdit(c.id, prompt.id)}
-                                            className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-xs focus:outline-none"
-                                            autoFocus
-                                          />
-                                          <div className="flex justify-end gap-3">
-                                            <button onClick={() => setEditingCommentId(null)} className="text-[10px] font-bold text-slate-500">إلغاء</button>
-                                            <button onClick={() => handleSaveCommentEdit(c.id, prompt.id)} className="text-[10px] font-black text-indigo-500">حفظ</button>
-                                          </div>
-                                        </div>
-                                      ) : (
-                                        <p className="text-slate-700 dark:text-slate-355 text-[13px] sm:text-[14px] leading-relaxed font-semibold">{c.content}</p>
-                                      )}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </>
-                          )}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
                   </div>
                 ))
               )}
@@ -892,9 +872,23 @@ const CommunityPromptPage: React.FC = () => {
                     type="text"
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && searchQuery.trim()) {
+                        saveRecentSearch(searchQuery);
+                        setShowMobileSearch(false);
+                      }
+                    }}
                     placeholder="ابحث في المجتمع..."
-                    className="w-full bg-slate-100 dark:bg-white/[0.05] text-slate-900 dark:text-white text-sm font-bold pr-10 pl-4 py-3 rounded-xl border-none focus:ring-2 focus:ring-indigo-500/50 transition-all placeholder:text-slate-400"
+                    className="w-full bg-slate-100 dark:bg-white/[0.05] text-slate-900 dark:text-white text-sm font-bold pr-10 pl-8 py-3 rounded-xl border-none focus:ring-2 focus:ring-indigo-500/50 transition-all placeholder:text-slate-400"
                   />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-slate-400 hover:text-slate-700 transition-all"
+                    >
+                      <X size={14} strokeWidth={2.5} />
+                    </button>
+                  )}
                 </div>
                 <button 
                   onClick={() => setShowMobileSearch(false)}
@@ -906,23 +900,43 @@ const CommunityPromptPage: React.FC = () => {
 
               {/* Recent Searches */}
               <div className="p-4 flex-1 overflow-y-auto">
-                <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.1em] mb-4 px-2">عمليات البحث الأخيرة</h3>
-                <div className="space-y-1">
-                  {recentSearches.map((term, i) => (
-                    <button 
-                      key={i}
-                      onClick={() => {
-                        setSearchQuery(term);
-                        setShowMobileSearch(false);
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors text-right active:scale-95"
-                    >
-                      <Search size={14} className="text-slate-400" />
-                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200 flex-1">{term}</span>
-                      <ArrowUpRight size={14} className="text-slate-300 dark:text-slate-600" />
+                <div className="flex items-center justify-between mb-4 px-2">
+                  <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.1em]">عمليات البحث الأخيرة</h3>
+                  {recentSearches.length > 0 && (
+                    <button onClick={clearRecentSearches} className="text-[10px] font-bold text-red-400 hover:text-red-500 transition-colors">
+                      مسح الكل
                     </button>
-                  ))}
+                  )}
                 </div>
+                {recentSearches.length === 0 ? (
+                  <p className="text-center text-xs text-slate-400 py-8">لا توجد عمليات بحث سابقة</p>
+                ) : (
+                  <div className="space-y-1">
+                    {recentSearches.map((term, i) => (
+                      <div key={i} className="flex items-center gap-1 group/item">
+                        <button 
+                          onClick={() => {
+                            setSearchQuery(term);
+                            saveRecentSearch(term);
+                            setShowMobileSearch(false);
+                          }}
+                          className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors text-right active:scale-95"
+                        >
+                          <Search size={14} className="text-slate-400 shrink-0" />
+                          <span className="text-sm font-bold text-slate-700 dark:text-slate-200 flex-1">{term}</span>
+                          <ArrowUpRight size={14} className="text-slate-300 dark:text-slate-600" />
+                        </button>
+                        <button
+                          onClick={() => removeRecentSearch(term)}
+                          className="shrink-0 p-1.5 rounded-full text-slate-300 hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all opacity-0 group-hover/item:opacity-100"
+                          title="حذف"
+                        >
+                          <X size={12} strokeWidth={2.5} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
@@ -935,6 +949,165 @@ const CommunityPromptPage: React.FC = () => {
           onSubmit={handleCreatePrompt}
           tags={tags}
         />
+
+        {/* Comments Modal (Desktop & Mobile responsive) */}
+        <AnimatePresence>
+          {activeCommentsPostId && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+              {/* Backdrop */}
+              <div 
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+                onClick={() => setActiveCommentsPostId(null)} 
+              />
+              
+              {/* Modal Container */}
+              <div className="relative bg-white dark:bg-[#18191a] w-full sm:max-w-2xl h-full sm:h-auto sm:max-h-[90vh] rounded-none sm:rounded-t-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-200 dark:border-white/5">
+                {/* Header */}
+                <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-[#242526] z-10 shrink-0">
+                  <button 
+                    onClick={() => setActiveCommentsPostId(null)}
+                    className="p-1.5 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                  <h3 className="text-base font-black text-slate-900 dark:text-white">
+                    منشور {prompts.find(p => p.id === activeCommentsPostId)?.author_name}
+                  </h3>
+                  <div className="w-8" /> {/* Spacer */}
+                </div>
+
+                {/* Body (Scrollable) */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  {/* Show Post Card ONLY on Desktop (hidden on Mobile) */}
+                  <div className="hidden sm:block pointer-events-auto">
+                    {(() => {
+                      const activePrompt = prompts.find(p => p.id === activeCommentsPostId);
+                      if (!activePrompt) return null;
+                      return (
+                        <PromptCard
+                          prompt={activePrompt}
+                          userVote={userVotes[activePrompt.id] || null}
+                          isOwner={user?.uid === activePrompt.author_uid}
+                          onVote={handleVote}
+                          onComment={() => {}}
+                          onShare={handleShare}
+                          onDelete={(id) => {
+                            handleDelete(id);
+                            setActiveCommentsPostId(null);
+                          }}
+                        />
+                      );
+                    })()}
+                  </div>
+
+                  {/* Comments Title / Count */}
+                  <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-white/5">
+                    <span className="font-bold text-sm text-slate-800 dark:text-slate-200">التعليقات</span>
+                    <span className="bg-slate-100 dark:bg-white/10 px-2 py-0.5 rounded-full text-xs font-bold text-slate-500 dark:text-slate-400">
+                      {prompts.find(p => p.id === activeCommentsPostId)?.comments_count || 0}
+                    </span>
+                  </div>
+
+                  {/* Comments List */}
+                  {loadingComments.has(activeCommentsPostId) ? (
+                    <div className="flex justify-center py-12">
+                      <Loader2 className="w-8 h-8 animate-spin text-indigo-500 shrink-0" />
+                    </div>
+                  ) : (
+                    <>
+                      {(commentsMap[activeCommentsPostId] || []).length === 0 && (
+                        <div className="text-center py-12 flex flex-col items-center gap-2 bg-slate-50/50 dark:bg-white/[0.01] rounded-2xl border border-dashed border-slate-200/60 dark:border-white/5 animate-in fade-in duration-300">
+                          <MessageSquare size={24} className="text-slate-350 dark:text-slate-600 animate-pulse shrink-0" />
+                          <p className="text-slate-400 dark:text-slate-550 text-xs font-bold">لا توجد تعليقات بعد. كن أول من يشارك برأيه!</p>
+                        </div>
+                      )}
+                      
+                      <div className="space-y-4">
+                        {(commentsMap[activeCommentsPostId] || []).map(c => (
+                          <div key={c.id} className="flex items-start gap-3 group/comment animate-in fade-in slide-in-from-top-1 duration-300">
+                            <div className={`w-8 h-8 rounded-full ${getAvatarColor(c.author_name)} flex items-center justify-center text-white font-black text-xs shrink-0 shadow-sm`}>
+                              {c.author_name[0]}
+                            </div>
+                            <div className="flex-1 bg-slate-50/70 dark:bg-white/[0.02] border border-slate-100/50 dark:border-white/[0.03] rounded-2xl px-4 py-3 hover:bg-slate-100/50 dark:hover:bg-white/[0.04] transition-all duration-300 hover:shadow-sm">
+                              <div className="flex items-center justify-between mb-1.5">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-xs sm:text-sm text-slate-800 dark:text-white leading-none">{c.author_name}</span>
+                                  <span className="text-[10px] text-slate-400 dark:text-slate-555 font-medium">{timeAgo(c.created_at)}</span>
+                                </div>
+                                {user?.uid === c.author_uid && (
+                                  <div className="flex items-center gap-1.5 opacity-0 group-hover/comment:opacity-100 transition-opacity duration-300">
+                                    <button 
+                                      onClick={() => startEditingComment(c)} 
+                                      className="p-1 text-slate-400 hover:text-indigo-500 transition-colors rounded hover:bg-slate-100 dark:hover:bg-white/5"
+                                      title="تعديل"
+                                    >
+                                      <Edit2 size={12} />
+                                    </button>
+                                    <button 
+                                      onClick={() => handleDeleteComment(c.id, activeCommentsPostId)} 
+                                      className="p-1 text-slate-400 hover:text-red-500 transition-colors rounded hover:bg-slate-100 dark:hover:bg-white/5"
+                                      title="حذف"
+                                    >
+                                      <Trash2 size={12} />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                              {editingCommentId === c.id ? (
+                                <div className="mt-1 space-y-2">
+                                  <input
+                                    type="text"
+                                    value={editCommentContent}
+                                    onChange={e => setEditCommentContent(e.target.value)}
+                                    onKeyDown={e => e.key === 'Enter' && handleSaveCommentEdit(c.id, activeCommentsPostId)}
+                                    className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-xs focus:outline-none"
+                                    autoFocus
+                                  />
+                                  <div className="flex justify-end gap-3">
+                                    <button onClick={() => setEditingCommentId(null)} className="text-[10px] font-bold text-slate-500">إلغاء</button>
+                                    <button onClick={() => handleSaveCommentEdit(c.id, activeCommentsPostId)} className="text-[10px] font-black text-indigo-500">حفظ</button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <p className="text-slate-700 dark:text-slate-355 text-[13px] sm:text-[14px] leading-relaxed font-semibold">{c.content}</p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Footer (Input Field) */}
+                <div className="p-4 border-t border-slate-150 dark:border-white/5 bg-slate-50/50 dark:bg-[#18191a] shrink-0">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full shrink-0 ${user ? getAvatarColor(user.displayName || 'م') : 'bg-slate-350'} flex items-center justify-center text-white font-bold text-sm shadow-inner`}>
+                      {user?.displayName?.[0] || 'م'}
+                    </div>
+                    <div className="flex-1 relative">
+                      <input
+                        type="text"
+                        value={commentInputs[activeCommentsPostId] || ''}
+                        onChange={e => setCommentInputs(prev => ({ ...prev, [activeCommentsPostId]: e.target.value }))}
+                        onKeyDown={e => e.key === 'Enter' && handleAddComment(activeCommentsPostId)}
+                        placeholder="اكتب تعليقاً..."
+                        className="w-full bg-white dark:bg-[#242526] border border-slate-200 dark:border-white/5 rounded-full py-2.5 pr-4 pl-10 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-indigo-500/50 transition-all duration-300 shadow-inner"
+                      />
+                      <button
+                        onClick={() => handleAddComment(activeCommentsPostId)}
+                        disabled={!commentInputs[activeCommentsPostId]?.trim()}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500 disabled:text-slate-350 dark:disabled:text-slate-650 transition-all hover:scale-110 active:scale-95"
+                      >
+                        <Send size={15} className="rtl:-scale-x-100 shrink-0" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </AnimatePresence>
       </main>
     </PageLayout>
   );

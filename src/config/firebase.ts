@@ -121,6 +121,21 @@ try {
       // استخدام try-catch لمنع التكرار وانهيار التطبيق بسبب الـ Hot-Reloading في Turbopack
       connectFirestoreEmulator(db, '127.0.0.1', 8080);
       console.log('🔌 [Firebase Emulator] تم ربط Firestore بنجاح على المنفذ 8080');
+
+      // تحقق غير متزامن لتنبيه المطور إذا كان المحاكي غير مشغل
+      if (typeof window !== 'undefined') {
+        fetch('http://127.0.0.1:8080', { mode: 'no-cors' })
+          .catch(() => {
+            console.error(
+              '%c🚨 [Firebase Emulator] فشل الاتصال بمحاكي Firestore على المنفذ 8080!\n' +
+              'تأكد من تشغيل المحاكي باستخدام الأمر:\n' +
+              '   npx firebase emulators:start\n' +
+              'أو قم بتعطيله في ملف .env عن طريق تغيير:\n' +
+              '   NEXT_PUBLIC_USE_FIREBASE_EMULATOR=false',
+              'color: #ff3333; font-weight: bold; font-size: 14px;'
+            );
+          });
+      }
     } catch (e) {
       console.warn('⚠️ [Firebase Emulator] مستمع Firestore قيد التشغيل بالفعل أو فشل الربط:', e);
     }
@@ -128,6 +143,18 @@ try {
     try {
       connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
       console.log('🔌 [Firebase Emulator] تم ربط Auth بنجاح على المنفذ 9099');
+
+      // تحقق غير متزامن لتنبيه المطور إذا كان محاكي Auth غير مشغل
+      if (typeof window !== 'undefined') {
+        fetch('http://127.0.0.1:9099', { mode: 'no-cors' })
+          .catch(() => {
+            console.error(
+              '%c🚨 [Firebase Emulator] فشل الاتصال بمحاكي Auth على المنفذ 9099!\n' +
+              'تأكد من تشغيل المحاكي أو قم بتعطيله في ملف .env.',
+              'color: #ff3333; font-weight: bold; font-size: 14px;'
+            );
+          });
+      }
     } catch (e) {
       console.warn('⚠️ [Firebase Emulator] مستمع Auth قيد التشغيل بالفعل أو فشل الربط:', e);
     }

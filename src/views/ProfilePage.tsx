@@ -193,8 +193,9 @@ const ProfilePage: React.FC = () => {
       if (!user?.uid) return;
       setIsLoadingTools(true);
       try {
+        // إلغاء جلب الأدوات المحفوظة نهائياً للمسؤول لتسريع التحميل وتجنب المشاكل
         const [saved, submitted] = await Promise.all([
-          getUsersSavedTools(user.uid),
+          isAdmin ? Promise.resolve([]) : getUsersSavedTools(user.uid),
           getUsersSubmittedTools(user.uid)
         ]);
         setSavedTools(saved);
@@ -207,7 +208,7 @@ const ProfilePage: React.FC = () => {
     };
 
     fetchUserTools();
-  }, [user?.uid]);
+  }, [user?.uid, isAdmin]);
 
   // Keep savedTools synced with global context updates for optimistic UI (optional/hybrid)
   useEffect(() => {
@@ -606,23 +607,27 @@ const ProfilePage: React.FC = () => {
 
         {/* Stats Grid */}
         {isOwnProfile && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-2xl sm:rounded-[1.5rem] flex flex-col items-center justify-center text-center group shadow-sm transition-all hover:border-indigo-500/30">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-2 sm:mb-3 group-hover:scale-110 group-hover:-rotate-6 transition-transform">
-              <Bookmark className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
-            <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-0.5">{savedTools.length}</p>
-            <p className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">المكتبة</p>
-          </div>
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-2xl sm:rounded-[1.5rem] flex flex-col items-center justify-center text-center group shadow-sm transition-all hover:border-rose-500/30">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center text-rose-600 dark:text-rose-400 mb-2 sm:mb-3 group-hover:scale-110 group-hover:-rotate-6 transition-transform">
-              <Heart className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
-            <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-0.5">
-              {savedTools.filter(t => t.isFeatured).length}
-            </p>
-            <p className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">المفضلة</p>
-          </div>
+        <div className={`grid ${isAdmin ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4'} gap-3 sm:gap-4`}>
+          {!isAdmin && (
+            <>
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-2xl sm:rounded-[1.5rem] flex flex-col items-center justify-center text-center group shadow-sm transition-all hover:border-indigo-500/30">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-2 sm:mb-3 group-hover:scale-110 group-hover:-rotate-6 transition-transform">
+                  <Bookmark className="w-5 h-5 sm:w-6 sm:h-6" />
+                </div>
+                <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-0.5">{savedTools.length}</p>
+                <p className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">المكتبة</p>
+              </div>
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-2xl sm:rounded-[1.5rem] flex flex-col items-center justify-center text-center group shadow-sm transition-all hover:border-rose-500/30">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center text-rose-600 dark:text-rose-400 mb-2 sm:mb-3 group-hover:scale-110 group-hover:-rotate-6 transition-transform">
+                  <Heart className="w-5 h-5 sm:w-6 sm:h-6" />
+                </div>
+                <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-0.5">
+                  {savedTools.filter(t => t.isFeatured).length}
+                </p>
+                <p className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">المفضلة</p>
+              </div>
+            </>
+          )}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-2xl sm:rounded-[1.5rem] flex flex-col items-center justify-center text-center group shadow-sm transition-all hover:border-amber-500/30">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-600 dark:text-amber-400 mb-2 sm:mb-3 group-hover:scale-110 group-hover:-rotate-6 transition-transform">
               <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -683,7 +688,7 @@ const ProfilePage: React.FC = () => {
         )}
 
         {/* Saved Tools List */}
-        {isOwnProfile && (
+        {isOwnProfile && !isAdmin && (
         <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm mb-6">
           <div className="flex items-center gap-3 mb-6 sm:mb-8">
             <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center">

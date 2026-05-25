@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import './scripts/cloudflareBuildTrigger.js';
 
 const nextConfig: NextConfig = {
     // Enable React strict mode for better error catching
