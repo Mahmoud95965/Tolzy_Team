@@ -12,7 +12,7 @@ import {
   Briefcase, GraduationCap, Heart,
   Video, Image as ImageIcon, Award,
   Home, Search, X, ArrowUpRight,
-  Send, Trash2, Edit2
+  Send, Trash2, Edit2, Smile
 } from 'lucide-react';
 import PromptCard from '../components/community/PromptCard';
 import CreatorsSection from '../components/community/CreatorsSection';
@@ -953,7 +953,7 @@ const CommunityPromptPage: React.FC = () => {
         {/* Comments Modal (Desktop & Mobile responsive) */}
         <AnimatePresence>
           {activeCommentsPostId && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
               {/* Backdrop */}
               <div 
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
@@ -961,7 +961,7 @@ const CommunityPromptPage: React.FC = () => {
               />
               
               {/* Modal Container */}
-              <div className="relative bg-white dark:bg-[#18191a] w-full sm:max-w-2xl h-full sm:h-auto sm:max-h-[90vh] rounded-none sm:rounded-t-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-200 dark:border-white/5">
+              <div className="relative bg-white dark:bg-[#18191a] w-full sm:max-w-2xl h-[100dvh] sm:h-auto sm:max-h-[90vh] rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-200 dark:border-white/5">
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-[#242526] z-10 shrink-0">
                   <button 
@@ -1023,84 +1023,127 @@ const CommunityPromptPage: React.FC = () => {
                       )}
                       
                       <div className="space-y-4">
-                        {(commentsMap[activeCommentsPostId] || []).map(c => (
-                          <div key={c.id} className="flex items-start gap-3 group/comment animate-in fade-in slide-in-from-top-1 duration-300">
-                            <div className={`w-8 h-8 rounded-full ${getAvatarColor(c.author_name)} flex items-center justify-center text-white font-black text-xs shrink-0 shadow-sm`}>
-                              {c.author_name[0]}
-                            </div>
-                            <div className="flex-1 bg-slate-50/70 dark:bg-white/[0.02] border border-slate-100/50 dark:border-white/[0.03] rounded-2xl px-4 py-3 hover:bg-slate-100/50 dark:hover:bg-white/[0.04] transition-all duration-300 hover:shadow-sm">
-                              <div className="flex items-center justify-between mb-1.5">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-bold text-xs sm:text-sm text-slate-800 dark:text-white leading-none">{c.author_name}</span>
-                                  <span className="text-[10px] text-slate-400 dark:text-slate-555 font-medium">{timeAgo(c.created_at)}</span>
-                                </div>
-                                {user?.uid === c.author_uid && (
-                                  <div className="flex items-center gap-1.5 opacity-0 group-hover/comment:opacity-100 transition-opacity duration-300">
-                                    <button 
-                                      onClick={() => startEditingComment(c)} 
-                                      className="p-1 text-slate-400 hover:text-indigo-500 transition-colors rounded hover:bg-slate-100 dark:hover:bg-white/5"
-                                      title="تعديل"
-                                    >
-                                      <Edit2 size={12} />
-                                    </button>
-                                    <button 
-                                      onClick={() => handleDeleteComment(c.id, activeCommentsPostId)} 
-                                      className="p-1 text-slate-400 hover:text-red-500 transition-colors rounded hover:bg-slate-100 dark:hover:bg-white/5"
-                                      title="حذف"
-                                    >
-                                      <Trash2 size={12} />
-                                    </button>
-                                  </div>
-                                )}
+                        {(commentsMap[activeCommentsPostId] || []).map(c => {
+                          const isPostAuthor = c.author_uid === prompts.find(p => p.id === activeCommentsPostId)?.author_uid;
+                          return (
+                            <div key={c.id} className="flex items-start gap-2.5 group/comment animate-in fade-in slide-in-from-top-1 duration-300">
+                              {/* Avatar (RTL: right side) */}
+                              <div className={`w-8 h-8 rounded-full ${getAvatarColor(c.author_name)} flex items-center justify-center text-white font-black text-xs shrink-0 shadow-sm`}>
+                                {c.author_name[0]}
                               </div>
-                              {editingCommentId === c.id ? (
-                                <div className="mt-1 space-y-2">
-                                  <input
-                                    type="text"
-                                    value={editCommentContent}
-                                    onChange={e => setEditCommentContent(e.target.value)}
-                                    onKeyDown={e => e.key === 'Enter' && handleSaveCommentEdit(c.id, activeCommentsPostId)}
-                                    className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-xs focus:outline-none"
-                                    autoFocus
-                                  />
-                                  <div className="flex justify-end gap-3">
-                                    <button onClick={() => setEditingCommentId(null)} className="text-[10px] font-bold text-slate-500">إلغاء</button>
-                                    <button onClick={() => handleSaveCommentEdit(c.id, activeCommentsPostId)} className="text-[10px] font-black text-indigo-500">حفظ</button>
+                              
+                              {/* Content & Actions */}
+                              <div className="flex-1 flex flex-col items-start">
+                                {/* Comment Bubble */}
+                                <div className="bg-[#f0f2f5] dark:bg-[#242526] rounded-[18px] px-3.5 py-2 max-w-[90%] sm:max-w-full">
+                                  {/* Author Badge for Post Creator */}
+                                  {isPostAuthor && (
+                                    <div className="flex items-center gap-1 text-[9px] sm:text-[10px] text-blue-650 dark:text-blue-400 font-bold mb-0.5 select-none">
+                                      <Edit2 size={8} className="shrink-0" />
+                                      <span>كاتب المنشور</span>
+                                    </div>
+                                  )}
+                                  
+                                  {/* Display Name & Verification Badge */}
+                                  <div className="flex items-center gap-1">
+                                    <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white leading-tight">{c.author_name}</span>
+                                    {isPostAuthor && (
+                                      <span className="text-blue-500 text-xs font-bold shrink-0 select-none" title="كاتب المنشور">✓</span>
+                                    )}
                                   </div>
+
+                                  {/* Comment Text / Edit Input */}
+                                  {editingCommentId === c.id ? (
+                                    <div className="mt-1 space-y-2 min-w-[200px] w-full">
+                                      <input
+                                        type="text"
+                                        value={editCommentContent}
+                                        onChange={e => setEditCommentContent(e.target.value)}
+                                        onKeyDown={e => e.key === 'Enter' && handleSaveCommentEdit(c.id, activeCommentsPostId)}
+                                        className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl p-2 text-xs text-slate-900 dark:text-white focus:outline-none"
+                                        autoFocus
+                                      />
+                                      <div className="flex justify-end gap-3">
+                                        <button onClick={() => setEditingCommentId(null)} className="text-[10px] font-bold text-slate-500">إلغاء</button>
+                                        <button onClick={() => handleSaveCommentEdit(c.id, activeCommentsPostId)} className="text-[10px] font-black text-indigo-500">حفظ</button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <p className="text-slate-800 dark:text-slate-200 text-[13px] sm:text-[14px] leading-relaxed mt-1 whitespace-pre-wrap font-medium">{c.content}</p>
+                                  )}
                                 </div>
-                              ) : (
-                                <p className="text-slate-700 dark:text-slate-355 text-[13px] sm:text-[14px] leading-relaxed font-semibold">{c.content}</p>
-                              )}
+
+                                {/* Action Buttons below Bubble */}
+                                <div className="flex items-center gap-3 mt-1 px-2 text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 font-bold select-none">
+                                  <span className="font-normal text-[9px] sm:text-[10px]">{timeAgo(c.created_at)}</span>
+                                  <button className="hover:text-slate-700 dark:hover:text-slate-300 transition-colors">أعجبني</button>
+                                  <button className="hover:text-slate-700 dark:hover:text-slate-300 transition-colors">رد</button>
+                                  {user?.uid === c.author_uid && editingCommentId !== c.id && (
+                                    <>
+                                      <button onClick={() => startEditingComment(c)} className="hover:text-indigo-500 transition-colors">تعديل</button>
+                                      <button onClick={() => handleDeleteComment(c.id, activeCommentsPostId)} className="hover:text-red-500 transition-colors text-red-400">حذف</button>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </>
                   )}
                 </div>
 
                 {/* Footer (Input Field) */}
-                <div className="p-4 border-t border-slate-150 dark:border-white/5 bg-slate-50/50 dark:bg-[#18191a] shrink-0">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full shrink-0 ${user ? getAvatarColor(user.displayName || 'م') : 'bg-slate-350'} flex items-center justify-center text-white font-bold text-sm shadow-inner`}>
+                <div className="p-3 border-t border-slate-150 dark:border-white/5 bg-white dark:bg-[#18191a] shrink-0 sticky bottom-0 z-20 pb-safe">
+                  <div className="flex items-start gap-2.5">
+                    {/* User Avatar */}
+                    <div className={`w-8 h-8 rounded-full shrink-0 ${user ? getAvatarColor(user.displayName || 'م') : 'bg-slate-350'} flex items-center justify-center text-white font-bold text-xs shadow-sm`}>
                       {user?.displayName?.[0] || 'م'}
                     </div>
-                    <div className="flex-1 relative">
-                      <input
-                        type="text"
-                        value={commentInputs[activeCommentsPostId] || ''}
-                        onChange={e => setCommentInputs(prev => ({ ...prev, [activeCommentsPostId]: e.target.value }))}
-                        onKeyDown={e => e.key === 'Enter' && handleAddComment(activeCommentsPostId)}
-                        placeholder="اكتب تعليقاً..."
-                        className="w-full bg-white dark:bg-[#242526] border border-slate-200 dark:border-white/5 rounded-full py-2.5 pr-4 pl-10 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-indigo-500/50 transition-all duration-300 shadow-inner"
-                      />
-                      <button
-                        onClick={() => handleAddComment(activeCommentsPostId)}
-                        disabled={!commentInputs[activeCommentsPostId]?.trim()}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500 disabled:text-slate-350 dark:disabled:text-slate-650 transition-all hover:scale-110 active:scale-95"
-                      >
-                        <Send size={15} className="rtl:-scale-x-100 shrink-0" />
-                      </button>
+                    
+                    {/* Input Field Container (Bubble style) */}
+                    <div className="flex-1 bg-[#f0f2f5] dark:bg-[#242526] rounded-2xl p-2.5 flex flex-col">
+                      {user && (
+                        <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mb-1 select-none">
+                          تعليق باسم {user.displayName}
+                        </div>
+                      )}
+                      <div className="flex items-center">
+                        <input
+                          type="text"
+                          value={commentInputs[activeCommentsPostId] || ''}
+                          onChange={e => setCommentInputs(prev => ({ ...prev, [activeCommentsPostId]: e.target.value }))}
+                          onKeyDown={e => e.key === 'Enter' && handleAddComment(activeCommentsPostId)}
+                          placeholder="اكتب تعليقاً..."
+                          className="w-full bg-transparent border-none outline-none text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-0 p-0"
+                        />
+                      </div>
+                      
+                      {/* Icons bar inside input bubble */}
+                      <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-200/40 dark:border-white/5">
+                        {/* Right side icons */}
+                        <div className="flex items-center gap-3 text-slate-400 dark:text-slate-500">
+                          <button className="hover:text-slate-650 dark:hover:text-slate-300 transition-colors" title="رمز تعبيري">
+                            <Smile size={16} />
+                          </button>
+                          <button className="hover:text-slate-650 dark:hover:text-slate-300 transition-colors" title="إرفاق صورة">
+                            <ImageIcon size={16} />
+                          </button>
+                          <button className="hover:text-slate-650 dark:hover:text-slate-300 transition-colors select-none" title="GIF">
+                            <span className="text-[9px] font-black border border-slate-400 dark:border-slate-500 px-0.5 rounded leading-none">GIF</span>
+                          </button>
+                        </div>
+
+                        {/* Left side send button */}
+                        <button
+                          onClick={() => handleAddComment(activeCommentsPostId)}
+                          disabled={!commentInputs[activeCommentsPostId]?.trim()}
+                          className="text-indigo-500 disabled:text-slate-300 dark:disabled:text-slate-650 transition-all hover:scale-115 active:scale-90"
+                        >
+                          <Send size={15} className="rtl:-scale-x-100 shrink-0" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
