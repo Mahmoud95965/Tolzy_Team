@@ -20,8 +20,8 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
     }
 
     return {
-        title: 'جميع الأدوات - دليل شامل 630+ أداة ذكاء اصطناعي',
-        description: 'استكشف أكبر دليل عربي لأدوات الذكاء الاصطناعي. أكثر من 630 أداة مع تقييمات حقيقية، مقارنات احترافية، ومراجعات مفصلة. ChatGPT، Gemini، Claude، Midjourney، DALL-E وأكثر. ابحث عن الأداة المثالية لمشروعك.',
+        title: 'جميع الأدوات - دليل شامل +1000 أداة ذكاء اصطناعي',
+        description: 'استكشف أكبر دليل عربي لأدوات الذكاء الاصطناعي. أكثر من 1000 أداة مع تقييمات حقيقية، مقارنات احترافية، ومراجعات مفصلة. ChatGPT، Gemini، Claude، Midjourney، DALL-E وأكثر. ابحث عن الأداة المثالية لمشروعك.',
         keywords: [
             'أدوات ذكاء اصطناعي',
             'AI tools',
@@ -45,7 +45,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
             'دليل أدوات الذكاء الاصطناعي',
         ],
         openGraph: {
-            title: 'جميع الأدوات - دليل شامل 630+ أداة ذكاء اصطناعي',
+            title: 'جميع الأدوات - دليل شامل +1000 أداة ذكاء اصطناعي',
             description: 'أكبر دليل عربي لأدوات الذكاء الاصطناعي مع تقييمات ومقارنات احترافية',
             url: 'https://tolzy.me/tools',
             type: 'website',
@@ -94,7 +94,7 @@ export default async function Tools() {
 
     const collectionSchema = generateCollectionPageSchema(
         'جميع أدوات الذكاء الاصطناعي - دليل Tolzy الشامل',
-        'استكشف أكبر دليل عربي لأدوات الذكاء الاصطناعي. أكثر من 630 أداة مع تقييمات حقيقية ومراجعات مفصلة.',
+        'استكشف أكبر دليل عربي لأدوات الذكاء الاصطناعي. أكثر من 1000 أداة مع تقييمات حقيقية ومراجعات مفصلة.',
         'https://tolzy.me/tools',
         schemaItems
     );

@@ -15,10 +15,10 @@ import '@/src/index.css';
 export const metadata: Metadata = {
     metadataBase: new URL('https://tolzy.me'),
     title: {
-        default: 'Tolzy - اكتشف 630+ أداة ذكاء اصطناعي مجانية وكورسات برمجة 2026',
+        default: 'Tolzy - اكتشف +1000 أداة ذكاء اصطناعي مجانية وكورسات برمجة 2026',
         template: '%s | Tolzy - منصة أدوات الذكاء الاصطناعي',
     },
-    description: 'منصة Tolzy هي دليلك العربي الأول لأكثر من 630 أداة ذكاء اصطناعي مجانية 2026. كورسات برمجة، ChatGPT، Gemini، Claude، DeepSeek، Sora AI - كل ما تحتاجه في مكان واحد. ابدأ رحلتك مجاناً!',
+    description: 'منصة Tolzy هي دليلك العربي الأول لأكثر من 1000 أداة ذكاء اصطناعي مجانية 2026. كورسات برمجة، ChatGPT، Gemini، Claude، DeepSeek، Sora AI - كل ما تحتاجه في مكان واحد. ابدأ رحلتك مجاناً!',
     keywords: [
         'Tolzy',
         'تولزي',
@@ -76,8 +76,8 @@ export const metadata: Metadata = {
         locale: 'ar_AR',
         url: 'https://tolzy.me/',
         siteName: 'Tolzy',
-        title: 'Tolzy - اكتشف 630+ أداة ذكاء اصطناعي مجانية | كورسات برمجة 2026',
-        description: 'منصة Tolzy العربية الأولى: 630+ أداة AI مجانية، كورسات برمجة، ChatGPT، Gemini، Claude، DeepSeek. ابدأ التعلم والإنجاز الآن!',
+        title: 'Tolzy - اكتشف +1000 أداة ذكاء اصطناعي مجانية | كورسات برمجة 2026',
+        description: 'منصة Tolzy العربية الأولى: +1000 أداة AI مجانية، كورسات برمجة، ChatGPT، Gemini، Claude، DeepSeek. ابدأ التعلم والإنجاز الآن!',
         images: [
             {
                 url: '/image/tools/Hero.png',
@@ -91,8 +91,8 @@ export const metadata: Metadata = {
         card: 'summary_large_image',
         site: '@tolzytools',
         creator: '@tolzytools',
-        title: 'Tolzy - اكتشف 630+ أداة ذكاء اصطناعي مجانية | كورسات برمجة 2026',
-        description: 'منصة Tolzy العربية الأولى: 630+ أداة AI مجانية، كورسات برمجة، ChatGPT، Gemini، Claude، DeepSeek.',
+        title: 'Tolzy - اكتشف +1000 أداة ذكاء اصطناعي مجانية | كورسات برمجة 2026',
+        description: 'منصة Tolzy العربية الأولى: +1000 أداة AI مجانية، كورسات برمجة، ChatGPT، Gemini، Claude، DeepSeek.',
         images: ['/image/tools/Hero.png'],
     },
     verification: {
@@ -126,7 +126,7 @@ export default function RootLayout({
         'alternateName': 'تولزي',
         'url': 'https://tolzy.me',
         'logo': 'https://tolzy.me/image/tools/Logo.webp',
-        'description': 'Tolzy - المنصة العربية الأولى لأدوات الذكاء الاصطناعي والتعليم التقني. نمكّن التعليم من خلال الذكاء الاصطناعي مع أكثر من 630 أداة ومحتوى 100% عربي',
+        'description': 'Tolzy - المنصة العربية الأولى لأدوات الذكاء الاصطناعي والتعليم التقني. نمكّن التعليم من خلال الذكاء الاصطناعي مع أكثر من 1000 أداة ومحتوى 100% عربي',
         'sameAs': [
             'https://twitter.com/tolzy',
             'https://facebook.com/tolzy',
