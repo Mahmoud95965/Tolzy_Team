@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { parent_prompt_id, title, prompt_text, ai_output, ai_model, description, tag_slugs, change_summary, author_uid, author_name, author_avatar } = body;
 
-    if (!parent_prompt_id || !title || !prompt_text || !author_uid || !author_name) {
+    if (!parent_prompt_id || !prompt_text || !author_uid || !author_name) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     const { data: prompt, error: insertError } = await supabase
       .from('community_prompts')
       .insert({
-        title,
+        title: title || '',
         prompt_text,
         ai_output: ai_output || null,
         ai_model: ai_model || null,

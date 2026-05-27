@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { post_type, title, prompt_text, ai_output, ai_model, description, code_snippet, code_language, link_url, tag_slugs, author_uid, author_name, author_avatar } = body;
 
-    if (!title || !prompt_text || !author_uid || !author_name) {
+    if (!prompt_text || !author_uid || !author_name) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     let insertPayload: any = {
       post_type: post_type || 'prompt',
       status: 'published',
-      title,
+      title: title || '',
       prompt_text,
       ai_output: ai_output || null,
       ai_model: ai_model || null,
