@@ -4,6 +4,7 @@ import { getAllToolsFromFirebase } from '@/lib/firebase-admin';
 import { generateCollectionPageSchema } from '@/src/utils/seoHelpers';
 
 export const dynamic = 'force-static';
+export const revalidate = 86400; // Revalidate every 24 hours (ISR)
 
 
 // Generate metadata dynamically based on search params (e.g. category)
@@ -78,7 +79,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
 export default async function Tools() {
     let tools: any[] = [];
     try {
-        tools = await getAllToolsFromFirebase();
+        tools = await getAllToolsFromFirebase(100);
     } catch (error) {
         console.error('❌ Error fetching tools for tools page schema:', error);
     }

@@ -106,7 +106,7 @@ const serializeData = (data: any): any => {
 };
 
 // Helper function to get all tools for SSR/SSG
-export async function getAllToolsFromFirebase(): Promise<Tool[]> {
+export async function getAllToolsFromFirebase(limitCount?: number): Promise<Tool[]> {
 
     try {
         if (!adminDb) {
@@ -114,9 +114,13 @@ export async function getAllToolsFromFirebase(): Promise<Tool[]> {
             return [];
         }
 
-        const toolsSnapshot = await adminDb.collection('tools').get();
+        let queryRef: any = adminDb.collection('tools');
+        if (limitCount) {
+            queryRef = queryRef.limit(limitCount);
+        }
+        const toolsSnapshot = await queryRef.get();
 
-        const tools = toolsSnapshot.docs.map((doc) => serializeData({
+        const tools = toolsSnapshot.docs.map((doc: any) => serializeData({
             id: doc.id,
             ...doc.data(),
         })) as Tool[];
