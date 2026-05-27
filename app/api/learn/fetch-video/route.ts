@@ -20,12 +20,18 @@ export async function OPTIONS() {
 }
 
 // Custom Fetch wrapper using Axios to support proxy routing
-async function customProxyFetch(url: string, init?: any): Promise<Response> {
+async function customProxyFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+    const url = typeof input === 'string'
+        ? input
+        : input instanceof URL
+            ? input.toString()
+            : input.url;
+
     const proxyUrl = process.env.YOUTUBE_PROXY_URL;
     
     // If no proxy is set, use standard global fetch directly
     if (!proxyUrl) {
-        return fetch(url, init);
+        return fetch(input, init);
     }
 
     let proxyConfig = undefined;
@@ -53,7 +59,7 @@ async function customProxyFetch(url: string, init?: any): Promise<Response> {
             reqHeaders[key] = value;
         });
     } else if (typeof headers === 'object') {
-        reqHeaders = { ...headers };
+        reqHeaders = { ...headers } as Record<string, string>;
     }
 
     try {
