@@ -28,7 +28,7 @@ interface TourStep {
 const tourSteps: TourStep[] = [
   {
     title: 'دليل أدوات AI الشامل',
-    description: 'اكتشف أكثر من 630 أداة ذكاء اصطناعي مرتبة حسب الاستخدام - من ChatGPT إلى Midjourney وأدوات البرمجة والتصميم',
+    description: 'اكتشف أكثر من 1000 أداة ذكاء اصطناعي مرتبة حسب الاستخدام - من ChatGPT إلى Midjourney وأدوات البرمجة والتصميم',
     target: '/tools',
     icon: <Wrench className="w-8 h-8" />
   },
@@ -243,7 +243,7 @@ export default function EnhancedHero() {
           variants={itemVariants}
           className={`text-base md:text-xl max-w-3xl mx-auto leading-relaxed mb-10 text-center transition-colors duration-300 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}
         >
-          بوابة Tolzy الذكية تربطك بـ 630+ أداة AI احترافية، كورسات برمجة مجانية عالية الجودة،
+          بوابة Tolzy الذكية تربطك بـ 1000+ أداة AI احترافية، كورسات برمجة مجانية عالية الجودة،
           ومساعد Copilot التوليدي للإجابة وتوجيه أفكارك بالكامل باللغة العربية.
         </motion.p>
 
@@ -296,7 +296,7 @@ export default function EnhancedHero() {
             className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border transition-all hover:-translate-y-0.5 shadow-sm ${isDarkMode ? 'border-white/5 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08] hover:text-white' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}`}
           >
             <Wrench className="w-4 h-4 text-blue-400" />
-            دليل الأدوات (+630)
+            دليل الأدوات (+1000)
           </Link>
           
           <button

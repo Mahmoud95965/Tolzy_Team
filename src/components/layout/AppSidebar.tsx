@@ -8,7 +8,7 @@ import {
   Zap, 
   GraduationCap,
   Map, 
-  History,
+  Activity,
   Sparkles,
   Users,
   Search,
@@ -23,7 +23,7 @@ const AppSidebar: React.FC = () => {
   const { userProfile } = useAuth();
 
   const navItems = [
-    { name: 'سجل التغييرات', href: '/changelog', icon: History },
+    { name: 'TOLZY Pulse', href: '/pulse', icon: Activity },
     { name: 'التحديثات القادمة', href: '/upcoming', icon: Sparkles },
 
     { name: 'المجتمع', href: '/community', icon: Users },

@@ -42,7 +42,7 @@ const MobileBottomNav: React.FC = () => {
   ];
 
   const moreItems = [
-    { href: '/copilot', icon: Bot, label: 'مساعد Tolzy AI', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+    { href: '/axiom', icon: Bot, label: 'مساعد AXIOM الذكي', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20' },
     { href: '/learn', icon: GraduationCap, label: 'Tolzy Learn', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
     { href: '/tools', icon: Zap, label: 'دليل الأدوات', color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20' },
     { href: '/news', icon: Newspaper, label: 'الأخبار والشروحات', color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/20' },

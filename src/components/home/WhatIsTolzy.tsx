@@ -451,7 +451,7 @@ export default function WhatIsTolzy() {
               <div className="space-y-6 text-right" dir="rtl">
                 <div>
                   <span className={`text-xs block mb-1 transition-colors duration-305 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>دليل الأدوات الذكية</span>
-                  <LiveCounter target={630} suffix="+" />
+                  <LiveCounter target={1000} suffix="+" />
                 </div>
                 
                 <div className={`border-t pt-4 transition-colors duration-300 ${isDarkMode ? 'border-white/5' : 'border-slate-150'}`}>

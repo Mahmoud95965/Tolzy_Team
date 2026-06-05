@@ -45,7 +45,7 @@ export default function WelcomeBanner() {
             </div>
             <p className="text-sm font-medium truncate">
               {isNewVisitor ? (
-                <>مرحباً بك في Tolzy! 👋 دليلك الشامل لأدوات AI - اكتشف 630+ أداة أو اسأل Copilot</>
+                <>مرحباً بك في Tolzy! 👋 دليلك الشامل لأدوات AI - اكتشف 1000+ أداة أو اسأل Copilot</>
               ) : (
                 <>💡 جرب Copilot للحصول على توصيات ذكية للأدوات المناسبة لمشروعك</>
               )}

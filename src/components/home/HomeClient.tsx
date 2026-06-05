@@ -53,8 +53,8 @@ export default function HomeClient() {
     return (
         <>
             <SEO
-                title="Tolzy - المنصة الرئيسية لأدوات الذكاء الاصطناعي | 630+ أداة وكورس مجاني"
-                description="Tolzy - المنصة الرئيسية لدليل أدوات الذكاء الاصطناعي. اكتشف أكثر من 630 أداة احترافية (ChatGPT, Gemini, Claude, Midjourney). منتجات Tolzy الإضافية: Tolzy Learn (كورسات برمجة مجانية). أدوات للطلاب، الباحثين، المبرمجين، والمصممين. من إنتاج Tolzy. ابدأ مجاناً!"
+                title="Tolzy - المنصة الرئيسية لأدوات الذكاء الاصطناعي | 1000+ أداة وكورس مجاني"
+                description="Tolzy - المنصة الرئيسية لدليل أدوات الذكاء الاصطناعي. اكتشف أكثر من 1000 أداة احترافية (ChatGPT, Gemini, Claude, Midjourney). منتجات Tolzy الإضافية: Tolzy Learn (كورسات برمجة مجانية). أدوات للطلاب، الباحثين، المبرمجين، والمصممين. من إنتاج Tolzy. ابدأ مجاناً!"
                 keywords="tolzy, تولزي, tolzy tools, tolzy learn, منصة تولزي, أدوات ذكاء اصطناعي, AI tools 2025, ChatGPT 4, Google Gemini Pro, Claude 3 Opus, Midjourney v6, DALL-E 3, كورسات برمجة مجانية, تعلم الذكاء الاصطناعي, مشاريع GitHub, أدوات البحث العلمي, Consensus, Elicit, أدوات الكتابة, Jasper, Copy.ai, Grammarly, أدوات التصميم, Canva AI, Leonardo.ai, أدوات البرمجة, GitHub Copilot, Cursor IDE, أدوات الفيديو, Runway, HeyGen, أدوات الإنتاجية, Notion AI, أدوات الطلاب, حل الواجبات بالذكاء الاصطناعي, تلخيص الملفات, أفضل مواقع الذكاء الاصطناعي, دليل أدوات AI, تطبيقات ذكاء اصطناعي, Prompt Engineering, فري لانسر, العمل الحر, الربح من الذكاء الاصطناعي, منصات تعليمية عربية, تعلم البرمجة, دورات تفاعلية"
                 url="/"
             />

@@ -149,13 +149,13 @@ const AdminDashboard = () => {
             statLabel: 'اختبار'
         },
         {
-            title: 'إدارة خارطة الطريق',
-            description: 'إضافة ومتابعة الميزات وآخر التحديثات',
-            icon: Map,
-            href: '/admin/changelog',
+            title: 'إدارة TOLZY Pulse',
+            description: 'إضافة ومتابعة نبض التحديثات والميزات الجديدة',
+            icon: Activity,
+            href: '/admin/pulse',
             color: 'bg-indigo-600',
             stat: null,
-            statLabel: 'سجل/تحديث'
+            statLabel: 'نبض/تحديث'
         }
     ];
 

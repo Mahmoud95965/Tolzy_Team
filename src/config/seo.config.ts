@@ -6,8 +6,8 @@ export const SITE_CONFIG = {
     name: 'Tolzy',
     nameAr: 'تولزي',
     domain: 'https://tolzy.me',
-    description: 'Tolzy - المنصة العربية الأولى لأدوات الذكاء الاصطناعي والتعليم التقني 2026. اكتشف أكثر من 630 أداة AI مجانية، كورسات برمجة، ChatGPT، Gemini، Claude، DeepSeek. ابدأ مجاناً!',
-    descriptionEn: 'Tolzy - The first Arabic platform for AI tools and technical education 2026. Discover 630+ free AI tools, programming courses, and open source projects.',
+    description: 'Tolzy - المنصة العربية الأولى لأدوات الذكاء الاصطناعي والتعليم التقني 2026. اكتشف أكثر من 1000 أداة AI مجانية، كورسات برمجة، ChatGPT، Gemini، Claude، DeepSeek. ابدأ مجاناً!',
+    descriptionEn: 'Tolzy - The first Arabic platform for AI tools and technical education 2026. Discover 1000+ free AI tools, programming courses, and open source projects.',
     keywords: [
         'tolzy',
         'تولزي',
@@ -44,7 +44,7 @@ export const SITE_CONFIG = {
 export const DEFAULT_METADATA: Metadata = {
     metadataBase: new URL(SITE_CONFIG.domain),
     title: {
-        default: `${SITE_CONFIG.name} - اكتشف 630+ أداة ذكاء اصطناعي مجانية وكورسات برمجة 2026`,
+        default: `${SITE_CONFIG.name} - اكتشف 1000+ أداة ذكاء اصطناعي مجانية وكورسات برمجة 2026`,
         template: `%s | ${SITE_CONFIG.name}`,
     },
     description: SITE_CONFIG.description,
@@ -68,14 +68,14 @@ export const DEFAULT_METADATA: Metadata = {
         locale: 'ar_AR',
         url: SITE_CONFIG.domain,
         siteName: SITE_CONFIG.name,
-        title: `${SITE_CONFIG.name} - اكتشف 630+ أداة ذكاء اصطناعي مجانية | كورسات برمجة 2026`,
+        title: `${SITE_CONFIG.name} - اكتشف 1000+ أداة ذكاء اصطناعي مجانية | كورسات برمجة 2026`,
         description: SITE_CONFIG.description,
         images: [
             {
                 url: SITE_CONFIG.images.ogDefault,
                 width: SITE_CONFIG.images.ogWidth,
                 height: SITE_CONFIG.images.ogHeight,
-                alt: `${SITE_CONFIG.name} - دليل شامل لأكثر من 630 أداة ذكاء اصطناعي`,
+                alt: `${SITE_CONFIG.name} - دليل شامل لأكثر من 1000 أداة ذكاء اصطناعي`,
             },
         ],
     },
@@ -83,7 +83,7 @@ export const DEFAULT_METADATA: Metadata = {
         card: 'summary_large_image',
         site: SITE_CONFIG.social.twitter,
         creator: SITE_CONFIG.social.twitter,
-        title: `${SITE_CONFIG.name} - اكتشف 630+ أداة ذكاء اصطناعي مجانية | كورسات برمجة 2026`,
+        title: `${SITE_CONFIG.name} - اكتشف 1000+ أداة ذكاء اصطناعي مجانية | كورسات برمجة 2026`,
         description: SITE_CONFIG.description,
         images: [SITE_CONFIG.images.ogDefault],
     },

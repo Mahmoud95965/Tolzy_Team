@@ -53,7 +53,7 @@ const NEWS_ITEMS: NewsItem[] = [
     badgeColor: 'text-amber-700 dark:text-amber-400',
     badgeBg: 'bg-amber-100 dark:bg-amber-500/15',
     emoji: '🤖',
-    title: '+630 أداة ذكاء اصطناعي',
+    title: '+1000 أداة ذكاء اصطناعي',
     desc: 'أكبر دليل عربي لأدوات AI — مرتبة، مقيّمة، وموثّقة بالعربية.',
     link: '/tools',
   },

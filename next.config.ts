@@ -157,6 +157,21 @@ const nextConfig: NextConfig = {
                 destination: '/',
                 permanent: true,
             },
+            {
+                source: '/changelog',
+                destination: '/pulse',
+                permanent: true,
+            },
+            {
+                source: '/changelog/:id',
+                destination: '/pulse/:id',
+                permanent: true,
+            },
+            {
+                source: '/admin/changelog',
+                destination: '/admin/pulse',
+                permanent: true,
+            },
         ];
     },
 

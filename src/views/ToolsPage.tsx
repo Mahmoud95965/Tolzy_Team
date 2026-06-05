@@ -137,7 +137,7 @@ const ToolsPage: React.FC = () => {
               أفضل أدوات <span className="text-indigo-600 dark:text-indigo-400">الذكاء الاصطناعي</span>
             </h1>
             <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
-              دليلك الشامل لاستكشاف أكثر من 630 أداة مبتكرة مصنفة لتناسب جميع احتياجاتك الإبداعية والمهنية
+              دليلك الشامل لاستكشاف أكثر من 1000 أداة مبتكرة مصنفة لتناسب جميع احتياجاتك الإبداعية والمهنية
             </p>
           </div>
 

@@ -46,7 +46,7 @@ export default function SuccessPage() {
 
     const handleContinue = () => {
         // Force fully reload to ensure the AuthContext fetches the latest plan from Supabase user_limits
-        window.location.href = '/copilot';
+        window.location.href = '/axiom';
     };
 
     return (

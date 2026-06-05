@@ -170,13 +170,13 @@ const getCategoryTexts = (category: string, toolCount: number): { title: string;
  * Generate title & description for Copilot page. Single source of truth.
  */
 const getCopilotTexts = () => {
-  const title = 'مساعد TOLZY Copilot: رفيقك الذكي للبرمجة والبحث';
-  const description = 'TOLZY Copilot هو مساعد ذكاء اصطناعي متقدم يفهم احتياجاتك. يساعدك في البحث عن الأدوات، شرح الأكواد البرمجية، الكتابة الإبداعية، وتلخيص المحتوى. جربه الآن مجاناً!';
+  const title = 'معالج AXIOM الذكي: رفيقك الفائق للبرمجة والبحث والتفكير';
+  const description = 'AXIOM هو معالج ذكاء اصطناعي متطور ونظام تفكير متقدم من Tolzy AI يفهم احتياجاتك. يساعدك في البحث عن الأدوات، شرح الأكواد البرمجية، التفكير المنطقي، وتطوير أفكارك. جربه الآن مجاناً!';
   const keywords = [
-    'TOLZY Copilot', 'مساعد ذكي', 'شات بوت عربي', 'ChatGPT عربي',
-    'بديل ChatGPT', 'مساعد شخصي AI', 'شرح كود برمجي',
-    'كتابة مقالات بالذكاء الاصطناعي', 'أداة بحث ذكية',
-    'تولزي كوبايلوت', 'ذكاء اصطناعي للمبرمجين', 'Copilot', 'AI Assistant'
+    'AXIOM', 'معالج AXIOM', 'شات بوت عربي', 'مساعد ذكي عربي',
+    'ذكاء اصطناعي عربي', 'مساعد شخصي AI', 'شرح كود برمجي',
+    'كتابة كود بالذكاء الاصطناعي', 'أداة تفكير ذكية',
+    'تولزي اكسيوم', 'تفكير منطقي ذكي', 'AXIOM AI', 'AI Assistant'
   ];
   return { title, description, keywords };
 };
@@ -321,7 +321,7 @@ export const generateCopilotSEO = () => {
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "TOLZY Copilot",
+    "name": "AXIOM",
     "applicationCategory": "AIAssistant",
     "operatingSystem": "Web, Mobile",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
@@ -442,7 +442,7 @@ export const generateOrganizationData = () => {
     "contactPoint": { "@type": "ContactPoint", "contactType": "Customer Service", "availableLanguage": ["Arabic", "English"] },
     "sameAs": ["https://twitter.com/tolzytools"],
     "makesOffer": [
-      { "@type": "Offer", "itemOffered": { "@type": "Product", "name": "Tolzy Tools", "description": "دليل شامل لأكثر من 630 أداة ذكاء اصطناعي", "url": "https://www.tolzy.me/tools" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Product", "name": "Tolzy Tools", "description": "دليل شامل لأكثر من 1000 أداة ذكاء اصطناعي", "url": "https://www.tolzy.me/tools" } },
       { "@type": "Offer", "itemOffered": { "@type": "Product", "name": "Tolzy Learn", "description": "منصة تعليمية تفاعلية تقدم دورات وكورسات مجانية", "url": "https://www.tolzy.me/learn" } }
     ]
   };
@@ -481,7 +481,7 @@ export const generateTolzyEcosystemData = () => {
     "foundingDate": "2024",
     "founder": { "@type": "Person", "name": "محمود موسى" },
     "owns": [
-      { "@type": "Product", "name": "Tolzy Tools", "description": "دليل شامل لأكثر من 630 أداة ذكاء اصطناعي", "category": "AI Tools Directory", "url": "https://www.tolzy.me/tools" },
+      { "@type": "Product", "name": "Tolzy Tools", "description": "دليل شامل لأكثر من 1000 أداة ذكاء اصطناعي", "category": "AI Tools Directory", "url": "https://www.tolzy.me/tools" },
       { "@type": "Product", "name": "Tolzy Learn", "description": "منصة تعليمية تفاعلية للدورات والكورسات المجانية", "category": "Educational Platform", "url": "https://www.tolzy.me/learn" }
     ],
     "audience": { "@type": "Audience", "audienceType": ["الطلاب", "المعلمون", "المطورون", "المصممون", "الباحثون", "مبدعو المحتوى"] }
@@ -675,7 +675,7 @@ export const generateCopilotMetadata = (): Metadata => {
     keywords,
     openGraph: {
       title, description,
-      images: [{ url: 'https://tolzy.me/image/copilot-chat.png', width: 1200, height: 630, alt: 'TOLZY Copilot' }],
+      images: [{ url: 'https://tolzy.me/image/copilot-chat.png', width: 1200, height: 630, alt: 'AXIOM' }],
       type: 'website', locale: 'ar_EG', siteName: SITE_CONFIG.name,
     },
     twitter: {

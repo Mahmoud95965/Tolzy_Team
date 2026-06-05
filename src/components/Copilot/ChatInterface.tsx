@@ -56,6 +56,13 @@ const AT_COMMANDS = [
     { id: 'general', label: 'عام', description: 'محادثة عامة مع Copilot', icon: <span className="material-symbols-outlined text-[15px]">chat_bubble_outline</span>, color: 'text-indigo-400', comingSoon: false },
 ];
 
+const QUICK_SUGGESTIONS = [
+    { text: 'أفضل أدوات البرمجة بالذكاء الاصطناعي 💻', mode: 'tools' },
+    { text: 'كورس لتعلم البيانات وتحليلها 📊', mode: 'learn' },
+    { text: 'شرح كود برمجي بالتفصيل ⚙️', mode: 'code' },
+    { text: 'مسار تعلم الذكاء الاصطناعي 🎓', mode: 'learn' }
+];
+
 type CopilotMode = 'general' | 'code' | 'tools' | 'learn';
 
 interface ModeConfig {
@@ -74,7 +81,7 @@ const MODES: ModeConfig[] = [
         id: 'general',
         label: 'عام',
         icon: <span className="material-symbols-outlined text-[16px]">chat_bubble_outline</span>,
-        placeholder: 'اسأل TOLZY Copilot...',
+        placeholder: 'اسأل AXIOM الذكي...',
         color: 'text-slate-300',
         bg: 'bg-white/[0.05]',
         border: 'border-white/[0.08]',
@@ -113,13 +120,12 @@ const MODES: ModeConfig[] = [
 ];
 
 const generateId = () => {
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-        return crypto.randomUUID();
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let result = 'axz';
+    for (let i = 0; i < 8; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
+    return result;
 };
 
 const getApiBase = () => '';
@@ -451,240 +457,302 @@ const MessageItem = React.memo(({ msg, user, onResend }: {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className={`flex gap-3 sm:gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''} group relative mb-5 sm:mb-7 pb-5 border-b border-slate-100 dark:border-white/[0.04] last:border-0 last:pb-0`}
+            className={`flex gap-3 sm:gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''} group relative mb-6 sm:mb-8`}
         >
-            <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden border
+            {/* ── Avatar ── */}
+            <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden border mt-0.5
                 ${msg.role === 'user'
-                    ? 'bg-slate-100 dark:bg-white/[0.06] border-slate-200 dark:border-white/[0.08]'
-                    : 'bg-blue-500/10 dark:bg-white/[0.08] border-blue-500/20 dark:border-white/[0.10]'
+                    ? 'bg-slate-100/60 dark:bg-white/[0.06] border-slate-200/60 dark:border-white/[0.08]'
+                    : 'bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border-indigo-200/40 dark:border-indigo-500/20'
                 }
             `}>
                 {msg.role === 'user' ? (
                     user?.photoURL ? (
                         <Image src={user.photoURL} alt="User" width={36} height={36} className="object-cover" sizes="36px" />
                     ) : (
-                        <span className="material-symbols-outlined text-[16px] text-slate-500 dark:text-slate-400">person</span>
+                        <span className="material-symbols-outlined text-[16px] text-slate-500 dark:text-slate-400 font-bold">person</span>
                     )
                 ) : (
-                    <span className="material-symbols-outlined text-[16px] text-blue-500 dark:text-white">smart_toy</span>
+                    <img src="/image/tools/11zon_cropped (1).webp" alt="AXIOM" className="w-full h-full object-cover select-none" />
                 )}
             </div>
 
+            {/* ── Bubble ── */}
             <div className={`flex flex-col flex-1 max-w-[calc(100%-44px)] sm:max-w-[85%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                <div className={`w-full text-[14px] sm:text-[15px] leading-relaxed relative
-                    ${msg.role === 'user'
-                        ? 'bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] text-slate-800 dark:text-slate-100 rounded-xl rounded-tr-none px-4 py-3 sm:px-5 sm:py-3.5'
-                        : 'bg-transparent border-none text-slate-800 dark:text-slate-200 px-0 py-0.5'
-                    }
-                `}>
-                    {msg.role === 'assistant' && (
-                        <div className="flex items-center gap-2 mb-2.5">
-                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                                TOLZY Copilot
-                            </span>
-                        </div>
-                    )}
-
-                    {msg.status === 'thinking' ? (
-                        <div className="flex items-center gap-2 py-2">
-                            {[0, 1, 2].map(i => (
-                                <motion.span
-                                    key={i}
-                                    className="w-1.5 h-1.5 rounded-full bg-slate-500"
-                                    animate={{ opacity: [0.3, 1, 0.3] }}
-                                    transition={{
-                                        repeat: Infinity,
-                                        duration: 1.4,
-                                        delay: i * 0.22,
-                                        ease: 'easeInOut'
-                                    }}
-                                />
-                            ))}
-                            <span className="text-[11px] text-slate-500 font-medium mr-1">
-                                جاري التحليل...
-                            </span>
-                        </div>
-                    ) : (
-                        <ReactMarkdown children={processedContent} remarkPlugins={[remarkGfm as any]} components={{
-                            p: ({ children }) => <p className="mb-3.5 last:mb-0 text-slate-700 dark:text-slate-300 leading-[1.85] text-[14px] sm:text-[15px] text-right">{children}</p>,
-                            h1: ({ children }) => <h1 className="text-xl sm:text-2xl font-black mb-3 mt-4 text-slate-950 dark:text-white leading-tight text-right">{children}</h1>,
-                            h2: ({ children }) => <h2 className="text-base sm:text-lg font-bold mb-2.5 mt-4 text-slate-900 dark:text-white pb-2 border-b border-slate-200 dark:border-white/[0.06] leading-snug text-right">{children}</h2>,
-                            h3: ({ children }) => <h3 className="text-sm sm:text-base font-semibold mb-2 mt-3.5 text-slate-800 dark:text-slate-200 text-right">{children}</h3>,
-                            ul: ({ children }) => <ul className="list-disc pr-6 mb-3.5 space-y-2 text-slate-750 dark:text-slate-300 text-right w-full">{children}</ul>,
-                            ol: ({ children }) => <ol className="list-decimal pr-6 mb-3.5 space-y-2 text-slate-750 dark:text-slate-300 text-right w-full">{children}</ol>,
-                            li: ({ children }) => <li className="text-slate-650 dark:text-slate-400 pr-1 pl-0 text-[13.5px] sm:text-[14.5px] leading-[1.8] text-right w-full">{children}</li>,
-                            blockquote: ({ children }) => (
-                                <blockquote className="border-r-2 border-slate-300 dark:border-white/20 pr-4 my-3.5 italic text-slate-500 text-right">
-                                    {children}
-                                </blockquote>
-                            ),
-                            strong: ({ children }) => <strong className="font-extrabold text-slate-950 dark:text-white mx-0.5">{children}</strong>,
-                            table: ({ children }) => (
-                                <div className="overflow-x-auto my-4 rounded-xl border border-slate-200 dark:border-white/[0.08]">
-                                    <table className="w-full text-xs sm:text-sm text-right border-collapse">
-                                        {children}
-                                    </table>
-                                </div>
-                            ),
-                            thead: ({ children }) => <thead className="bg-slate-100 dark:bg-white/[0.04] text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">{children}</thead>,
-                            th: ({ children }) => <th className="px-4 py-3 border-b border-slate-200 dark:border-white/[0.06] text-slate-700 dark:text-slate-300 font-semibold">{children}</th>,
-                            td: ({ children }) => <td className="px-4 py-3 border-b border-slate-100 dark:border-white/[0.04] text-slate-600 dark:text-slate-400">{children}</td>,
-                            code: ({ node, className, children, ...props }: any) => {
-                                const match = /language-(\w+)/.exec(className || '');
-                                if (match && match[1] === 'tool') {
-                                    const content = String(children);
-                                    const lines = content.split('\n');
-                                    const toolData: any = {};
-                                    lines.forEach(line => {
-                                        const colonIdx = line.indexOf(':');
-                                        if (colonIdx > -1) {
-                                            const rawKey = line.substring(0, colonIdx).trim().toLowerCase();
-                                            const val = line.substring(colonIdx + 1).trim();
-                                            if (rawKey.includes('name')) toolData.name = val;
-                                            else if (rawKey.includes('description') || rawKey.includes('وصف')) toolData.description = val;
-                                            else if (rawKey.includes('link') || rawKey.includes('رابط')) toolData.link = val;
-                                            else if (rawKey.includes('category') || rawKey.includes('قسم')) toolData.category = val;
-                                        }
-                                    });
-                                    return (
-                                        <div className="my-3">
-                                            <ToolCard
-                                                name={toolData.name || 'أداة ذكاء اصطناعي'}
-                                                description={toolData.description || ''}
-                                                category={toolData.category}
-                                                link={toolData.link}
-                                            />
+                {msg.role === 'user' ? (
+                    /* ── User bubble ── */
+                    <div className="relative px-5 py-3.5 rounded-2xl rounded-tr-sm bg-slate-100/70 dark:bg-white/[0.05] border border-slate-200/60 dark:border-white/[0.07] shadow-sm backdrop-blur-sm">
+                        <p className="text-[15px] sm:text-[16px] font-semibold text-slate-800 dark:text-slate-100 leading-relaxed text-right">
+                            {msg.content}
+                        </p>
+                    </div>
+                ) : (
+                    /* ── AXIOM assistant bubble ── */
+                    <div className="w-full">
+                        {msg.status === 'thinking' ? (
+                            /* Thinking dots */
+                            <div className="flex items-center gap-2 px-1 py-3">
+                                {[0, 1, 2].map(i => (
+                                    <motion.span
+                                        key={i}
+                                        className="w-2 h-2 rounded-full bg-indigo-400/60 dark:bg-indigo-400/50"
+                                        animate={{ y: [0, -5, 0], opacity: [0.4, 1, 0.4] }}
+                                        transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.18, ease: 'easeInOut' }}
+                                    />
+                                ))}
+                                <span className="text-[13px] text-slate-400 dark:text-slate-500 font-medium mr-1">جاري التحليل...</span>
+                            </div>
+                        ) : (
+                            /* Response content */
+                            <div className="prose-axiom">
+                                <ReactMarkdown children={processedContent} remarkPlugins={[remarkGfm as any]} components={{
+                                    p: ({ children }) => <p className="mb-4 last:mb-0 text-slate-700 dark:text-slate-200 leading-[1.9] text-[15px] sm:text-[16px] font-medium text-right">{children}</p>,
+                                    h1: ({ children }) => <h1 className="text-xl sm:text-2xl font-black mb-4 mt-6 text-slate-900 dark:text-white leading-tight text-right border-r-4 border-indigo-500 pr-3">{children}</h1>,
+                                    h2: ({ children }) => <h2 className="text-[17px] sm:text-lg font-extrabold mb-3 mt-5 text-slate-900 dark:text-white pb-2 border-b border-slate-200/60 dark:border-white/[0.08] leading-snug text-right">{children}</h2>,
+                                    h3: ({ children }) => <h3 className="text-[15px] sm:text-base font-bold mb-2 mt-4 text-slate-700 dark:text-slate-300 text-right">{children}</h3>,
+                                    ul: ({ children }) => <ul className="mb-4 space-y-1.5 text-right w-full" style={{ paddingRight: '1.25rem', listStyleType: 'none' }}>{children}</ul>,
+                                    ol: ({ children }) => <ol className="mb-4 space-y-1.5 text-right w-full" style={{ paddingRight: '1.25rem', listStyleType: 'decimal' }}>{children}</ol>,
+                                    li: ({ children }) => (
+                                        <li className="relative text-slate-700 dark:text-slate-200 text-[15px] sm:text-[16px] font-medium leading-[1.8] text-right flex items-start gap-2 flex-row-reverse">
+                                            <span className="mt-2 w-1.5 h-1.5 rounded-full bg-indigo-400/70 dark:bg-indigo-400/50 flex-shrink-0" />
+                                            <span className="flex-1">{children}</span>
+                                        </li>
+                                    ),
+                                    blockquote: ({ children }) => (
+                                        <blockquote className="border-r-[3px] border-indigo-400/50 dark:border-indigo-500/40 pr-4 my-4 bg-indigo-50/40 dark:bg-indigo-500/[0.05] py-2 rounded-r-lg text-slate-600 dark:text-slate-400 text-right">
+                                            {children}
+                                        </blockquote>
+                                    ),
+                                    strong: ({ children }) => <strong className="font-bold text-slate-900 dark:text-white">{children}</strong>,
+                                    em: ({ children }) => <em className="not-italic text-indigo-600 dark:text-indigo-400 font-semibold">{children}</em>,
+                                    table: ({ children }) => (
+                                        <div className="overflow-x-auto my-4 rounded-xl border border-slate-200 dark:border-white/[0.08] shadow-sm">
+                                            <table className="w-full text-[13px] sm:text-sm text-right border-collapse">
+                                                {children}
+                                            </table>
                                         </div>
-                                    );
-                                }
-
-                                if (match && match[1] === 'course') {
-                                    const content = String(children);
-                                    const lines = content.split('\n');
-                                    const courseData: any = {};
-                                    lines.forEach(line => {
-                                        const colonIdx = line.indexOf(':');
-                                        if (colonIdx > -1) {
-                                            const rawKey = line.substring(0, colonIdx).trim().toLowerCase();
-                                            const val = line.substring(colonIdx + 1).trim();
-                                            if (rawKey.includes('name') || rawKey.includes('title') || rawKey.includes('عنوان')) courseData.title = val;
-                                            else if (rawKey.includes('description') || rawKey.includes('وصف')) courseData.description = val;
-                                            else if (rawKey.includes('link') || rawKey.includes('رابط')) courseData.link = val;
-                                            else if (rawKey.includes('level') || rawKey.includes('مستوى')) courseData.level = val;
-                                            else if (rawKey.includes('duration') || rawKey.includes('مدة')) courseData.duration = val;
-                                            else if (rawKey.includes('instructor') || rawKey.includes('مدرب') || rawKey.includes('اشراف') || rawKey.includes('إشراف')) courseData.instructor = val;
+                                    ),
+                                    thead: ({ children }) => <thead className="bg-slate-50 dark:bg-white/[0.03] text-slate-500 dark:text-slate-400 text-[11px] font-bold uppercase tracking-wider">{children}</thead>,
+                                    th: ({ children }) => <th className="px-4 py-3 border-b border-slate-200 dark:border-white/[0.06] text-slate-700 dark:text-slate-300 font-semibold">{children}</th>,
+                                    td: ({ children }) => <td className="px-4 py-3 border-b border-slate-100 dark:border-white/[0.04] text-slate-600 dark:text-slate-300">{children}</td>,
+                                    code: ({ node, className, children, ...props }: any) => {
+                                        const match = /language-(\w+)/.exec(className || '');
+                                        if (match && match[1] === 'tool') {
+                                            const content = String(children);
+                                            const lines = content.split('\n');
+                                            const toolData: any = {};
+                                            lines.forEach(line => {
+                                                const colonIdx = line.indexOf(':');
+                                                if (colonIdx > -1) {
+                                                    const rawKey = line.substring(0, colonIdx).trim().toLowerCase();
+                                                    const val = line.substring(colonIdx + 1).trim();
+                                                    if (rawKey.includes('name')) toolData.name = val;
+                                                    else if (rawKey.includes('link') || rawKey.includes('رابط')) {
+                                                        let cleaned = val.trim();
+                                                        if (cleaned.includes('/tools/')) {
+                                                            const parts = cleaned.split('/tools/');
+                                                            cleaned = `/tools/${parts[parts.length - 1]}`;
+                                                        }
+                                                        toolData.link = cleaned;
+                                                    }
+                                                    else if (rawKey.includes('category') || rawKey.includes('قسم')) toolData.category = val;
+                                                }
+                                            });
+                                            const toolHref = toolData.link || '#';
+                                            const isExternal = toolHref.startsWith('http');
+                                            return (
+                                                <a
+                                                    href={toolHref}
+                                                    target={isExternal ? '_blank' : '_self'}
+                                                    rel={isExternal ? 'noopener noreferrer' : undefined}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1 my-1 mx-0.5 rounded-full bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-semibold border border-indigo-500/20 hover:border-indigo-500/30 transition-all text-[14px] duration-200 no-underline cursor-pointer"
+                                                >
+                                                    <span className="material-symbols-outlined text-[13px]">layers</span>
+                                                    <span>{toolData.name || 'أداة ذكاء اصطناعي'}</span>
+                                                </a>
+                                            );
                                         }
-                                    });
-                                    return (
-                                        <div className="my-3">
-                                            <CourseCard
-                                                title={courseData.title || 'كورس تعليمي'}
-                                                description={courseData.description || ''}
-                                                link={courseData.link}
-                                                level={courseData.level}
-                                                duration={courseData.duration}
-                                                instructor={courseData.instructor}
-                                            />
-                                        </div>
-                                    );
-                                }
 
-                                if (match && match[1] === 'gmail-inbox') {
-                                    const content = String(children).replace(/\n$/, '');
-                                    return <GmailInboxWidget rawContent={content} />;
-                                }
+                                        if (match && match[1] === 'course') {
+                                            const content = String(children);
+                                            const lines = content.split('\n');
+                                            const courseData: any = {};
+                                            lines.forEach(line => {
+                                                const colonIdx = line.indexOf(':');
+                                                if (colonIdx > -1) {
+                                                    const rawKey = line.substring(0, colonIdx).trim().toLowerCase();
+                                                    const val = line.substring(colonIdx + 1).trim();
+                                                    if (rawKey.includes('name') || rawKey.includes('title') || rawKey.includes('عنوان')) courseData.title = val;
+                                                    else if (rawKey.includes('link') || rawKey.includes('رابط')) {
+                                                        let cleaned = val.trim();
+                                                        if (cleaned.includes('/learn/course/')) {
+                                                            const parts = cleaned.split('/learn/course/');
+                                                            cleaned = `/learn/course/${parts[parts.length - 1]}`;
+                                                        }
+                                                        courseData.link = cleaned;
+                                                    }
+                                                }
+                                            });
+                                            const courseHref = courseData.link || '#';
+                                            const isExternal = courseHref.startsWith('http');
+                                            return (
+                                                <a
+                                                    href={courseHref}
+                                                    target={isExternal ? '_blank' : '_self'}
+                                                    rel={isExternal ? 'noopener noreferrer' : undefined}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1 my-1 mx-0.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 font-semibold border border-amber-500/20 hover:border-amber-500/30 transition-all text-[14px] duration-200 no-underline cursor-pointer"
+                                                >
+                                                    <span className="material-symbols-outlined text-[13px]">school</span>
+                                                    <span>{courseData.title || 'كورس تعليمي'}</span>
+                                                </a>
+                                            );
+                                        }
 
-                                if (match && match[1] === 'gmail-compose') {
-                                    const content = String(children).replace(/\n$/, '');
-                                    return <GmailComposeWidget rawContent={content} />;
-                                }
+                                        if (match && match[1] === 'gmail-inbox') {
+                                            const content = String(children).replace(/\n$/, '');
+                                            return <GmailInboxWidget rawContent={content} />;
+                                        }
 
-                                return match ? (
-                                    <div className="bg-slate-900 dark:bg-[#0b0c10] rounded-xl overflow-hidden my-4 border border-slate-800 dark:border-white/[0.08] w-full max-w-full" dir="ltr">
-                                        <div className="bg-slate-800 dark:bg-white/[0.03] px-4 py-2.5 flex justify-between items-center border-b border-slate-700 dark:border-white/[0.06]">
-                                            <div className="flex items-center gap-2.5">
-                                                <div className="flex gap-1.5">
-                                                    <div className="w-2.5 h-2.5 rounded-full bg-white/10 border border-white/10"></div>
-                                                    <div className="w-2.5 h-2.5 rounded-full bg-white/10 border border-white/10"></div>
-                                                    <div className="w-2.5 h-2.5 rounded-full bg-white/10 border border-white/10"></div>
+                                        if (match && match[1] === 'gmail-compose') {
+                                            const content = String(children).replace(/\n$/, '');
+                                            return <GmailComposeWidget rawContent={content} />;
+                                        }
+
+                                        return match ? (
+                                            <div className="bg-[#0d1117] dark:bg-[#0b0c10] rounded-xl overflow-hidden my-4 border border-slate-700/60 dark:border-white/[0.08] w-full max-w-full shadow-md" dir="ltr">
+                                                <div className="bg-slate-800/80 dark:bg-white/[0.03] px-4 py-2.5 flex justify-between items-center border-b border-slate-700/60 dark:border-white/[0.06]">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <div className="flex gap-1.5">
+                                                            <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
+                                                            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50" />
+                                                            <div className="w-2.5 h-2.5 rounded-full bg-green-500/50" />
+                                                        </div>
+                                                        <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase tracking-widest">{match[1]}</span>
+                                                    </div>
+                                                    <button
+                                                        className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500 hover:text-white dark:hover:text-slate-300 transition-colors duration-200 px-2.5 py-1 rounded-lg hover:bg-white/[0.05]"
+                                                        onClick={() => {
+                                                            const cleanContent = String(children).replace(/\n$/, '');
+                                                            navigator.clipboard.writeText(cleanContent);
+                                                            toast.success('تم نسخ الكود');
+                                                        }}
+                                                    >
+                                                        <span className="material-symbols-outlined text-[13px]">content_copy</span>
+                                                        <span>نسخ</span>
+                                                    </button>
                                                 </div>
-                                                <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase tracking-widest">{match[1]}</span>
+                                                <div className="relative overflow-x-auto text-left">
+                                                    <SyntaxHighlighter
+                                                        style={oneDark}
+                                                        language={match[1]}
+                                                        PreTag="div"
+                                                        customStyle={{
+                                                            margin: 0,
+                                                            padding: '1rem 1.25rem',
+                                                            background: 'transparent',
+                                                            fontSize: '13px',
+                                                            lineHeight: '1.65',
+                                                            fontFamily: 'Consolas, Monaco, "Andale Mono", monospace'
+                                                        }}
+                                                        codeTagProps={{ style: { background: 'transparent', fontFamily: 'inherit', display: 'block' } }}
+                                                        {...props}
+                                                    >
+                                                        {String(children).replace(/\n$/, '')}
+                                                    </SyntaxHighlighter>
+                                                </div>
                                             </div>
-                                            <button
-                                                className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500 hover:text-white dark:hover:text-slate-300 transition-colors duration-200 px-2.5 py-1 rounded-lg hover:bg-white/[0.05]"
-                                                onClick={() => {
-                                                    const cleanContent = String(children).replace(/\n$/, '');
-                                                    navigator.clipboard.writeText(cleanContent);
-                                                    toast.success('تم نسخ الكود');
-                                                }}
-                                            >
-                                                <span className="material-symbols-outlined text-[13px]">content_copy</span>
-                                                <span>نسخ</span>
-                                            </button>
-                                        </div>
-                                        <div className="relative overflow-x-auto text-left">
-                                            <SyntaxHighlighter
-                                                style={oneDark}
-                                                language={match[1]}
-                                                PreTag="div"
-                                                customStyle={{
-                                                    margin: 0,
-                                                    padding: '1rem 1.25rem',
-                                                    background: 'transparent',
-                                                    fontSize: '13px',
-                                                    lineHeight: '1.65',
-                                                    fontFamily: 'Consolas, Monaco, "Andale Mono", monospace'
-                                                }}
-                                                codeTagProps={{ style: { background: 'transparent', fontFamily: 'inherit', display: 'block' } }}
+                                        ) : (
+                                            <code className="bg-indigo-50 dark:bg-indigo-500/[0.08] text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-md text-[0.85em] font-mono border border-indigo-200/50 dark:border-indigo-500/[0.15]" {...props}>{children}</code>
+                                        )
+                                    },
+                                    a: ({ node, className, href, children, ...props }: any) => {
+                                        let content = children;
+                                        if (typeof content === 'string' && content.startsWith('http')) {
+                                            try {
+                                                const urlObj = new URL(content);
+                                                content = urlObj.hostname.replace('www.', '');
+                                            } catch (e) { }
+                                        }
+
+                                        const isTool = href && (
+                                            href.startsWith('/tools/') ||
+                                            href.includes('tolzy.me/tools/')
+                                        );
+                                        const isCourse = href && (
+                                            href.startsWith('/learn/') ||
+                                            href.startsWith('/course/') ||
+                                            href.includes('tolzy.me/learn/') ||
+                                            href.includes('tolzy.me/course/')
+                                        );
+
+                                        // For tolzy.me absolute URLs, open in new tab
+                                        const isTolzyExternal = href && href.includes('tolzy.me');
+
+                                        if (isTool) {
+                                            return (
+                                                <a
+                                                    href={href}
+                                                    target={isTolzyExternal ? '_blank' : '_self'}
+                                                    rel={isTolzyExternal ? 'noopener noreferrer' : undefined}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1 my-1 mx-0.5 rounded-full bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-semibold border border-indigo-500/20 hover:border-indigo-500/30 transition-all text-[14px] duration-200 no-underline cursor-pointer"
+                                                    {...props}
+                                                >
+                                                    <span className="material-symbols-outlined text-[13px]">layers</span>
+                                                    <span>{content}</span>
+                                                </a>
+                                            );
+                                        }
+
+                                        if (isCourse) {
+                                            return (
+                                                <a
+                                                    href={href}
+                                                    target={isTolzyExternal ? '_blank' : '_self'}
+                                                    rel={isTolzyExternal ? 'noopener noreferrer' : undefined}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1 my-1 mx-0.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 font-semibold border border-amber-500/20 hover:border-amber-500/30 transition-all text-[14px] duration-200 no-underline cursor-pointer"
+                                                    {...props}
+                                                >
+                                                    <span className="material-symbols-outlined text-[13px]">school</span>
+                                                    <span>{content}</span>
+                                                </a>
+                                            );
+                                        }
+
+                                        const isExternal = href && href.startsWith('http');
+                                        return (
+                                            <a
+                                                href={href}
+                                                target={isExternal ? '_blank' : '_self'}
+                                                rel={isExternal ? 'noopener noreferrer' : undefined}
+                                                className="inline-flex items-center gap-1 px-2.5 py-0.5 my-0.5 mx-0.5 rounded-full bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-semibold border border-indigo-500/20 hover:border-indigo-500/30 transition-all text-[13px] duration-200 no-underline select-none shrink-0"
                                                 {...props}
                                             >
-                                                {String(children).replace(/\n$/, '')}
-                                            </SyntaxHighlighter>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <code className="bg-slate-100/90 dark:bg-white/[0.06] text-slate-800 dark:text-slate-200 px-2.5 py-0.5 rounded-full text-[0.88em] font-mono border border-slate-200/50 dark:border-white/[0.04]" {...props}>{children}</code>
-                                )
-                            },
-                            a: ({ node, className, href, children, ...props }: any) => {
-                                let content = children;
-                                if (typeof content === 'string' && content.startsWith('http')) {
-                                    try {
-                                        const urlObj = new URL(content);
-                                        content = urlObj.hostname.replace('www.', '');
-                                    } catch (e) { }
-                                }
-                                return (
-                                    <a
-                                        href={href}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1 px-2.5 py-0.5 my-0.5 mx-1 rounded-full bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 font-bold border border-blue-500/20 transition-all text-xs duration-200 decoration-none select-none shrink-0"
-                                        {...props}
-                                    >
-                                        <span className="material-symbols-outlined text-[13px] translate-y-[0.5px]">link</span>
-                                        <span className="truncate max-w-[200px]">{content}</span>
-                                    </a>
-                                );
-                            }
-                        }} />
-                    )}
-                    {msg.isStreaming && (
-                        <span
-                            className="inline-block w-[2px] h-4 bg-indigo-400 ml-0.5 rounded-sm align-middle"
-                            style={{ animation: 'blink 0.8s step-end infinite' }}
-                        />
-                    )}
-                </div>
+                                                <span className="material-symbols-outlined text-[12px]">{isExternal ? 'open_in_new' : 'link'}</span>
+                                                <span className="truncate max-w-[200px]">{content}</span>
+                                            </a>
+                                        );
+                                    }
+                                }} />
+                                {msg.isStreaming && (
+                                    <span
+                                        className="inline-block w-[2px] h-[1.1em] bg-indigo-400 dark:bg-indigo-300 ml-0.5 rounded-sm align-middle opacity-90"
+                                        style={{ animation: 'blink 0.75s step-end infinite' }}
+                                    />
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
 
-                {msg.role === 'assistant' && !msg.isStreaming && (
-                    <div className="flex items-center gap-1.5 mt-2 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                {/* ── Action buttons ── */}
+                {msg.role === 'assistant' && !msg.isStreaming && msg.status !== 'thinking' && (
+                    <div className="flex items-center gap-1 mt-2.5 opacity-0 group-hover:opacity-100 transition-all duration-200">
                         <button
                             onClick={handleCopy}
                             className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium rounded-lg border transition-colors duration-200
                                 ${isCopied
                                     ? 'border-slate-200 dark:border-white/[0.08] text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.05]'
-                                    : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04] hover:border-slate-200 dark:hover:border-white/[0.06]'
+                                    : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-white/[0.04] hover:border-slate-200/60 dark:hover:border-white/[0.06]'
                                 }
                             `}
                         >
@@ -695,13 +763,13 @@ const MessageItem = React.memo(({ msg, user, onResend }: {
                 )}
 
                 {msg.role === 'user' && (
-                    <div className="flex items-center gap-1.5 mt-2 justify-end opacity-0 group-hover:opacity-100 transition-all duration-200">
+                    <div className="flex items-center gap-1 mt-2 justify-end opacity-0 group-hover:opacity-100 transition-all duration-200">
                         <button
                             onClick={handleUserCopy}
                             className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium rounded-lg border transition-colors duration-200
                                 ${isUserCopied
                                     ? 'border-slate-200 dark:border-white/[0.08] text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.05]'
-                                    : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04] hover:border-slate-200 dark:hover:border-white/[0.06]'
+                                    : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-white/[0.04] hover:border-slate-200/60 dark:hover:border-white/[0.06]'
                                 }
                             `}
                         >
@@ -711,7 +779,7 @@ const MessageItem = React.memo(({ msg, user, onResend }: {
                         {onResend && (
                             <button
                                 onClick={() => onResend(msg.content)}
-                                className="flex items-center gap-1.5 px-2.5 py-1.5 border border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04] hover:border-slate-200 dark:hover:border-white/[0.06] rounded-lg text-[11px] font-medium transition-colors duration-200"
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 border border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-white/[0.04] hover:border-slate-200/60 dark:hover:border-white/[0.06] rounded-lg text-[11px] font-medium transition-colors duration-200"
                             >
                                 <span className="material-symbols-outlined text-[13px]">rotate_left</span>
                                 <span>إعادة إرسال</span>
@@ -767,7 +835,8 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
     const [currentConversationId, setCurrentConversationId] = useState<string | null>(initialChatId || null);
     const [selectedTool, setSelectedTool] = useState(TOOLS[0]);
     const [mode, setMode] = useState<CopilotMode>('general');
-    const [isModeDropdownOpen, setIsModeDropdownOpen] = useState(false);
+    const [isInputModeDropdownOpen, setIsInputModeDropdownOpen] = useState(false);
+    const [isHeaderModeDropdownOpen, setIsHeaderModeDropdownOpen] = useState(false);
     const [isAccountPopoverOpen, setIsAccountPopoverOpen] = useState(false);
     const [isSettingsPopoverOpen, setIsSettingsPopoverOpen] = useState(false);
     const [isSearchEnabled, setIsSearchEnabled] = useState(false);
@@ -827,7 +896,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
             if (q) {
                 setHasHandledInitialQuery(true);
                 setTimeout(() => handleSendMessage(q), 100);
-                window.history.replaceState({}, '', '/copilot');
+                window.history.replaceState({}, '', '/axiom');
             }
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -898,14 +967,14 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
             content: '',
             isStreaming: false,
             status: 'thinking',
-            modelId: 'tolzy-v2.5',
+            modelId: 'axiom',
             tools: []
         };
         setMessages(prev => [...prev, assistantMessage]);
         setLastMessageId(assistantMessageId);
 
         try {
-            const response = await fetch(`${getApiBase()}/api/copilot/chat`, {
+            const response = await fetch(`${getApiBase()}/api/axiom/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -981,7 +1050,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                 supabase.from('conversations').insert([newConv]).then(({ error }) => {
                     if (error) console.error('Error creating conversation:', error);
                     else {
-                        window.history.pushState({}, '', `/copilot/${newId}`);
+                        window.history.pushState({}, '', `/axiom/${newId}`);
                     }
                 });
             } else {
@@ -1166,22 +1235,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="relative w-full transition-all duration-300 z-30"
             >
-                <style dangerouslySetInnerHTML={{ __html: `
-                    @keyframes auraWave1 { 0% { transform: scale(0.4); opacity: 0; } 35% { opacity: 0.85; } 100% { transform: scale(1.4); opacity: 0; } }
-                    @keyframes auraWave2 { 0% { transform: scale(0.4); opacity: 0; } 35% { opacity: 0.65; } 100% { transform: scale(2.2); opacity: 0; } }
-                    @keyframes auraWave3 { 0% { transform: scale(0.4); opacity: 0; } 35% { opacity: 0.45; } 100% { transform: scale(3.0); opacity: 0; } }
-                    .animate-aura-1 { animation: auraWave1 6.5s cubic-bezier(0.16, 1, 0.3, 1) infinite; }
-                    .animate-aura-2 { animation: auraWave2 6.5s cubic-bezier(0.16, 1, 0.3, 1) infinite; animation-delay: 2.1s; }
-                    .animate-aura-3 { animation: auraWave3 6.5s cubic-bezier(0.16, 1, 0.3, 1) infinite; animation-delay: 4.2s; }
-                `}} />
 
-                {!isLoading && (
-                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vw] max-w-[100vw] h-[800px] -z-20 pointer-events-none overflow-hidden flex items-center justify-center">
-                        <div className="absolute w-[1200px] h-[600px] rounded-full bg-gradient-to-tr from-blue-200/25 via-sky-200/30 to-blue-100/15 dark:from-blue-600/3 dark:via-sky-500/5 dark:to-indigo-500/2 blur-[140px] sm:blur-[180px] animate-aura-1" />
-                        <div className="absolute w-[1200px] h-[600px] rounded-full bg-gradient-to-tr from-blue-200/20 via-sky-200/25 to-blue-100/10 dark:from-blue-600/2 dark:via-sky-500/4 dark:to-indigo-500/1 blur-[160px] sm:blur-[200px] animate-aura-2" />
-                        <div className="absolute w-[1200px] h-[600px] rounded-full bg-gradient-to-tr from-blue-200/15 via-sky-200/20 to-blue-100/8 dark:from-blue-600/1.5 dark:via-sky-500/2.5 dark:to-indigo-500/0.5 blur-[180px] sm:blur-[220px] animate-aura-3" />
-                    </div>
-                )}
 
                 <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2 rounded-full bg-white dark:bg-[#131314]/90 backdrop-blur-xl border border-slate-200 dark:border-white/[0.08] focus-within:border-blue-400 dark:focus-within:border-blue-500/40 shadow-md dark:shadow-none transition-all duration-200" dir="rtl">
                     <div className="flex-shrink-0 mb-0.5">
@@ -1204,10 +1258,10 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                 if (showAtMenu && e.key === 'Escape') { setShowAtMenu(false); e.preventDefault(); return; }
                                 if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); }
                             }}
-                            placeholder={MODES.find(m => m.id === mode)?.placeholder || "اسأل TOLZY Copilot..."}
+                            placeholder={MODES.find(m => m.id === mode)?.placeholder || "اسأل AXIOM الذكي..."}
                             rows={1}
                             disabled={isLoading}
-                            className="w-full bg-transparent border-none focus:ring-0 resize-none py-2 px-1 text-[14px] sm:text-[15px] text-slate-800 dark:text-slate-100 placeholder:text-slate-400/80 dark:placeholder:text-slate-500 max-h-40 min-h-[40px] scrollbar-hide text-right leading-6 outline-none"
+                            className="w-full bg-transparent border-none focus:ring-0 resize-none py-2 px-1 text-[16px] sm:text-[18px] font-bold text-slate-900 dark:text-white placeholder:text-slate-450 dark:placeholder:text-slate-500 max-h-40 min-h-[40px] scrollbar-hide text-right leading-6 outline-none"
                             style={{ height: '40px' }}
                             dir="rtl"
                         />
@@ -1299,18 +1353,18 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                         <div className="hidden lg:flex items-center gap-2">
                             <div className="relative">
                                 <button
-                                    onClick={() => setIsModeDropdownOpen(!isModeDropdownOpen)}
+                                    onClick={() => setIsInputModeDropdownOpen(!isInputModeDropdownOpen)}
                                     type="button"
                                     className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-200/50 hover:bg-slate-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-slate-300/30 dark:border-white/[0.05] transition-all duration-200 active:scale-95 cursor-pointer select-none"
                                 >
                                     <span>{MODES.find(m => m.id === mode)?.label || 'عام'}</span>
-                                    <span className="material-symbols-outlined text-[14px] sm:text-[16px] transition-transform duration-200" style={{ transform: isModeDropdownOpen ? 'rotate(180deg)' : 'none' }}>
+                                    <span className="material-symbols-outlined text-[14px] sm:text-[16px] transition-transform duration-200" style={{ transform: isInputModeDropdownOpen ? 'rotate(180deg)' : 'none' }}>
                                         keyboard_arrow_down
                                     </span>
                                 </button>
 
                                 <AnimatePresence>
-                                    {isModeDropdownOpen && (
+                                    {isInputModeDropdownOpen && (
                                         <motion.div
                                             initial={{ opacity: 0, scale: 0.95, y: 10 }}
                                             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1326,7 +1380,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                                         key={m.id}
                                                         onClick={() => {
                                                             setMode(m.id as CopilotMode);
-                                                            setIsModeDropdownOpen(false);
+                                                            setIsInputModeDropdownOpen(false);
                                                             textareaRef.current?.focus();
                                                         }}
                                                         className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all ${
@@ -1576,14 +1630,16 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                     className="relative z-10 w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden"
                 >
                     <div className="flex flex-col items-center text-center relative z-10">
-                        <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shadow-inner mb-6 relative">
-                            <svg className="w-8 h-8 text-blue-500 animate-pulse" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 3C12 3 12 9 6 12C12 15 12 21 12 21C12 21 12 15 18 12C12 9 12 3 12 3Z" fill="currentColor" />
-                            </svg>
+                        <div className="w-16 h-16 rounded-3xl border border-slate-200 dark:border-white/10 overflow-hidden flex items-center justify-center mb-5 relative shadow-xl">
+                            <img
+                                src="/image/tools/11zon_cropped (1).webp"
+                                alt="AXIOM Logo"
+                                className="w-full h-full object-cover"
+                            />
                         </div>
 
-                        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2">أهلاً بك في <span className="text-blue-500 font-sans font-black">TOLZY Copilot</span> ✨</h1>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mb-6 leading-relaxed font-medium">مساعدك البرمجي والتعليمي الفائق بالذكاء الاصطناعي. ابدأ رحلتك التفاعلية واقضِ على المشكلات البرمجية فوراً وبكل سهولة.</p>
+                        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2">أهلاً بك في <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-pink-500 font-sans font-black">AXIOM</span> ✨</h1>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mb-6 leading-relaxed font-medium">مساعدك للتفكير والتحليل وحل المشكلات البرمجية والتعليمية بالذكاء الفائق. ابدأ رحلتك التفاعلية فوراً وبكل سهولة.</p>
 
                         <div className="flex flex-col gap-2.5 w-full justify-center">
                             <Link href="/auth" className="w-full py-3 px-5 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-500/10 active:scale-[0.98] transition-all text-center flex items-center justify-center gap-2 font-sans">
@@ -1607,13 +1663,14 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
     return (
         <>
             <div
-                className="flex h-[100dvh] bg-white dark:bg-[#070a12] text-slate-800 dark:text-slate-100 overflow-hidden transition-colors duration-300 relative font-sans"
+                className="flex h-[100dvh] bg-white dark:bg-[#030305] text-slate-800 dark:text-slate-100 overflow-hidden transition-colors duration-300 relative font-sans"
                 dir="rtl"
             >
                 {/* ── Ambient Background Glow ── */}
                 <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-                    <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-blue-500/5 dark:bg-blue-600/8 blur-[120px]" />
-                    <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-500/5 dark:bg-indigo-600/6 blur-[100px]" />
+                    <div className="absolute top-[-25%] right-[-10%] w-[650px] h-[650px] rounded-full bg-indigo-500/5 dark:bg-indigo-500/8 blur-[130px]" />
+                    <div className="absolute bottom-[-15%] left-[-10%] w-[550px] h-[550px] rounded-full bg-pink-500/5 dark:bg-pink-500/6 blur-[110px]" />
+                    <div className="absolute top-[35%] left-[30%] w-[350px] h-[350px] rounded-full bg-purple-500/3 dark:bg-purple-500/4 blur-[120px]" />
                 </div>
 
                 {/* ── Sidebar Backdrop ── */}
@@ -1694,38 +1751,80 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                             </div>
 
                             {/* Sidebar Footer */}
-                            <div className="px-4 py-4 border-t border-slate-100 dark:border-white/[0.05]">
-                                <button
-                                    onClick={() => { deleteAllConversations(); setIsSidebarOpen(false); }}
-                                    className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl hover:bg-red-500/10 text-red-400 text-xs font-bold transition-all"
-                                >
-                                    <span className="material-symbols-outlined text-[15px]">delete_sweep</span>
-                                    <span>مسح كل السجل</span>
-                                </button>
+                            <div className="px-4 py-4 border-t border-slate-100 dark:border-white/[0.05] space-y-3">
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => { setIsSettingsPopoverOpen(!isSettingsPopoverOpen); setIsSidebarOpen(false); }}
+                                        className="flex-grow flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-slate-350 text-xs font-bold transition-all hover:bg-slate-200 dark:hover:bg-white/[0.08]"
+                                    >
+                                        <span className="material-symbols-outlined text-[16px] animate-spin-slow">settings</span>
+                                        <span>الإعدادات</span>
+                                    </button>
+                                    <button
+                                        onClick={() => { deleteAllConversations(); setIsSidebarOpen(false); }}
+                                        className="px-3 py-2.5 rounded-xl bg-red-500/10 text-red-400 text-xs font-bold transition-all hover:bg-red-500/20 flex items-center gap-1"
+                                        title="مسح كل السجل"
+                                    >
+                                        <span className="material-symbols-outlined text-[15px]">delete_sweep</span>
+                                        <span>مسح</span>
+                                    </button>
+                                </div>
                             </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
 
+                {/* ── Persistent Floating Settings Gear when Sidebar is Closed ── */}
+                {!isSidebarOpen && (
+                    <div className="fixed bottom-5 right-5 z-[80] block">
+                        <button
+                            onClick={() => setIsSettingsPopoverOpen(!isSettingsPopoverOpen)}
+                            className="w-10 h-10 rounded-full bg-white dark:bg-[#0d0e15] border border-slate-200 dark:border-white/[0.08] flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.18)] active:scale-95 transition-all cursor-pointer"
+                            title="الإعدادات"
+                        >
+                            <span className="material-symbols-outlined text-[20px] animate-spin-slow">settings</span>
+                        </button>
+                    </div>
+                )}
+
                 {/* Popover Backdrops */}
                 {(isAccountPopoverOpen || isSettingsPopoverOpen) && (
-                    <div className="fixed inset-0 z-40" onClick={() => { setIsAccountPopoverOpen(false); setIsSettingsPopoverOpen(false); }} />
+                    <div className="fixed inset-0 z-[90]" onClick={() => { setIsAccountPopoverOpen(false); setIsSettingsPopoverOpen(false); }} />
                 )}
 
                 <AnimatePresence>
                     {isSettingsPopoverOpen && (
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 8 }}
+                            initial={{ opacity: 0, scale: 0.95, y: 12 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 8 }}
-                            className="fixed left-4 top-16 w-52 bg-white dark:bg-[#0c0e16] border border-slate-200 dark:border-white/[0.08] rounded-2xl shadow-2xl p-1.5 z-[120]"
+                            exit={{ opacity: 0, scale: 0.95, y: 12 }}
+                            className="fixed bottom-16 right-5 w-60 bg-white dark:bg-[#0c0e16] border border-slate-200 dark:border-white/[0.08] rounded-2xl shadow-2xl p-4 z-[100] text-right font-sans"
                             dir="rtl"
                         >
+                            <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-3 border-b border-slate-100 dark:border-white/[0.05] pb-2 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[16px] text-indigo-500">settings</span>
+                                <span>إعدادات AXIOM</span>
+                            </h4>
+                            
+                            {/* Theme Toggle */}
+                            <div className="flex items-center justify-between py-2 mb-2">
+                                <span className="text-[12px] font-bold text-slate-655 dark:text-slate-400">مظهر المنصة (داكن / مضيء)</span>
+                                <button
+                                    onClick={toggleDarkMode}
+                                    className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/[0.05] hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-600 dark:text-slate-350 flex items-center justify-center transition-all"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">
+                                        {isDarkMode ? 'light_mode' : 'dark_mode'}
+                                    </span>
+                                </button>
+                            </div>
+
+                            {/* Clear History */}
                             <button
                                 onClick={() => { deleteAllConversations(); setIsSettingsPopoverOpen(false); }}
-                                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-red-500/10 text-red-400 text-xs font-bold transition-all"
+                                className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl hover:bg-red-500/10 text-red-400 text-xs font-bold transition-all mt-2 border border-transparent hover:border-red-500/10"
                             >
-                                <span className="material-symbols-outlined text-[16px]">delete</span>
+                                <span className="material-symbols-outlined text-[16px]">delete_sweep</span>
                                 <span>حذف السجل بالكامل</span>
                             </button>
                         </motion.div>
@@ -1790,49 +1889,19 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
 
                         {/* Center: Brand */}
                         <div className="flex items-center gap-2 select-none">
-                            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/25">
-                                <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none">
-                                    <path d="M12 3C12 3 12 9 6 12C12 15 12 21 12 21C12 21 12 15 18 12C12 9 12 3 12 3Z" fill="currentColor" />
-                                </svg>
+                            <div className="w-7 h-7 rounded-lg border border-slate-200 dark:border-white/10 overflow-hidden flex items-center justify-center shadow-md">
+                                <img
+                                    src="/image/tools/11zon_cropped (1).webp"
+                                    alt="AXIOM Logo"
+                                    className="w-full h-full object-cover"
+                                />
                             </div>
-                            <span className="text-sm font-black text-slate-900 dark:text-white tracking-tight">TOLZY <span className="text-blue-500">Copilot</span></span>
+                            <span className="text-sm font-black text-slate-900 dark:text-white tracking-tight">TOLZY <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-pink-500 font-bold">AXIOM</span></span>
                         </div>
 
                         {/* Right: Mode indicator + Account */}
                         <div className="flex items-center gap-1.5">
-                            <button
-                                onClick={() => setIsModeDropdownOpen(!isModeDropdownOpen)}
-                                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.06] border border-slate-200 dark:border-white/[0.06] transition-all"
-                            >
-                                <span>{MODES.find(m => m.id === mode)?.label || 'عام'}</span>
-                                <span className="material-symbols-outlined text-[14px]">keyboard_arrow_down</span>
-                            </button>
 
-                            <AnimatePresence>
-                                {isModeDropdownOpen && (
-                                    <motion.div
-                                        initial={{ opacity: 0, scale: 0.95, y: 6 }}
-                                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                                        exit={{ opacity: 0, scale: 0.95, y: 6 }}
-                                        className="fixed left-1/2 -translate-x-1/2 top-16 w-44 bg-white dark:bg-[#0e1119] border border-slate-200 dark:border-white/[0.08] rounded-2xl shadow-2xl p-1.5 z-50"
-                                        dir="rtl"
-                                    >
-                                        {MODES.map(m => (
-                                            <button
-                                                key={m.id}
-                                                onClick={() => { setMode(m.id as CopilotMode); setIsModeDropdownOpen(false); textareaRef.current?.focus(); }}
-                                                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all ${mode === m.id ? 'bg-blue-500/10 text-blue-500 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04]'}`}
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-slate-400 flex items-center">{m.icon}</span>
-                                                    <span>{m.label}</span>
-                                                </div>
-                                                {mode === m.id && <span className="material-symbols-outlined text-[13px]">check</span>}
-                                            </button>
-                                        ))}
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
 
                             <button
                                 onClick={() => { setIsAccountPopoverOpen(!isAccountPopoverOpen); setIsSettingsPopoverOpen(false); }}
@@ -1863,6 +1932,22 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                             userName={userData?.displayName || user?.displayName || undefined}
                                         >
                                             <div className="w-full max-w-2xl mx-auto mt-6 px-2">
+                                                {/* Suggestions Chips above Welcome Input */}
+                                                <div className="flex items-center gap-2 overflow-x-auto pb-2.5 mb-3 scrollbar-hide w-full justify-center" dir="rtl">
+                                                    {QUICK_SUGGESTIONS.map((sug, i) => (
+                                                        <button
+                                                            key={i}
+                                                            onClick={() => {
+                                                                setInput(sug.text);
+                                                                setMode(sug.mode as CopilotMode);
+                                                                textareaRef.current?.focus();
+                                                            }}
+                                                            className="shrink-0 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-350 text-[11px] font-bold border border-slate-200/50 dark:border-white/[0.06] hover:border-slate-300 dark:hover:border-white/[0.12] transition-all duration-200 active:scale-95 cursor-pointer"
+                                                        >
+                                                            {sug.text}
+                                                        </button>
+                                                    ))}
+                                                </div>
                                                 {renderInputPill(true)}
                                             </div>
                                         </WelcomeScreen>
@@ -1886,28 +1971,10 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                             {messages.length > 0 && (
                                 <div className="fixed bottom-0 left-0 right-0 z-30 px-4 pb-5 pt-12 bg-gradient-to-t from-white via-white/95 dark:from-[#070a12] dark:via-[#070a12]/95 to-transparent pointer-events-none">
                                     <div className="max-w-3xl mx-auto w-full pointer-events-auto flex flex-col gap-2">
-                                        {/* Mode Pills Row */}
-                                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                                            {MODES.map(m => (
-                                                <button
-                                                    key={m.id}
-                                                    onClick={() => setMode(m.id as CopilotMode)}
-                                                    className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all border ${
-                                                        mode === m.id
-                                                            ? 'bg-blue-500 text-white border-blue-500 shadow-md shadow-blue-500/20'
-                                                            : 'bg-white dark:bg-white/[0.04] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/[0.12]'
-                                                    }`}
-                                                >
-                                                    <span className="flex items-center">{m.icon}</span>
-                                                    <span>{m.label}</span>
-                                                </button>
-                                            ))}
-                                        </div>
-
                                         {renderInputPill(false)}
 
                                         <p className="text-center text-[10px] text-slate-400 dark:text-slate-600 font-medium">
-                                            TOLZY Copilot قد يخطئ أحياناً. يرجى التحقق من المعلومات المهمة.
+                                            AXIOM قد يخطئ أحياناً. يرجى التحقق من المعلومات المهمة.
                                         </p>
                                     </div>
                                 </div>

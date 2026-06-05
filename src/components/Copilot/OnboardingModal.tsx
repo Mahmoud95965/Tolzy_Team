@@ -55,7 +55,7 @@ const OnboardingModal = () => {
     const tourSteps = [
         {
             title: "فهم عميق للسياق",
-            desc: "Copilot لا يجيب فقط، بل يفهم ما تحاول بناءه. تحدث معه وكأنه شريكك في المشروع.",
+            desc: "AXIOM لا يجيب فقط، بل يفهم ما تحاول بناءه. تحدث معه وكأنه شريكك في المشروع.",
             icon: <span className="material-symbols-outlined text-[80px] text-blue-600" style={{fontSize:'80px'}}>auto_awesome</span>,
         },
         {
@@ -87,8 +87,8 @@ const OnboardingModal = () => {
                     </button>
 
                     <div className="absolute top-8 right-8 z-50 flex items-center gap-3">
-                        <span className="font-bold text-lg tracking-wide text-slate-800">Tolzy Copilot</span>
-                        <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
+                        <span className="font-bold text-lg tracking-wide text-slate-800 font-sans uppercase">AXIOM</span>
+                        <div className="w-10 h-10 bg-indigo-50 dark:bg-white/[0.04] rounded-xl flex items-center justify-center text-indigo-600">
                             <span className="material-symbols-outlined text-[22px]">smart_toy</span>
                         </div>
                     </div>
@@ -156,7 +156,7 @@ const OnboardingModal = () => {
                                 <div className="flex flex-col md:flex-row justify-between items-end w-full gap-8 z-20">
                                     <div className="text-slate-400 text-sm hidden md:block">
                                         <p>Tolzy New Era</p>
-                                        <p>Powered by Gemini Pro</p>
+                                        <p>Powered by AXIOM Reasoning</p>
                                     </div>
 
                                     <div className="flex gap-4 w-full md:w-auto">

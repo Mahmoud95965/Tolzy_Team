@@ -79,8 +79,8 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/copilot" className="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                  المساعد الذكي (Copilot)
+                <Link href="/axiom" className="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                  المساعد الذكي (AXIOM)
                 </Link>
               </li>
               <li>
@@ -125,8 +125,8 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/changelog" className="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                  سجل التغييرات
+                <Link href="/pulse" className="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                  TOLZY Pulse
                 </Link>
               </li>
               <li>

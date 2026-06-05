@@ -65,3 +65,5 @@ secure_firebase_rules.md
 # Local Scratch Directory
 scratch/
 
+# Firebase CLI cache
+.firebase/

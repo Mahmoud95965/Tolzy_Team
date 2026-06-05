@@ -75,9 +75,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                 <span>{isDarkMode ? 'الوضع النهاري' : 'الوضع الليلي'}</span>
                             </button>
 
-                            <Link href="/changelog" onClick={onClose} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-gray-200 text-sm transition-colors">
+                            <Link href="/pulse" onClick={onClose} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-gray-200 text-sm transition-colors">
                                 <Sparkles size={18} className="text-indigo-500" />
-                                <span>ما الجديد؟</span>
+                                <span>TOLZY Pulse</span>
                             </Link>
 
 

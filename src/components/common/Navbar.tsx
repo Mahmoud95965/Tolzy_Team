@@ -18,7 +18,8 @@ import {
   Users,
   History,
   BookOpen,
-  Wand2
+  Wand2,
+  Activity
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
@@ -158,13 +159,13 @@ const Navbar: React.FC = () => {
                         <div className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">ابنِ فكرة مشروعك بالكامل باستخدام الذكاء الاصطناعي في ثوانٍ.</div>
                       </div>
                     </Link>
-                    <Link href="/copilot" className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group/link relative">
+                    <Link href="/axiom" className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group/link relative">
                       <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 group-hover/link:scale-110 transition-transform">
                         <BrainCircuit className="w-5 h-5" />
                       </div>
                       <div className="text-right flex-1">
-                        <div className="font-bold text-slate-800 dark:text-white mb-0.5 text-sm">Tolzy Copilot</div>
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400">مساعدك الذكي لكتابة الأكواد وتحليلها</div>
+                        <div className="font-bold text-slate-800 dark:text-white mb-0.5 text-sm">AXIOM</div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400">مساعدك للتفكير والتحليل وحل المشكلات البرمجية</div>
                       </div>
                     </Link>
                     <Link href="/tools" className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group/link relative">
@@ -173,7 +174,7 @@ const Navbar: React.FC = () => {
                       </div>
                       <div className="text-right flex-1">
                         <div className="font-bold text-slate-800 dark:text-white mb-0.5 text-sm">دليل الأدوات</div>
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400">اكتشف أكثر من 630 أداة وتطبيق ذكاء اصطناعي</div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400">اكتشف أكثر من 1000 أداة وتطبيق ذكاء اصطناعي</div>
                       </div>
                     </Link>
                   </div>
@@ -197,13 +198,13 @@ const Navbar: React.FC = () => {
                         <div className="text-[11px] text-slate-500 dark:text-slate-400">تواصل مع المطورين وصناع المحتوى</div>
                       </div>
                     </Link>
-                    <Link href="/changelog" className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group/link">
+                    <Link href="/pulse" className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group/link">
                       <div className="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0 group-hover/link:scale-110 transition-transform">
-                        <History className="w-5 h-5" />
+                        <Activity className="w-5 h-5" />
                       </div>
                       <div className="text-right">
-                        <div className="font-bold text-slate-800 dark:text-white mb-0.5 text-sm">سجل التغييرات</div>
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400">تابع أحدث التحديثات والميزات</div>
+                        <div className="font-bold text-slate-800 dark:text-white mb-0.5 text-sm">TOLZY Pulse</div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400">نبض التحديثات والميزات الجديدة</div>
                       </div>
                     </Link>
                     <Link href="/docs" className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group/link">
@@ -426,9 +427,9 @@ const Navbar: React.FC = () => {
                       </div>
                       <span className="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">PRO</span>
                     </Link>
-                    <Link href="/copilot" onClick={() => setIsOpen(false)} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+                    <Link href="/axiom" onClick={() => setIsOpen(false)} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
                       <BrainCircuit className="w-4 h-4 text-indigo-500" />
-                      <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Tolzy Copilot</span>
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-300">AXIOM</span>
                     </Link>
                     <Link href="/tools" onClick={() => setIsOpen(false)} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
                       <Zap className="w-4 h-4 text-amber-500" />
@@ -459,9 +460,9 @@ const Navbar: React.FC = () => {
                       <Users className="w-4 h-4 text-indigo-500" />
                       <span className="text-sm font-bold text-slate-700 dark:text-slate-300">المجتمع</span>
                     </Link>
-                    <Link href="/changelog" onClick={() => setIsOpen(false)} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
-                      <History className="w-4 h-4 text-amber-500" />
-                      <span className="text-sm font-bold text-slate-700 dark:text-slate-300">سجل التغييرات</span>
+                    <Link href="/pulse" onClick={() => setIsOpen(false)} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+                      <Activity className="w-4 h-4 text-amber-500" />
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-300">TOLZY Pulse</span>
                     </Link>
                     <Link href="/docs" onClick={() => setIsOpen(false)} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
                       <BookOpen className="w-4 h-4 text-emerald-500" />
