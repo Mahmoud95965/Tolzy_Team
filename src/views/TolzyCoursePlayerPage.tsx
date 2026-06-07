@@ -311,7 +311,7 @@ const TolzyCoursePlayerPage: React.FC<TolzyCoursePlayerPageProps> = ({ initialCo
                                 />
                             </div>
 
-                            {/* Ask YouTube Learn - Bento Promotional Card */}
+                            {/* TOLZY OmniLearn - Bento Promotional Card */}
                             <div className="md:col-span-12 overflow-hidden rounded-3xl border border-emerald-500/20 dark:border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent dark:from-emerald-500/15 dark:via-teal-500/5 dark:to-[#0f1115]/45 p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative shadow-lg shadow-emerald-500/5 dark:shadow-[0_0_30px_rgba(16,185,129,0.05)] text-right">
                                 {/* Ambient glow backgrounds */}
                                 <div className="absolute top-0 right-1/4 w-40 h-40 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-full blur-[60px] pointer-events-none" />
@@ -320,7 +320,7 @@ const TolzyCoursePlayerPage: React.FC<TolzyCoursePlayerPageProps> = ({ initialCo
                                     <div className="shrink-0 w-16 h-16 rounded-2xl overflow-hidden border-2 border-emerald-400 relative shadow-lg shadow-emerald-500/20">
                                         <img 
                                             src="/image/tools/11zon_cropped.jpg" 
-                                            alt="YouTube Learn Icon" 
+                                            alt="TOLZY OmniLearn Icon" 
                                             className="w-full h-full object-cover"
                                         />
                                         <span className="absolute inset-0 bg-emerald-400/10 animate-pulse"></span>
@@ -329,19 +329,19 @@ const TolzyCoursePlayerPage: React.FC<TolzyCoursePlayerPageProps> = ({ initialCo
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-center md:justify-start gap-2">
                                             <h3 className="text-lg md:text-xl font-black text-emerald-600 dark:text-emerald-400">
-                                                تعلّم بشكل أسرع مع Ask YouTube Learn AI
+                                                تعلّم بشكل أسرع مع TOLZY OmniLearn AI
                                             </h3>
                                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-550/30">جديد ✨</span>
                                         </div>
                                         <p className="text-sm md:text-base text-slate-600 dark:text-slate-350 font-medium leading-relaxed max-w-2xl">
-                                            هل تود مناقشة هذا الكورس؟ اسأل رفيقك الذكي فوراً عن الأكواد والمفاهيم واستخرج ملخصات شاملة أو اختبر مستواك بأسئلة تفاعلية ذكية!
+                                            هل تود مناقشة هذا الكورس؟ اسأل رفيقك الذكي فوراً عن الأكواد والمفاهيم واستخرج ملخصات شاملة أو اختبر مستواك بأسئلة تفاعلية ذكية عبر محرك AXIOM!
                                         </p>
                                     </div>
                                 </div>
 
                                 <div className="shrink-0 relative z-10 w-full md:w-auto">
                                     <button
-                                        onClick={() => router.push(`/learn?youtubeUrl=${encodeURIComponent(course.sourceUrl || '')}`)}
+                                        onClick={() => router.push(`/learn/omnilearn?url=${encodeURIComponent(course.sourceUrl || '')}`)}
                                         className="w-full md:w-auto px-6 py-4 rounded-2xl bg-gradient-to-l from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white dark:text-[#090a0f] font-black text-base shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 hover:-translate-y-0.5 active:scale-98 transition-all flex items-center justify-center gap-2 group"
                                     >
                                         <span>ابدأ التعلم التفاعلي الذكي</span>
@@ -421,21 +421,7 @@ const TolzyCoursePlayerPage: React.FC<TolzyCoursePlayerPageProps> = ({ initialCo
                     </button>
                 </div>
 
-                {/* Ask YouTube Learn Floating Launcher */}
-                <div className="fixed bottom-24 right-6 md:bottom-6 md:right-6 z-50">
-                    <button
-                        onClick={() => router.push(`/learn?youtubeUrl=${encodeURIComponent(course.sourceUrl || '')}`)}
-                        className="relative block w-14 h-14 rounded-full overflow-hidden border-2 border-emerald-400 bg-[#090a0f] shadow-lg shadow-emerald-500/20 hover:scale-110 hover:shadow-emerald-500/40 hover:border-emerald-300 transition-all duration-300 group"
-                        title="اسأل يوتيوب AI عن هذا الكورس"
-                    >
-                        <img 
-                            src="/image/tools/11zon_cropped.jpg" 
-                            alt="Ask YouTube Learn" 
-                            className="w-full h-full object-cover group-hover:scale-115 transition-transform duration-300"
-                        />
-                        <span className="absolute inset-0 rounded-full border-2 border-emerald-400 animate-ping opacity-75 pointer-events-none"></span>
-                    </button>
-                </div>
+
             </div>
         </PageLayout>
     );

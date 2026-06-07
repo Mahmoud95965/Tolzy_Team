@@ -209,11 +209,11 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, course
                                                 </div>
                                                 <div className="min-w-0 flex-1 pl-2">
                                                     <p className="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                                                        <span>🧠 اسأل YouTube Learn AI</span>
+                                                        <span>🧠 اسأل TOLZY OmniLearn AI</span>
                                                         <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-550/30 uppercase tracking-wide">جديد ✨</span>
                                                     </p>
                                                     <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1 truncate">
-                                                        حلل أي كورس يوتيوب فوراً، استخرج الملخصات والأكواد الذكية، واختبر نفسك!
+                                                        حلل أي كورس Coursera، يوتيوب، أو مقال تعليمي فوراً بمساعدة AXIOM، استخرج ملخصات وأكواد ذكية واختبر نفسك!
                                                     </p>
                                                 </div>
                                             </div>
@@ -248,11 +248,11 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, course
                                                 </div>
                                                 <div className="min-w-0 flex-1 pl-2">
                                                     <p className="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                                                        <span>🧠 اسأل YouTube Learn AI</span>
+                                                        <span>🧠 اسأل TOLZY OmniLearn AI</span>
                                                         <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 uppercase tracking-wide">جديد ✨</span>
                                                     </p>
                                                     <p className="text-xs text-slate-555 dark:text-slate-400 font-medium mt-1 truncate">
-                                                        حلل أي كورس يوتيوب فوراً، اختبر معلوماتك، واستخرج ملخصات وأكواد ذكية!
+                                                        حلل أي كورس Coursera، يوتيوب، أو مقال تعليمي فوراً بمساعدة AXIOM، استخرج ملخصات وأكواد ذكية واختبر نفسك!
                                                     </p>
                                                 </div>
                                             </div>

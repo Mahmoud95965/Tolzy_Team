@@ -299,7 +299,7 @@ export default function PricingPage() {
       features: [
         '♾️ مساعد Copilot غير محدود بأقوى النماذج',
         '🚀 ميزة البناء بالذكاء الاصطناعي (Build with AI)',
-        '🧠 ميزة Ask YouTube Learn للتعلم الذكي',
+        '🧠 ميزة TOLZY OmniLearn للتعلم الذكي',
         '💡 التلخيص الذكي للمنشورات والتعليقات',
         '⚡ سرعة وأولوية فائقة على السيرفرات',
         '🎟️ وصول كامل للأدوات والخدمات بلا حدود',
@@ -313,7 +313,7 @@ export default function PricingPage() {
   const comparisonFeatures = [
     { name: 'الطلبات اليومية في Copilot', free: '5 طلبات يومياً', pro: 'عدد غير محدود' },
     { name: 'ميزة البناء Build with AI', free: 'غير متوفرة', pro: 'وصول كامل وحصري' },
-    { name: 'ميزة Ask YouTube Learn', free: 'غير متوفرة', pro: 'وصول كامل وحصري' },
+    { name: 'ميزة TOLZY OmniLearn', free: 'غير متوفرة', pro: 'وصول كامل وحصري' },
     { name: 'التلخيص الذكي للتعليقات', free: 'غير متوفرة', pro: 'وصول كامل وحصري' },
     { name: 'الوصول للأدوات والخدمات', free: 'أكثر من 1000 أداة', pro: 'كافة الأدوات والخدمات بلا حدود' },
     { name: 'سرعة السيرفرات والأولوية', free: 'مستقرة', pro: 'أولوية سريعة فائقة' },

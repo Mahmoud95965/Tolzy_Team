@@ -4,11 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import PageLayout from '../components/layout/PageLayout';
-import { Search, BookOpen, ChevronLeft, ChevronRight, Code2, Brain, Palette, Database, Shield, Globe, Zap, Star, TrendingUp, Target, Clock, Award } from 'lucide-react';
+import { Search, BookOpen, ChevronLeft, ChevronRight, Code2, Brain, Palette, Database, Shield, Globe, Zap, Star, TrendingUp, Target, Clock, Award, Sparkles } from 'lucide-react';
 import { Course } from '../types/learn';
 import SmartCourseCard from '../components/learn/SmartCourseCard';
 import CommandPalette from '../components/learn/CommandPalette';
-import AskYouTubeLearn from '../components/learn/AskYouTubeLearn';
 
 const COURSES_PER_PAGE = 9;
 
@@ -129,14 +128,7 @@ const TolzyLearnPage: React.FC = () => {
         <PageLayout navbarOffset={false} showCopilot={false}>
             <div className="relative min-h-screen bg-slate-50 dark:bg-[#090a0f] text-slate-800 dark:text-slate-200 transition-colors duration-300 overflow-x-hidden w-full pt-20 md:pt-24">
 
-                {/* === ASK YOUTUBE LEARN (CHAT BAR / WIDGET) === */}
-                <div className={isYoutubeActive ? "relative z-40 w-full max-w-7xl mx-auto px-4 pb-2" : "w-0 h-0 overflow-visible"}>
-                    <AskYouTubeLearn 
-                        onStateChange={(isActive) => setIsYoutubeActive(isActive)} 
-                        isForceOpen={isForceOpenYoutubeLearn}
-                        onCloseForceOpen={() => setIsForceOpenYoutubeLearn(false)}
-                    />
-                </div>
+
 
                 {/* === PREMIUM HERO SECTION === */}
                 {!isYoutubeActive && (
@@ -271,6 +263,42 @@ const TolzyLearnPage: React.FC = () => {
                         </div>
                     </div>
                 )}
+
+                {/* === TOLZY OMNILEARN BANNER === */}
+                <div className="max-w-7xl mx-auto px-4 mt-6">
+                    <div className="overflow-hidden rounded-3xl border border-purple-500/20 dark:border-purple-550/30 bg-gradient-to-br from-purple-500/10 via-indigo-500/5 to-transparent dark:from-purple-500/15 dark:via-indigo-500/5 dark:to-[#0f1115]/45 p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative shadow-lg shadow-purple-500/5 dark:shadow-[0_0_30px_rgba(168,85,247,0.05)] text-right">
+                        {/* Ambient glow backgrounds */}
+                        <div className="absolute top-0 right-1/4 w-40 h-40 bg-purple-500/10 dark:bg-purple-550/20 rounded-full blur-[60px] pointer-events-none" />
+                        
+                        <div className="flex flex-col md:flex-row items-center gap-5 md:gap-6 relative z-10 text-center md:text-right">
+                            <div className="shrink-0 w-16 h-16 rounded-2xl overflow-hidden border-2 border-purple-450 relative shadow-lg shadow-purple-500/20 flex items-center justify-center bg-[#090a0f]">
+                                <Sparkles className="w-8 h-8 text-purple-400 animate-pulse" />
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-center md:justify-start gap-2">
+                                    <h3 className="text-lg md:text-xl font-black text-purple-405">
+                                        معالج التعلم الذكي الفائق - TOLZY OmniLearn
+                                    </h3>
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-400 border border-purple-550/30">جديد بالكامل 🚀</span>
+                                </div>
+                                <p className="text-sm md:text-base text-slate-600 dark:text-slate-350 font-medium leading-relaxed max-w-2xl">
+                                    ادرس بذكاء بمساعدة محرك AXIOM. ضع رابط أي مساق من Coursera، فيديو يوتيوب، أو مقال تعليمي، وابدأ بتلخيص المفاهيم وحل كويزات تفاعلية فورية ومناقشة التفريغ!
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="shrink-0 relative z-10 w-full md:w-auto">
+                            <Link
+                                href="/learn/omnilearn"
+                                className="w-full md:w-auto px-6 py-4 rounded-2xl bg-gradient-to-l from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-base shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30 hover:-translate-y-0.5 active:scale-98 transition-all flex items-center justify-center gap-2 group text-center"
+                            >
+                                <span>ابدأ تجربة OmniLearn الآن</span>
+                                <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                            </Link>
+                        </div>
+                    </div>
+                </div>
 
                 {/* === MAIN CONTENT (Grid + Sidebar) === */}
                 {!isYoutubeActive && (
@@ -475,7 +503,7 @@ const TolzyLearnPage: React.FC = () => {
                     onSelectCourse={handleCourseClick}
                     onLaunchYouTubeLearn={() => {
                         setIsCommandPaletteOpen(false);
-                        setIsForceOpenYoutubeLearn(true);
+                        router.push('/learn/omnilearn');
                     }}
                 />
             </div>

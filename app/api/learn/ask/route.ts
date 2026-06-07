@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'يرجى تسجيل الدخول أولاً للتحقق من الصلاحية.' }, { status: 401, headers: corsHeaders() });
         }
 
-        // --- Plan check: Ask YouTube Learn is Pro/Ultra only ---
+        // --- Plan check: TOLZY OmniLearn is Pro/Ultra only ---
         if (adminDb) {
             try {
                 const userRef = adminDb.collection('users').doc(userId);
@@ -47,11 +47,11 @@ export async function POST(req: NextRequest) {
 
                 if (!isPro) {
                     return NextResponse.json({
-                        error: 'عذراً، ميزة Ask YouTube Learn متوفرة فقط لمشتركي باقة Pro. يرجى ترقية حسابك للاستفادة منها.'
+                        error: 'عذراً، ميزة TOLZY OmniLearn متوفرة فقط لمشتركي باقة Pro. يرجى ترقية حسابك للاستفادة منها.'
                     }, { status: 403, headers: corsHeaders() });
                 }
             } catch (e) {
-                console.error('YouTube Learn ask plan check error:', e);
+                console.error('TOLZY OmniLearn ask plan check error:', e);
             }
         }
 
@@ -99,44 +99,55 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        // 2. Format context text with precise timestamps
+        // 2. Format context text with precise timestamps or sections
+        const isYouTube = videoId.length === 11;
         const contextText = relevantChunks && relevantChunks.length > 0 
-            ? relevantChunks.map((c: any) => `[T-Timestamp: ${formatTime(Number(c.start_time))}] ${c.text}`).join('\n\n')
-            : 'نص تفريغ الفيديو غير متوفر حالياً.';
+            ? relevantChunks.map((c: any) => {
+                const label = isYouTube 
+                    ? `Timestamp: ${formatTime(Number(c.start_time))}`
+                    : `القسم: ${Number(c.chunk_index) + 1}`;
+                return `[T-${label}] ${c.text}`;
+              }).join('\n\n')
+            : 'محتوى المادة التعليمية غير متوفر حالياً.';
 
-        // Approximate timestamp of the first matched chunk as reference
+        // Approximate reference of the first matched chunk
         const firstMatchStartTime = relevantChunks && relevantChunks.length > 0 ? Number(relevantChunks[0].start_time) : 0;
-        const approximateTimestamp = formatTime(firstMatchStartTime);
+        const firstMatchIndex = relevantChunks && relevantChunks.length > 0 ? Number(relevantChunks[0].chunk_index) : 0;
+        const approximateRef = isYouTube 
+            ? formatTime(firstMatchStartTime)
+            : `القسم ${firstMatchIndex + 1}`;
 
-        // 3. Construct System Prompt with strict Arabic RAG instructions
-        const systemPrompt = `أنت مساعد تعليمي ذكي ومحترف لمنصة Tolzy Learn الفائقة الجودة.
-مهمتك هي الإجابة عن أسئلة المستخدمين بدقة واحترافية بالاعتماد حصرياً على سياق تفريغ الفيديو (Video Transcript Context) المرفق بالأسفل.
+        // 3. Construct System Prompt with strict Arabic RAG instructions and AXIOM persona
+        const systemPrompt = `أنت "TOLZY OmniLearn ✨" — معالج ومساعد التعلم الذكي الفائق المتكامل مع محرك AXIOM الذكي من Tolzy AI.
+مهمتك هي الإجابة عن أسئلة المستخدمين بدقة واحترافية عالية بالاعتماد على سياق المادة التعليمية المرفقة بالأسفل (سواء كانت تفريغ فيديو يوتيوب، محتوى مساق من Coursera، أو مقال/مدونة من موقع تعليمي).
 
-قواعد صارمة للإجابة والتفاعل:
-1. يجب أن تكون إجابتك باللغة العربية الفصحى، بأسلوب علمي راقٍ وجميل ومنسق بشكل ممتاز.
-2. أجب فقط من خلال المعلومات المذكورة في سياق تفريغ الفيديو المرفق.
-3. إذا لم تكن الإجابة موجودة في السياق، وضح ذلك بأدب ("هذه المعلومة غير مذكورة في الفيديو الشارح ولكن...")، ثم قدم إجابة عامة مختصرة ودقيقة مع توضيح أنها إضافية وليست من الفيديو.
-4. استخدم التنسيق المنسق الجميل (Markdown) بشكل كامل مثل العناوين الفرعية، القوائم المنقطة، وإبراز الكلمات الهامة (Bold).
-5. أشر دائماً إلى التوقيت الزمني (مثال: [04:15]) عند مناقشة مواضيع تم اقتباسها من هذا التوقيت في الشرح.
-6. إذا طلب المستخدم "اختبار"، "أسئلة"، "سؤال"، "تقييم"، "اختبرني"، "quiz" (أو إذا كان السؤال يحمل معنى تقييم الفهم)، قم بصياغة اختبار تفاعلي (Quiz) يحتوي على 3 أسئلة اختيار من متعدد متعلقة بمحتوى الفيديو. أرفق هيكل هذا الاختبار في حقل "quiz" في مخرجات الـ JSON كما هو موضح بالأسفل. وفي حال لم يطلب اختباراً، ضع قيمة حقل "quiz" كـ null.
+قواعد صارمة للإجابة والتفاعل (بشخصية AXIOM الهندسية):
+1. يجب أن تكون إجابتك باللغة العربية الفصحى، بأسلوب خبير هندسي وتقني مخضرم، واضح ومنظم للغاية ومنسق بشكل ممتاز.
+2. أجب فقط من خلال المعلومات المذكورة في سياق المادة التعليمية المرفقة.
+3. إذا لم تكن الإجابة موجودة في السياق، وضح ذلك بأدب ("هذه المعلومة غير مذكورة في المصدر ولكن...")، ثم قدم إجابة هندسية وعلمية دقيقة من ذاكرتك التقنية العامة مع توضيح أنها إضافية ومكملة للمصدر.
+4. استخدم التنسيق المنسق الجميل (Markdown) بشكل كامل مثل العناوين الفرعية، القوائم المنقطة، الكلمات الهامة (Bold)، وبلوكات الأكواد البرمجية الملونة إذا لزم الأمر.
+5. ${isYouTube ? 'أشر دائماً إلى التوقيت الزمني (مثال: [04:15]) عند مناقشة مواضيع تم اقتباسها من هذا التوقيت في الشرح.' : 'أشر دائماً إلى رقم القسم (مثال: [القسم 2]) عند الإشارة إلى أجزاء تم اقتباسها من هذا القسم في الشرح.'}
+6. إذا طلب المستخدم "اختبار"، "أسئلة"، "سؤال"، "تقييم"، "اختبرني"، "quiz" (أو إذا كان السؤال يحمل معنى تقييم الفهم أو طلب المزيد من الأسئلة)، قم بصياغة اختبار تفاعلي (Quiz) يحتوي على 10 أسئلة اختيار من متعدد (MCQ) متعلقة بمحتوى المادة.
+   هام جداً: يجب عليك قراءة تاريخ الدردشة (chatHistory) المرفق أدناه، وإذا كان هناك أسئلة اختبار قد تم تقديمها مسبقاً، فيجب أن تكون الـ 10 أسئلة الجديدة مختلفة تماماً وغير مكررة في الأفكار أو الصياغة لتغطية جوانب جديدة من المادة.
+   أرفق هيكل هذا الاختبار في حقل "quiz" في مخرجات الـ JSON كما هو موضح بالأسفل. وفي حال لم يطلب اختباراً، ضع قيمة حقل "quiz" كـ null.
 
 تنسيق الاستجابة المطلوبة:
 يجب أن تكون مخرجاتك عبارة عن كائن JSON صالح بنسبة 100% يحتوي على الحقول التالية فقط وبدون أي إضافات خارج الهيكل:
 {
-  "text": "نص الإجابة العربية المنسقة بالكامل بـ Markdown مع الإشارة للـ timestamps للفقرات...",
-  "timestamp": "التوقيت الزمني التقريبي لبداية موضوع السؤال كـ MM:SS (مثال: '${approximateTimestamp}')",
+  "text": "نص الإجابة العربية المنسقة بالكامل بـ Markdown مع الإشارة للـ ${isYouTube ? 'timestamps' : 'الأقسام'} للفقرات...",
+  "timestamp": "${isYouTube ? 'التوقيت الزمني التقريبي لبداية موضوع السؤال كـ MM:SS' : 'رقم القسم التقريبي لموضوع السؤال كـ القسم X'}",
   "quiz": [
     {
       "id": 1,
-      "question": "السؤال الأول حول محتوى الفيديو؟",
+      "question": "السؤال الأول حول محتوى المادة؟",
       "options": ["الخيار الأول", "الخيار الثاني (الافتراض الصحيح مثلاً)", "الخيار الثالث", "الخيار الرابع"],
       "correctIndex": 1,
-      "explanation": "شرح سبب صحة هذا الخيار بالتحديد بناءً على ما جاء في الفيديو..."
+      "explanation": "شرح سبب صحة هذا الخيار بالتحديد بناءً على ما جاء في المصدر..."
     }
   ]
 }
 
-سياق الفيديو المتاح حالياً كمرجع لك:
+سياق المادة التعليمية المتاحة حالياً كمرجع لك:
 --------------------
 ${contextText}
 --------------------`;
@@ -144,8 +155,8 @@ ${contextText}
         // 4. Format chat history
         const formattedMessages = [];
         if (chatHistory && Array.isArray(chatHistory)) {
-            // Include last 8 messages for conversational context to prevent token bloat
-            const limitedHistory = chatHistory.slice(-8);
+            // Include last 16 messages for conversational context to prevent token bloat and avoid quiz question overlap
+            const limitedHistory = chatHistory.slice(-16);
             for (const msg of limitedHistory) {
                 formattedMessages.push({
                     role: msg.sender === 'user' ? 'user' : 'assistant',
@@ -239,7 +250,7 @@ ${contextText}
         // 6. Parse and structure the response
         let finalResponse = {
             text: rawContent,
-            timestamp: approximateTimestamp,
+            timestamp: approximateRef,
             quiz: null
         };
 
@@ -247,7 +258,7 @@ ${contextText}
             const parsed = JSON.parse(rawContent);
             finalResponse = {
                 text: parsed.text || parsed.answer || rawContent,
-                timestamp: parsed.timestamp || approximateTimestamp,
+                timestamp: parsed.timestamp || approximateRef,
                 quiz: parsed.quiz || null
             };
         } catch (parseError) {
