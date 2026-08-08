@@ -32,7 +32,7 @@ const BentoCard = ({ tool }: { tool: Tool }) => {
           <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md border transition-all duration-300 ${
             isDarkMode 
               ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' 
-              : 'bg-amber-55/70 border-amber-100 text-amber-600'
+              : 'bg-amber-50 border-amber-100 text-amber-600'
           }`}>
             مجاني/مدفوع
           </span>
@@ -53,14 +53,14 @@ const BentoCard = ({ tool }: { tool: Tool }) => {
   return (
     <div className={`group rounded-2xl border p-5 transition-all duration-300 flex flex-col h-full relative overflow-hidden ${
       isDarkMode 
-        ? 'bg-slate-950/45 border-white/5 hover:border-indigo-500/30 shadow-2xl hover:shadow-indigo-500/5' 
-        : 'bg-white border-slate-200/80 hover:border-indigo-500/40 shadow-sm hover:shadow-lg shadow-slate-100/50'
+        ? 'bg-slate-950/45 border-white/5 hover:border-indigo-500/40 shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1' 
+        : 'bg-white border-slate-200/80 hover:border-indigo-500/50 shadow-sm hover:shadow-xl shadow-slate-100/50 hover:-translate-y-1'
     }`}>
       {/* Decorative hover gradient overlay */}
       <div className={`absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none ${
         isDarkMode 
-          ? 'bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-transparent' 
-          : 'bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-transparent'
+          ? 'bg-gradient-to-r from-indigo-500/15 via-purple-500/15 to-transparent' 
+          : 'bg-gradient-to-r from-indigo-500/8 via-purple-500/8 to-transparent'
       }`} />
 
       <div className="relative z-10 flex flex-col h-full">
@@ -70,36 +70,46 @@ const BentoCard = ({ tool }: { tool: Tool }) => {
             name={tool.name} 
             categoryName={primaryCategory} 
             size="md" 
-            className={`rounded-xl border transition-colors duration-300 ${
+            className={`rounded-xl border transition-all duration-300 group-hover:scale-105 ${
               isDarkMode ? 'border-slate-800' : 'border-slate-100'
             }`} 
           />
           {getPricingBadge()}
         </div>
         
-        <h3 className={`text-lg font-bold mb-2 line-clamp-1 transition-colors duration-300 ${
+        <h3 className={`text-lg font-bold mb-1.5 line-clamp-1 transition-colors duration-300 ${
           isDarkMode ? 'text-white group-hover:text-indigo-400' : 'text-slate-900 group-hover:text-indigo-600'
         }`}>
           {tool.name}
         </h3>
         
-        <p className={`text-sm line-clamp-2 mb-4 flex-grow transition-colors duration-300 ${
+        <p className={`text-xs line-clamp-2 mb-4 flex-grow leading-relaxed transition-colors duration-300 ${
           isDarkMode ? 'text-slate-400' : 'text-slate-500'
         }`}>
           {tool.description}
         </p>
         
-        <Link 
-          href={`/tools/${tool.id}`} 
-          className={`mt-auto inline-flex items-center gap-2 text-sm font-bold transition-all duration-300 group-hover:gap-3 w-fit ${
-            isDarkMode 
-              ? 'text-slate-300 group-hover:text-indigo-400' 
-              : 'text-slate-700 group-hover:text-indigo-600'
-          }`}
-        >
-          <span>زيارة الأداة</span>
-          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-        </Link>
+        <div className="mt-auto flex items-center justify-between pt-2 border-t border-slate-100 dark:border-white/5">
+          <Link 
+            href={`/tools/${tool.id}`} 
+            className={`inline-flex items-center gap-1.5 text-xs font-bold transition-all duration-300 group-hover:gap-2.5 ${
+              isDarkMode 
+                ? 'text-slate-300 group-hover:text-indigo-400' 
+                : 'text-slate-700 group-hover:text-indigo-600'
+            }`}
+          >
+            <span>زيارة الأداة</span>
+            <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />
+          </Link>
+          
+          {primaryCategory && (
+            <span className={`text-[10px] font-medium px-2 py-0.5 rounded-md ${
+              isDarkMode ? 'bg-white/5 text-slate-400' : 'bg-slate-100 text-slate-500'
+            }`}>
+              {primaryCategory}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
