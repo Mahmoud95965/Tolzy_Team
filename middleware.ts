@@ -52,6 +52,33 @@ export function middleware(request: NextRequest) {
             url.pathname = `/learn${url.pathname === '/' ? '' : url.pathname}`;
             return NextResponse.rewrite(url);
         }
+
+        // 2d. build.tolzy.me or build.localhost
+        if (hostLower.startsWith('build.') || hostLower === 'build.tolzy.me') {
+            if (url.pathname.startsWith('/build')) {
+                return NextResponse.rewrite(url);
+            }
+            url.pathname = `/build${url.pathname === '/' ? '' : url.pathname}`;
+            return NextResponse.rewrite(url);
+        }
+
+        // 2e. flow.tolzy.me or flow.localhost or axiom.tolzy.me
+        if (hostLower.startsWith('flow.') || hostLower.startsWith('axiom.') || hostLower === 'flow.tolzy.me') {
+            if (url.pathname.startsWith('/axiom')) {
+                return NextResponse.rewrite(url);
+            }
+            url.pathname = `/axiom${url.pathname === '/' ? '' : url.pathname}`;
+            return NextResponse.rewrite(url);
+        }
+
+        // 2f. community.tolzy.me or community.localhost
+        if (hostLower.startsWith('community.') || hostLower === 'community.tolzy.me') {
+            if (url.pathname.startsWith('/community')) {
+                return NextResponse.rewrite(url);
+            }
+            url.pathname = `/community${url.pathname === '/' ? '' : url.pathname}`;
+            return NextResponse.rewrite(url);
+        }
     }
 
     return NextResponse.next();

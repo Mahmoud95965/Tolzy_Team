@@ -145,7 +145,7 @@ const Navbar: React.FC = () => {
                 <div className="absolute top-full right-[-80px] w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-xl shadow-indigo-500/10 border border-slate-100 dark:border-white/5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 translate-y-2 group-hover:translate-y-0 p-3 z-50">
                   <div className="flex flex-col gap-1">
                     <Link 
-                      href={isPro ? "/build" : "/pricing"} 
+                      href={getSubdomainUrl('build', '/build')} 
                       className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group/link relative overflow-hidden"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 to-transparent opacity-0 group-hover/link:opacity-100 transition-opacity"></div>
@@ -160,13 +160,13 @@ const Navbar: React.FC = () => {
                         <div className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">ابنِ فكرة مشروعك بالكامل باستخدام الذكاء الاصطناعي في ثوانٍ.</div>
                       </div>
                     </Link>
-                    <Link href="/axiom" className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group/link relative">
+                    <Link href={getSubdomainUrl('flow', '/axiom')} className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group/link relative">
                       <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 group-hover/link:scale-110 transition-transform">
                         <BrainCircuit className="w-5 h-5" />
                       </div>
                       <div className="text-right flex-1">
-                        <div className="font-bold text-slate-800 dark:text-white mb-0.5 text-sm">AXIOM</div>
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400">مساعدك للتفكير والتحليل وحل المشكلات البرمجية</div>
+                        <div className="font-bold text-slate-800 dark:text-white mb-0.5 text-sm">AXIOM Flow</div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400">توليد المستندات والتقارير وملفات Word & Excel بالذكاء الاصطناعي</div>
                       </div>
                     </Link>
                     <Link href={getSubdomainUrl('omnilearn', '/learn/omnilearn')} className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group/link relative">
@@ -202,7 +202,7 @@ const Navbar: React.FC = () => {
                 </button>
                 <div className="absolute top-full right-0 w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-xl shadow-indigo-500/10 border border-slate-100 dark:border-white/5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 translate-y-2 group-hover:translate-y-0 p-3 z-50">
                   <div className="flex flex-col gap-1">
-                    <Link href="/community" className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group/link">
+                    <Link href={getSubdomainUrl('community', '/community')} className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group/link">
                       <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 group-hover/link:scale-110 transition-transform">
                         <Users className="w-5 h-5" />
                       </div>

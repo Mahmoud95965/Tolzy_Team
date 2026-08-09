@@ -15,64 +15,65 @@ import { motion } from 'framer-motion';
 import { Tool } from '../../types/tool';
 import LogoMarquee from './LogoMarquee';
 import dynamic from 'next/dynamic';
+import { getSubdomainUrl } from '../../utils/domain';
 
 const NewsPanelSection = dynamic(() => import('./NewsPanelSection'), { ssr: false });
 
 // --------------- static data ---------------
 const QUICK_ACTIONS = [
     {
-        id: 'copilot',
-        label: 'Tolzy Copilot',
-        labelAr: 'المساعد الذكي',
-        icon: MessageSquare,
-        color: 'from-violet-500 to-indigo-600',
-        href: '/copilot',
-        desc: 'اسأل، ناقش، واحصل على حلول وأكواد فورية.'
-    },
-    {
-        id: 'build',
-        label: 'TOLZY Build',
-        labelAr: 'ابنِ مشروعك',
-        icon: Rocket,
-        color: 'from-orange-500 to-rose-500',
-        href: '/build',
-        desc: 'حوّل فكرتك البرمجية إلى خطة بناء ذكية متكاملة.'
-    },
-    {
-        id: 'prompts',
-        label: 'Prompt Builder',
-        labelAr: 'صانع الأوامر',
-        icon: Wand2,
-        color: 'from-pink-500 to-purple-500',
-        href: 'https://prompts.tolzy.me/generator',
-        desc: 'اصنع أوامر برمجية احترافية ومخصصة في ثوانٍ.'
-    },
-    {
-        id: 'code',
-        label: 'Code Assistant',
-        labelAr: 'مساعد الكود',
-        icon: TerminalSquare,
-        color: 'from-cyan-500 to-blue-600',
-        href: '/copilot',
-        desc: 'اكتب، راجع، وصحح الأخطاء البرمجية بذكاء.'
+        id: 'tools',
+        label: 'Tolzy Tools',
+        labelAr: 'دليل الأدوات',
+        icon: Zap,
+        color: 'from-amber-500 to-orange-500',
+        href: getSubdomainUrl('tools', '/tools'),
+        desc: 'أكثر من 1000 أداة ذكاء اصطناعي تفاعلية.'
     },
     {
         id: 'learn',
         label: 'Tolzy Learn',
-        labelAr: 'تعلم وتطور',
+        labelAr: 'منصة التعلم',
         icon: GraduationCap,
         color: 'from-emerald-500 to-teal-600',
-        href: '/learn',
-        desc: 'كورسات وشروحات تقنية عربية مجانية بالكامل.'
+        href: getSubdomainUrl('learn', '/learn'),
+        desc: '150+ كورس تقني وبرمجي مجاني بالكامل.'
+    },
+    {
+        id: 'omnilearn',
+        label: 'Tolzy OmniLearn',
+        labelAr: 'أداة OmniLearn',
+        icon: Sparkles,
+        color: 'from-purple-500 to-indigo-600',
+        href: getSubdomainUrl('omnilearn', '/learn/omnilearn'),
+        desc: 'معالجة وتلخيص الفيديوهات والمصادر بالذكاء الاصطناعي.'
+    },
+    {
+        id: 'flow',
+        label: 'AXIOM Flow',
+        labelAr: 'صانع المستندات',
+        icon: TerminalSquare,
+        color: 'from-indigo-500 to-blue-600',
+        href: getSubdomainUrl('flow', '/axiom'),
+        desc: 'إنشاء وتوليد تقارير وملفات Word & Excel الذكية.'
+    },
+    {
+        id: 'build',
+        label: 'TOLZY Build',
+        labelAr: 'صانع المشاريع',
+        icon: Wand2,
+        color: 'from-rose-500 to-pink-600',
+        href: getSubdomainUrl('build', '/build'),
+        desc: 'تحويل أفكارك لخطة بناء برمجية متكاملة بـ AI.'
     },
     {
         id: 'community',
         label: 'Community',
-        labelAr: 'المجتمع',
+        labelAr: 'مجتمع Tolzy',
         icon: Users,
-        color: 'from-amber-500 to-orange-500',
-        href: '/community',
-        desc: 'شارك أفكارك وتفاعل مع آلاف المطورين والمحترفين.'
+        color: 'from-blue-500 to-cyan-500',
+        href: getSubdomainUrl('community', '/community'),
+        desc: 'تبادل التوجيهات والخبرات والأكواد الذكية.'
     },
 ];
 

@@ -4,6 +4,9 @@
  * - tools.tolzy.me (/tools)
  * - learn.tolzy.me (/learn)
  * - omnilearn.tolzy.me (/learn/omnilearn)
+ * - build.tolzy.me (/build)
+ * - flow.tolzy.me (/axiom)
+ * - community.tolzy.me (/community)
  * and local/fallback routing.
  */
 
@@ -11,13 +14,16 @@ export const MAIN_DOMAIN = 'tolzy.me';
 export const TOOLS_SUBDOMAIN = 'tools.tolzy.me';
 export const LEARN_SUBDOMAIN = 'learn.tolzy.me';
 export const OMNILEARN_SUBDOMAIN = 'omnilearn.tolzy.me';
+export const BUILD_SUBDOMAIN = 'build.tolzy.me';
+export const FLOW_SUBDOMAIN = 'flow.tolzy.me';
+export const COMMUNITY_SUBDOMAIN = 'community.tolzy.me';
 
-export type SubdomainType = 'tools' | 'learn' | 'omnilearn' | 'main';
+export type SubdomainType = 'tools' | 'learn' | 'omnilearn' | 'build' | 'flow' | 'community' | 'main';
 
 /**
  * Returns the appropriate base URL or path for a given service.
  * In production (on tolzy.me), returns absolute subdomain URLs (e.g., https://tools.tolzy.me).
- * In development / preview, returns local relative paths (e.g., /tools, /learn, /learn/omnilearn).
+ * In development / preview, returns local relative paths (e.g., /tools, /learn, /build, /axiom).
  */
 export function getSubdomainUrl(type: SubdomainType, path: string = ''): string {
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
@@ -35,6 +41,12 @@ export function getSubdomainUrl(type: SubdomainType, path: string = ''): string 
                     return `https://${LEARN_SUBDOMAIN}${cleanPath === '/learn' ? '' : cleanPath}`;
                 case 'omnilearn':
                     return `https://${OMNILEARN_SUBDOMAIN}${cleanPath === '/learn/omnilearn' ? '' : cleanPath}`;
+                case 'build':
+                    return `https://${BUILD_SUBDOMAIN}${cleanPath === '/build' ? '' : cleanPath}`;
+                case 'flow':
+                    return `https://${FLOW_SUBDOMAIN}${cleanPath === '/axiom' ? '' : cleanPath}`;
+                case 'community':
+                    return `https://${COMMUNITY_SUBDOMAIN}${cleanPath === '/community' ? '' : cleanPath}`;
                 case 'main':
                 default:
                     return `https://${MAIN_DOMAIN}${cleanPath}`;
@@ -50,6 +62,12 @@ export function getSubdomainUrl(type: SubdomainType, path: string = ''): string 
             return cleanPath === '' || cleanPath === '/' ? '/learn' : (cleanPath.startsWith('/learn') ? cleanPath : `/learn${cleanPath}`);
         case 'omnilearn':
             return cleanPath === '' || cleanPath === '/' ? '/learn/omnilearn' : (cleanPath.startsWith('/learn/omnilearn') ? cleanPath : `/learn/omnilearn${cleanPath}`);
+        case 'build':
+            return cleanPath === '' || cleanPath === '/' ? '/build' : (cleanPath.startsWith('/build') ? cleanPath : `/build${cleanPath}`);
+        case 'flow':
+            return cleanPath === '' || cleanPath === '/' ? '/axiom' : (cleanPath.startsWith('/axiom') ? cleanPath : `/axiom${cleanPath}`);
+        case 'community':
+            return cleanPath === '' || cleanPath === '/' ? '/community' : (cleanPath.startsWith('/community') ? cleanPath : `/community${cleanPath}`);
         case 'main':
         default:
             return cleanPath || '/';
@@ -72,6 +90,15 @@ export function parseSubdomain(host: string | null): SubdomainType {
     }
     if (normalizedHost.startsWith('learn.') || normalizedHost.startsWith('courses.') || normalizedHost === 'learn.tolzy.me' || normalizedHost === 'learn.localhost') {
         return 'learn';
+    }
+    if (normalizedHost.startsWith('build.') || normalizedHost === 'build.tolzy.me' || normalizedHost === 'build.localhost') {
+        return 'build';
+    }
+    if (normalizedHost.startsWith('flow.') || normalizedHost.startsWith('axiom.') || normalizedHost === 'flow.tolzy.me' || normalizedHost === 'flow.localhost') {
+        return 'flow';
+    }
+    if (normalizedHost.startsWith('community.') || normalizedHost === 'community.tolzy.me' || normalizedHost === 'community.localhost') {
+        return 'community';
     }
 
     return 'main';
