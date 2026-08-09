@@ -5,7 +5,7 @@ export function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     const hostname = request.headers.get('host') || '';
 
-    // 1. مسار لوحة التحكم Admin protection
+    // 1. Admin Protection
     if (url.pathname.startsWith('/admin') || url.pathname.startsWith('/api/admin')) {
         if (url.pathname.startsWith('/api/admin')) {
             return NextResponse.next();
@@ -17,8 +17,7 @@ export function middleware(request: NextRequest) {
         }
     }
 
-    // 2. معالجة الدومينات الفرعية Subdomain Rewrites
-    // إستثناء ملفات النظام والـ API
+    // 2. Subdomain Detection and Rewrites
     const isApiOrAsset = url.pathname.startsWith('/api') || 
                          url.pathname.startsWith('/_next') || 
                          url.pathname.startsWith('/static') ||
@@ -27,20 +26,31 @@ export function middleware(request: NextRequest) {
     if (!isApiOrAsset) {
         const hostLower = hostname.toLowerCase();
 
-        // tools.tolzy.me or tools.localhost -> rewrite to /tools
-        if (hostLower.startsWith('tools.') || hostLower === 'tools.tolzy.me') {
-            if (!url.pathname.startsWith('/tools')) {
-                url.pathname = `/tools${url.pathname === '/' ? '' : url.pathname}`;
+        // 2a. omnilearn.tolzy.me or omnilearn.localhost
+        if (hostLower.startsWith('omnilearn.') || hostLower === 'omnilearn.tolzy.me') {
+            if (url.pathname.startsWith('/learn/omnilearn')) {
                 return NextResponse.rewrite(url);
             }
+            url.pathname = `/learn/omnilearn${url.pathname === '/' ? '' : url.pathname}`;
+            return NextResponse.rewrite(url);
         }
 
-        // learn.tolzy.me or learn.localhost -> rewrite to /learn
-        if (hostLower.startsWith('learn.') || hostLower.startsWith('courses.') || hostLower === 'learn.tolzy.me') {
-            if (!url.pathname.startsWith('/learn')) {
-                url.pathname = `/learn${url.pathname === '/' ? '' : url.pathname}`;
+        // 2b. tools.tolzy.me or tools.localhost
+        if (hostLower.startsWith('tools.') || hostLower === 'tools.tolzy.me') {
+            if (url.pathname.startsWith('/tools')) {
                 return NextResponse.rewrite(url);
             }
+            url.pathname = `/tools${url.pathname === '/' ? '' : url.pathname}`;
+            return NextResponse.rewrite(url);
+        }
+
+        // 2c. learn.tolzy.me or learn.localhost
+        if (hostLower.startsWith('learn.') || hostLower.startsWith('courses.') || hostLower === 'learn.tolzy.me') {
+            if (url.pathname.startsWith('/learn')) {
+                return NextResponse.rewrite(url);
+            }
+            url.pathname = `/learn${url.pathname === '/' ? '' : url.pathname}`;
+            return NextResponse.rewrite(url);
         }
     }
 
@@ -50,4 +60,3 @@ export function middleware(request: NextRequest) {
 export const config = {
     matcher: ['/((?:[^/]+/)*[^/.]*)', '/admin/:path*', '/api/admin/:path*'],
 };
-

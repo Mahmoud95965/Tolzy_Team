@@ -169,6 +169,18 @@ const Navbar: React.FC = () => {
                         <div className="text-[11px] text-slate-500 dark:text-slate-400">مساعدك للتفكير والتحليل وحل المشكلات البرمجية</div>
                       </div>
                     </Link>
+                    <Link href={getSubdomainUrl('omnilearn', '/learn/omnilearn')} className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group/link relative">
+                      <div className="w-10 h-10 rounded-lg bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0 group-hover/link:scale-110 transition-transform">
+                        <Sparkles className="w-5 h-5" />
+                      </div>
+                      <div className="text-right flex-1">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="font-bold text-slate-800 dark:text-white text-sm">TOLZY OmniLearn</span>
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400 uppercase tracking-wider">NEW</span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400">معالجة وتلخيص الفيديوهات والمصادر بالذكاء الاصطناعي</div>
+                      </div>
+                    </Link>
                     <Link href={getSubdomainUrl('tools', '/tools')} className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group/link relative">
                       <div className="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0 group-hover/link:scale-110 transition-transform">
                         <Zap className="w-5 h-5" />
