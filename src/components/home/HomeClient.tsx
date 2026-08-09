@@ -7,13 +7,8 @@ import { useAuth } from '@/src/context/AuthContext';
 import SEO from '@/src/components/SEO';
 
 
-// For Guests - Full Landing Experience
-const EnhancedHero = dynamic(() => import('@/src/components/home/EnhancedHero'));
-const WhatIsTolzy = dynamic(() => import('@/src/components/home/WhatIsTolzy'));
-
-// Shared Components
-const LogoMarquee = dynamic(() => import('@/src/components/home/LogoMarquee'), {
-    loading: () => <div className="h-24 w-full animate-pulse bg-slate-50 dark:bg-[#050505]" />
+const EcosystemHome = dynamic(() => import('@/src/components/home/EcosystemHome'), {
+    loading: () => <div className="min-h-screen animate-pulse bg-slate-50 dark:bg-[#030712]" />
 });
 
 // For Logged In Users - Dashboard
@@ -22,26 +17,17 @@ const LoggedInHome = dynamic(() => import('@/src/components/home/LoggedInHome'),
     ssr: false
 });
 
-// Additional Sections for Guests
-const BentoHomeSection = dynamic(() => import('@/src/components/home/BentoHomeSection'), {
-    loading: () => <div className="min-h-[600px] w-full animate-pulse bg-slate-50 dark:bg-[#050505]" />
-});
-const NewsPanelSection = dynamic(() => import('@/src/components/home/NewsPanelSection'), { ssr: false });
-
-
-
 export default function HomeClient() {
-    const { isLoading: toolsLoading, error: toolsError, featuredTools, newTools } = useTools();
     const { user } = useAuth();
 
-    // 1. Dashboard View (Logged In) - Clean and Simple
+    // 1. Dashboard View (Logged In)
     if (user) {
         return (
             <>
                 <SEO
-                    title="Tolzy - لوحة التحكم"
-                    description="لوحة التحكم الخاصة بك في Tolzy. استكشف أحدث الأدوات والأخبار."
-                    keywords="tolzy, dashboard, tools, news"
+                    title="Tolzy - لوحة التحكم والمنظومة"
+                    description="لوحة التحكم الخاصة بك في منظومة Tolzy. استكشف أدواتك وكورساتك ومشاريعك."
+                    keywords="tolzy, dashboard, tools, learn, ecosystem"
                     url="/"
                 />
                 <LoggedInHome />
@@ -49,31 +35,17 @@ export default function HomeClient() {
         );
     }
 
-    // 2. Landing Page View (Guest) - Full Experience with Explanations
+    // 2. Landing Page View (Ecosystem Overview)
     return (
         <>
             <SEO
-                title="Tolzy - المنصة الرئيسية لأدوات الذكاء الاصطناعي | 1000+ أداة وكورس مجاني"
-                description="Tolzy - المنصة الرئيسية لدليل أدوات الذكاء الاصطناعي. اكتشف أكثر من 1000 أداة احترافية (ChatGPT, Gemini, Claude, Midjourney). منتجات Tolzy الإضافية: Tolzy Learn (كورسات برمجة مجانية). أدوات للطلاب، الباحثين، المبرمجين، والمصممين. من إنتاج Tolzy. ابدأ مجاناً!"
-                keywords="tolzy, تولزي, tolzy tools, tolzy learn, منصة تولزي, أدوات ذكاء اصطناعي, AI tools 2025, ChatGPT 4, Google Gemini Pro, Claude 3 Opus, Midjourney v6, DALL-E 3, كورسات برمجة مجانية, تعلم الذكاء الاصطناعي, مشاريع GitHub, أدوات البحث العلمي, Consensus, Elicit, أدوات الكتابة, Jasper, Copy.ai, Grammarly, أدوات التصميم, Canva AI, Leonardo.ai, أدوات البرمجة, GitHub Copilot, Cursor IDE, أدوات الفيديو, Runway, HeyGen, أدوات الإنتاجية, Notion AI, أدوات الطلاب, حل الواجبات بالذكاء الاصطناعي, تلخيص الملفات, أفضل مواقع الذكاء الاصطناعي, دليل أدوات AI, تطبيقات ذكاء اصطناعي, Prompt Engineering, فري لانسر, العمل الحر, الربح من الذكاء الاصطناعي, منصات تعليمية عربية, تعلم البرمجة, دورات تفاعلية"
+                title="Tolzy - منظومة الذكاء الاصطناعي والتعليم التقني بالعالم العربي"
+                description="منظومة Tolzy الشاملة تجمع بين أضخم دليل لأدوات الذكاء الاصطناعي (tools.tolzy.me)، منصة التعلم التفاعلية (learn.tolzy.me)، المساعد الذكي، وصانع المشاريع بـ AI. حساب موحد وبنية خلفية موحدة."
+                keywords="tolzy, تولزي, منظومة تولزي, tools.tolzy.me, learn.tolzy.me, دليل أدوات الذكاء الاصطناعي, منصة تعليمية عربية, Tolzy Copilot, Build with AI"
                 url="/"
             />
 
-            {/* Enhanced Hero with clear value proposition */}
-            <EnhancedHero />
-
-            {/* What is Tolzy - Feature explanation section */}
-            <WhatIsTolzy />
-
-            {/* News Panel — below the Bento Grid */}
-            <div className="max-w-2xl mx-auto px-4 py-6">
-                <NewsPanelSection />
-            </div>
-
-            <BentoHomeSection
-                popularTools={featuredTools || []}
-                newTools={newTools || []}
-            />
+            <EcosystemHome />
         </>
     );
 }
