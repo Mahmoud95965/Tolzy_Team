@@ -267,7 +267,7 @@ export default function EcosystemHome() {
                             className="px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 text-sm sm:text-base font-black rounded-2xl shadow-xl shadow-amber-500/20 hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-2 group"
                         >
                             <Zap className="w-5 h-5 fill-current" />
-                            <span>tools.tolzy.me</span>
+                            <span>دليل الأدوات الذكية</span>
                             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                         </Link>
 
@@ -276,7 +276,7 @@ export default function EcosystemHome() {
                             className="px-6 py-4 bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white border border-slate-200 dark:border-white/10 text-sm sm:text-base font-black rounded-2xl shadow-lg hover:border-emerald-500/50 hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-2 group"
                         >
                             <GraduationCap className="w-5 h-5 text-emerald-500" />
-                            <span>learn.tolzy.me</span>
+                            <span>منصة التعلم والمسارات</span>
                             <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:-translate-x-1 transition-transform" />
                         </Link>
 
@@ -285,7 +285,7 @@ export default function EcosystemHome() {
                             className="px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm sm:text-base font-black rounded-2xl shadow-xl shadow-purple-500/20 hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-2 group"
                         >
                             <Video className="w-5 h-5" />
-                            <span>omnilearn.tolzy.me</span>
+                            <span>أداة OmniLearn الذكية</span>
                             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                         </Link>
 
@@ -294,7 +294,7 @@ export default function EcosystemHome() {
                             className="px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white text-sm sm:text-base font-black rounded-2xl shadow-xl shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-2 group"
                         >
                             <FileSpreadsheet className="w-5 h-5" />
-                            <span>flow.tolzy.me</span>
+                            <span>صانع المستندات والتقارير</span>
                             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                         </Link>
                     </div>
@@ -398,7 +398,7 @@ export default function EcosystemHome() {
                                                     href={service.url}
                                                     className={`inline-flex items-center gap-3 px-7 py-3.5 rounded-2xl text-sm font-black transition-all duration-200 shadow-md hover:scale-105 active:scale-95 ${service.buttonBg}`}
                                                 >
-                                                    <span>انتقل إلى {service.subdomain}</span>
+                                                    <span>استكشف {service.title} الآن</span>
                                                     <ArrowUpRight className="w-4.5 h-4.5" />
                                                 </Link>
                                             </div>
@@ -619,7 +619,7 @@ export default function EcosystemHome() {
                                 className="px-8 py-4 bg-amber-400 hover:bg-amber-300 text-slate-950 text-base font-black rounded-2xl shadow-xl transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
                             >
                                 <Zap className="w-5 h-5 fill-current" />
-                                <span>tools.tolzy.me</span>
+                                <span>استكشف دليل الأدوات</span>
                             </Link>
 
                             <Link
@@ -627,7 +627,7 @@ export default function EcosystemHome() {
                                 className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white border border-white/20 text-base font-black rounded-2xl backdrop-blur-md transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
                             >
                                 <GraduationCap className="w-5 h-5 text-emerald-400" />
-                                <span>learn.tolzy.me</span>
+                                <span>تصفح الكورسات والتعلم</span>
                             </Link>
 
                             <Link
@@ -635,7 +635,7 @@ export default function EcosystemHome() {
                                 className="px-8 py-4 bg-purple-500 hover:bg-purple-400 text-white text-base font-black rounded-2xl shadow-lg transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
                             >
                                 <Video className="w-5 h-5" />
-                                <span>omnilearn.tolzy.me</span>
+                                <span>تجربة OmniLearn</span>
                             </Link>
                         </div>
                     </div>
