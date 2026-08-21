@@ -32,7 +32,7 @@ export default function LoggedInHome() {
 
     const rawCount = (userProfile as any)?.aiRequestCount ?? (userProfile as any)?.copilotRequestCount ?? 0;
     const remainingQuota = isPro ? "غير محدود (∞)" : `${Math.max(0, 5 - rawCount)} من 5`;
-    const savedCount = (userProfile?.bookmarks?.length || (userProfile as any)?.savedTools?.length || 0);
+    const savedCount = ((userProfile as any)?.bookmarks?.length || (userProfile as any)?.savedTools?.length || 0);
 
     const greeting = () => {
         const hour = new Date().getHours();
