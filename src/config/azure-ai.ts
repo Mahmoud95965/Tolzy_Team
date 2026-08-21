@@ -1,8 +1,27 @@
 import OpenAI from 'openai';
 
-const endpoint = (process.env.AZURE_AI_ENDPOINT || 'https://mahmoudmuhammad212024-6-resource.services.ai.azure.com/openai/v1').trim();
+function normalizeAzureEndpoint(rawUrl: string): string {
+    const trimmed = (rawUrl || '').trim();
+    if (!trimmed) {
+        return 'https://mahmoudmuhammad212024-6-resource.services.ai.azure.com/openai/v1';
+    }
+
+    if (trimmed.endsWith('/openai/v1') || trimmed.endsWith('/openai/v1/')) {
+        return trimmed.replace(/\/+$/, '');
+    }
+
+    try {
+        const parsed = new URL(trimmed);
+        return `${parsed.protocol}//${parsed.host}/openai/v1`;
+    } catch {
+        return trimmed;
+    }
+}
+
+const rawEndpoint = process.env.AZURE_AI_ENDPOINT || 'https://mahmoudmuhammad212024-6-resource.services.ai.azure.com/openai/v1';
+const endpoint = normalizeAzureEndpoint(rawEndpoint);
 const apiKey = (process.env.AZURE_AI_KEY || '').trim();
-export const AZURE_AI_MODEL = (process.env.AZURE_AI_MODEL || process.env.AZURE_AI_DEPLOYMENT || 'axiom-core').trim();
+export const AZURE_AI_MODEL = (process.env.AZURE_AI_MODEL || process.env.AZURE_AI_DEPLOYMENT_NAME || process.env.AZURE_AI_DEPLOYMENT || 'axiom-core').trim();
 
 let _azureOpenAiClient: OpenAI | null = null;
 
