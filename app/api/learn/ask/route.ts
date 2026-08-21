@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/src/utils/supabaseAdmin';
-import { adminDb } from '@/src/config/firebase-admin';
 import { getAzureAiClient, AZURE_AI_MODEL } from '@/src/config/azure-ai';
+import { checkAndConsumeAiQuota } from '@/src/lib/ai-quota';
+
+export const maxDuration = 60;
 
 // Enable CORS
 function corsHeaders() {
@@ -37,23 +39,12 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'يرجى تسجيل الدخول أولاً للتحقق من الصلاحية.' }, { status: 401, headers: corsHeaders() });
         }
 
-        // --- Plan check: TOLZY OmniLearn is Pro/Ultra only ---
-        if (adminDb) {
-            try {
-                const userRef = adminDb.collection('users').doc(userId);
-                const userSnap = await userRef.get();
-                const userData = userSnap.data();
-                const userPlan = String(userData?.plan || 'free').toLowerCase();
-                const isPro = userPlan.includes('pro') || userPlan.includes('ultra');
-
-                if (!isPro) {
-                    return NextResponse.json({
-                        error: 'عذراً، ميزة TOLZY OmniLearn متوفرة فقط لمشتركي باقة Pro. يرجى ترقية حسابك للاستفادة منها.'
-                    }, { status: 403, headers: corsHeaders() });
-                }
-            } catch (e) {
-                console.error('TOLZY OmniLearn ask plan check error:', e);
-            }
+        // --- Unified AI Quota Check (5 free requests across all tools) ---
+        const quota = await checkAndConsumeAiQuota(userId);
+        if (!quota.allowed) {
+            return NextResponse.json({
+                error: quota.error || 'لقد استهلكت جميع طلباتك المجانية المتاحة (5 طلبات). يرجى الترقية إلى باقة Pro للحصول على وصول غير محدود!'
+            }, { status: 429, headers: corsHeaders() });
         }
 
         if (!videoId || !question) {
@@ -97,18 +88,17 @@ export async function POST(req: NextRequest) {
 
         // 2. Build Context from relevant chunks
         let contextText = '';
-        let approximateRef = '';
+        let approximateRef = '00:00';
 
         if (relevantChunks && relevantChunks.length > 0) {
             contextText = relevantChunks
-                .map((chunk: any) => `[الوقت: ${formatTime(chunk.start_time)}] ${chunk.text}`)
+                .map((chunk: any) => `[الوقت: ${formatTime(chunk.start_time || 0)}] ${chunk.text}`)
                 .join('\n\n');
 
             const firstChunkTime = relevantChunks[0].start_time || 0;
             approximateRef = formatTime(firstChunkTime);
         } else {
             contextText = 'لا يتوفر تفريغ نصي دقيق لهذه اللحظة، يرجى الإجابة بناءً على الفهم العام لمحتوى الفيديو.';
-            approximateRef = '00:00';
         }
 
         // 3. System Prompt for strict JSON response format
@@ -142,7 +132,7 @@ ${contextText}`;
         // 4. Format chat history
         const formattedMessages: any[] = [];
         if (chatHistory && Array.isArray(chatHistory)) {
-            const limitedHistory = chatHistory.slice(-16);
+            const limitedHistory = chatHistory.slice(-12);
             for (const msg of limitedHistory) {
                 formattedMessages.push({
                     role: msg.sender === 'user' ? 'user' : 'assistant',
@@ -161,12 +151,13 @@ ${contextText}`;
                 { role: 'user', content: question }
             ],
             temperature: 0.3,
+            max_tokens: 2500,
             response_format: { type: 'json_object' }
         });
 
         const rawContent = completion.choices[0]?.message?.content?.trim() || '{}';
 
-        // 6. Parse and structure the response
+        // 6. Robust Parse and structure the response
         let finalResponse = {
             text: rawContent,
             timestamp: approximateRef,
@@ -174,14 +165,18 @@ ${contextText}`;
         };
 
         try {
-            const parsed = JSON.parse(rawContent);
+            let cleanJsonText = rawContent;
+            if (cleanJsonText.includes('{')) {
+                cleanJsonText = cleanJsonText.substring(cleanJsonText.indexOf('{'), cleanJsonText.lastIndexOf('}') + 1);
+            }
+            const parsed = JSON.parse(cleanJsonText);
             finalResponse = {
                 text: parsed.text || parsed.answer || rawContent,
                 timestamp: parsed.timestamp || approximateRef,
                 quiz: parsed.quiz || null
             };
         } catch (parseError) {
-            console.warn('Failed to parse Azure AI response as JSON, falling back to raw text payload:', parseError);
+            console.warn('Failed to parse Azure AI response as JSON, falling back to raw text:', parseError);
         }
 
         return NextResponse.json(finalResponse, { headers: corsHeaders() });

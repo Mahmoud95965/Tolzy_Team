@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb } from '@/src/config/firebase-admin';
-import * as admin from 'firebase-admin';
 import { createClient } from '@supabase/supabase-js';
 import { getAzureAiClient, AZURE_AI_MODEL } from '@/src/config/azure-ai';
+import { checkAndConsumeAiQuota } from '@/src/lib/ai-quota';
+
+// زيادة مهلة التنفيذ لـ 60 ثانية لتوليد الخطط التفصيلية دون توقف
+export const maxDuration = 60;
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'placeholder-key';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'placeholder-key';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const SYSTEM_PROMPT = (userLevel: string) => `You are **"Tolzy Build Architect"**, an elite Silicon Valley Principal Startup Architect, CTO, and Product Strategist.
@@ -105,26 +107,15 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'يرجى تسجيل الدخول أولاً للتحقق من الصلاحية.' }, { status: 401 });
         }
 
-        // --- Plan validation: Build with AI is Pro/Ultra only ---
-        if (adminDb) {
-            try {
-                const userRef = adminDb.collection('users').doc(userId);
-                const userSnap = await userRef.get();
-                const userData = userSnap.data();
-                const userPlan = String(userData?.plan || 'free').toLowerCase();
-                const isPro = userPlan.includes('pro') || userPlan.includes('ultra');
-
-                if (!isPro) {
-                    return NextResponse.json({
-                        error: 'عذراً، ميزة البناء بالذكاء الاصطناعي متوفرة فقط لمشتركي باقة Pro. يرجى ترقية حسابك للاستفادة منها.'
-                    }, { status: 403 });
-                }
-            } catch (e) {
-                console.error('Build plan check error:', e);
-            }
+        // --- Unified AI Quota Check (5 free requests across all tools) ---
+        const quota = await checkAndConsumeAiQuota(userId);
+        if (!quota.allowed) {
+            return NextResponse.json({
+                error: quota.error || 'لقد استهلكت جميع طلباتك المجانية المتاحة (5 طلبات). يرجى الترقية إلى Pro لفتح وصول غير محدود!'
+            }, { status: 429 });
         }
 
-        // --- Generate with Azure AI ---
+        // --- Generate with Azure AI (axiom-core) ---
         const openai = getAzureAiClient();
         const completion = await openai.chat.completions.create({
             model: AZURE_AI_MODEL,
@@ -132,13 +123,13 @@ export async function POST(req: NextRequest) {
                 { role: 'system', content: SYSTEM_PROMPT(userLevel) },
                 { role: 'user', content: `🚀 فكرة المستخدم:\n"${idea.trim()}"\n\nGenerate the complete build plan now as valid JSON:` }
             ],
-            temperature: 0.7,
-            response_format: { type: 'json_object' }
+            temperature: 0.6,
+            max_tokens: 4096,
         });
 
-        const responseText = completion.choices[0]?.message?.content || '{}';
+        let responseText = completion.choices[0]?.message?.content?.trim() || '{}';
 
-        // Parse JSON to validate
+        // Robust JSON Parsing
         let parsedResult;
         try {
             parsedResult = JSON.parse(responseText);
@@ -152,7 +143,7 @@ export async function POST(req: NextRequest) {
                 if (start !== -1 && end !== -1) {
                     parsedResult = JSON.parse(responseText.substring(start, end + 1));
                 } else {
-                    throw new Error('Failed to parse AI response as JSON');
+                    throw new Error('Failed to parse AI response as valid JSON');
                 }
             }
         }
@@ -183,7 +174,7 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        return NextResponse.json({ result: parsedResult, projectId }, { status: 200 });
+        return NextResponse.json({ result: parsedResult, projectId, remainingQuota: quota.remaining }, { status: 200 });
 
     } catch (error: any) {
         console.error('Build with AI Error:', error);

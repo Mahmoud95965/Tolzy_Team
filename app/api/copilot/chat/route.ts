@@ -9,6 +9,8 @@ import { getAzureAiClient, AZURE_AI_MODEL } from '@/src/config/azure-ai';
 // =======================
 // 🔥 GLOBAL INIT
 // =======================
+export const maxDuration = 60;
+
 const supabase = createClient(
     process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'placeholder-key'
@@ -92,30 +94,14 @@ export async function POST(req: NextRequest) {
             .trim();
 
         // =======================
-        // 🔒 SECURE PLAN FETCH FROM FIRESTORE
+        // 🔒 UNIFIED AI QUOTA CHECK (5 Free requests across all tools)
         // =======================
-        let isProPlan = false;
-        let finalPlan = 'free';
-
-        if (userId && adminDb) {
-            try {
-                const firestorePromise = adminDb.collection('users').doc(userId).get();
-                const timeoutPromise = new Promise<never>((_, reject) =>
-                    setTimeout(() => reject(new Error('Firestore Timeout')), 1500)
-                );
-                const userSnap: any = await Promise.race([firestorePromise, timeoutPromise]);
-                const userData = userSnap.data();
-                finalPlan = String(userData?.plan || 'free').toLowerCase();
-                isProPlan = finalPlan.includes('pro') || finalPlan.includes('ultra');
-            } catch (e) {
-                console.error('Secure plan check error or timeout, defaulting to client tier:', e);
-                const normClientPlan = String(userPlan || 'free').toLowerCase();
-                isProPlan = normClientPlan.includes('pro') || normClientPlan.includes('ultra');
-            }
-        } else {
-            const normClientPlan = String(userPlan || 'free').toLowerCase();
-            isProPlan = normClientPlan.includes('pro') || normClientPlan.includes('ultra');
+        const { checkAndConsumeAiQuota } = await import('@/src/lib/ai-quota');
+        const quota = await checkAndConsumeAiQuota(userId, userPlan);
+        if (!quota.allowed) {
+            return NextResponse.json({ error: quota.error }, { status: 429 });
         }
+        const isProPlan = quota.isPro;
 
         // =======================
         // ⚡ FLAGS
@@ -123,42 +109,6 @@ export async function POST(req: NextRequest) {
         const words: string[] = sanitized.split(/\s+/);
         const SIMPLE_SET = new Set(['hi','hello','hey','مرحبا','السلام','ازيك'].map(normalize));
         const shouldUseRAG = sanitized.length >= 2 && !SIMPLE_SET.has(normalizedMsg);
-
-        // =======================
-        // 🔒 FREE PLAN LIMIT (5 req/day)
-        // =======================
-        if (!isProPlan && userId && adminDb) {
-            try {
-                const userRef = adminDb.collection('users').doc(userId);
-                const firestoreGetPromise = userRef.get();
-                const getTimeoutPromise = new Promise<never>((_, reject) =>
-                    setTimeout(() => reject(new Error('Firestore Get Timeout')), 1500)
-                );
-                const userSnap: any = await Promise.race([firestoreGetPromise, getTimeoutPromise]);
-                const userData = userSnap.data();
-
-                const count = userData?.copilotRequestCount || 0;
-                const lastDate = userData?.lastCopilotRequestDate?.toDate() || new Date(0);
-                const ONE_DAY = 24 * 60 * 60 * 1000;
-                const elapsed = Date.now() - lastDate.getTime();
-                const currentCount = elapsed > ONE_DAY ? 0 : count;
-
-                if (currentCount >= 5) {
-                    const hoursLeft = Math.ceil((ONE_DAY - elapsed) / 3600000);
-                    return NextResponse.json({
-                        error: `لقد استهلكت جميع رسائلك اليومية المجانية (5 رسائل). ستتجدد بعد ${hoursLeft} ساعة، أو اشترك في خطة Pro لرسائل غير محدودة!`
-                    }, { status: 429 });
-                }
-
-                userRef.set({
-                    copilotRequestCount: currentCount + 1,
-                    lastCopilotRequestDate: admin.firestore.FieldValue.serverTimestamp()
-                }, { merge: true }).catch(console.error);
-
-            } catch (err) {
-                console.error("Error verifying free quota with Firestore:", err);
-            }
-        }
 
         // =======================
         // ⚡ RAG SEARCH (Hybrid)

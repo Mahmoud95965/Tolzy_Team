@@ -4,8 +4,10 @@ import * as cheerio from 'cheerio';
 import { YoutubeTranscript } from 'youtube-transcript';
 import { google } from 'googleapis';
 import { supabaseAdmin } from '@/src/utils/supabaseAdmin';
-import { adminDb } from '@/src/config/firebase-admin';
 import crypto from 'crypto';
+import { checkAndConsumeAiQuota } from '@/src/lib/ai-quota';
+
+export const maxDuration = 60;
 
 // Enable CORS
 function corsHeaders() {
@@ -173,7 +175,7 @@ function chunkText(text: string, maxChunkLength = 1200): string[] {
     return finalChunks;
 }
 
-// Intelligent temporal chunking algorithm (3-5 minutes per chunk = 180 to 300 seconds)
+// Intelligent temporal chunking algorithm (3-5 minutes per chunk)
 interface TranscriptSegment {
     text: string;
     duration: number;
@@ -197,7 +199,6 @@ function chunkTranscript(segments: TranscriptSegment[], targetDurationSeconds = 
     for (let i = 0; i < segments.length; i++) {
         const segment = segments[i];
         
-        // Record start time if beginning a new chunk
         if (currentChunkTexts.length === 0) {
             currentChunkStart = segment.offset;
         }
@@ -207,9 +208,6 @@ function chunkTranscript(segments: TranscriptSegment[], targetDurationSeconds = 
             currentChunkTexts.push(cleanedText);
         }
         
-        // segment.duration is sometimes returned in milliseconds or seconds.
-        // youtube-transcript library standardizes durations and offsets to seconds, but let's be safe.
-        // If segment.duration is unusually large (>1000), it's likely milliseconds; convert it.
         const segmentDuration = segment.duration > 1000 ? segment.duration / 1000 : segment.duration;
         currentChunkDuration += segmentDuration;
 
@@ -225,7 +223,6 @@ function chunkTranscript(segments: TranscriptSegment[], targetDurationSeconds = 
                     duration: currentChunkDuration
                 });
             }
-            // Reset for next chunk
             currentChunkTexts = [];
             currentChunkDuration = 0;
         }
@@ -253,13 +250,17 @@ Output ONLY a valid JSON object with a "topics" array:
             model: AZURE_AI_MODEL,
             messages: [{ role: "user", content: prompt }],
             temperature: 0.1,
+            max_tokens: 1000,
             response_format: { type: "json_object" }
         });
 
-        const rawContent = response.choices[0]?.message?.content;
-        if (!rawContent) return ["برمجة 💻", "تطوير ⚙️", "تعليم 🧠"];
+        const rawContent = response.choices[0]?.message?.content?.trim() || '{}';
+        let cleanJsonText = rawContent;
+        if (cleanJsonText.includes('{')) {
+            cleanJsonText = cleanJsonText.substring(cleanJsonText.indexOf('{'), cleanJsonText.lastIndexOf('}') + 1);
+        }
         
-        const parsed = JSON.parse(rawContent);
+        const parsed = JSON.parse(cleanJsonText);
         if (Array.isArray(parsed)) return parsed.slice(0, 4);
         if (parsed.topics && Array.isArray(parsed.topics)) return parsed.topics.slice(0, 4);
         return ["برمجة 💻", "تطوير ⚙️", "تعليم 🧠"];
@@ -334,23 +335,12 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'يرجى تسجيل الدخول أولاً للتحقق من الصلاحية.' }, { status: 401, headers: corsHeaders() });
         }
 
-        // --- Plan check: TOLZY OmniLearn is Pro/Ultra only ---
-        if (adminDb) {
-            try {
-                const userRef = adminDb.collection('users').doc(userId);
-                const userSnap = await userRef.get();
-                const userData = userSnap.data();
-                const userPlan = String(userData?.plan || 'free').toLowerCase();
-                const isPro = userPlan.includes('pro') || userPlan.includes('ultra');
-
-                if (!isPro) {
-                    return NextResponse.json({
-                        error: 'عذراً، ميزة TOLZY OmniLearn متوفرة فقط لمشتركي باقة Pro. يرجى ترقية حسابك للاستفادة منها.'
-                    }, { status: 403, headers: corsHeaders() });
-                }
-            } catch (e) {
-                console.error('OmniLearn plan check error:', e);
-            }
+        // --- Unified AI Quota Check (5 free requests across all tools) ---
+        const quota = await checkAndConsumeAiQuota(userId);
+        if (!quota.allowed) {
+            return NextResponse.json({
+                error: quota.error || 'لقد استهلكت جميع طلباتك المجانية المتاحة (5 طلبات). يرجى الترقية إلى باقة Pro للحصول على وصول غير محدود!'
+            }, { status: 429, headers: corsHeaders() });
         }
 
         if (!url) {
@@ -367,7 +357,6 @@ export async function POST(req: NextRequest) {
         const resourceId = isYouTube ? videoId : generateUrlHash(url);
 
         // 1. Database Check (Deduplication)
-        // Check if the resource has already been fetched and chunked
         const { data: existingCourse } = await supabaseAdmin
             .from('youtube_courses')
             .select('*')
@@ -375,7 +364,6 @@ export async function POST(req: NextRequest) {
             .maybeSingle();
 
         if (existingCourse) {
-            // Fetch associated chunks
             const { data: existingChunks } = await supabaseAdmin
                 .from('youtube_transcript_chunks')
                 .select('*')
@@ -647,7 +635,7 @@ export async function POST(req: NextRequest) {
             throw new Error('فشل حفظ معلومات المادة التعليمية في قاعدة البيانات');
         }
 
-        // Delete old chunks if we are re-indexing (to avoid duplicate chunks)
+        // Delete old chunks if we are re-indexing
         await supabaseAdmin
             .from('youtube_transcript_chunks')
             .delete()
