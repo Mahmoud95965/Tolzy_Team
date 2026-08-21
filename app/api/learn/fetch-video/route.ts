@@ -240,14 +240,14 @@ async function generateTopicsWithAI(title: string, description: string): Promise
         const { getAzureAiClient, AZURE_AI_MODEL } = await import('@/src/config/azure-ai');
         const openai = getAzureAiClient();
 
-        const prompt = `You are a high-quality educational content analyzer.
-Analyze this YouTube video metadata and suggest exactly 4 technical topics or categories covered in the video, in Arabic with a relevant emoji.
+        const prompt = `You are an elite educational content taxonomist and tech curator for Tolzy OmniLearn.
+Analyze this video metadata and extract exactly 4 highly specific, attractive, and relevant technical topics/skills covered in the video, in professional Arabic with a fitting emoji for each.
 
 Title: ${title}
 Description: ${description}
 
-Output ONLY a valid JSON array of strings, like this:
-["برمجة الويب 🌐", "تطوير التطبيقات 📱", "قواعد البيانات 🗄️", "هندسة البرمجيات 🏗️"]`;
+Output ONLY a valid JSON object with a "topics" array:
+{"topics": ["برمجة الويب الحديثة 🌐", "هندسة النظم السحابية ☁️", "الذكاء الاصطناعي التوليدي 🤖", "قواعد البيانات وإدارة الـ SQL 🗄️"]}`;
 
         const response = await openai.chat.completions.create({
             model: AZURE_AI_MODEL,

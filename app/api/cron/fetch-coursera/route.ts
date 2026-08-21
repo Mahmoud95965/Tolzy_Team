@@ -14,14 +14,20 @@ import { getAzureAiClient, AZURE_AI_MODEL } from '@/src/config/azure-ai';
 async function enrichCourseWithAI(courseBatch: any[]) {
     try {
         const openai = getAzureAiClient();
-        const systemPrompt = `You are an expert AI translator. Translate course metadata into professional Arabic. Output ONLY a valid JSON object with a "courses" key.`;
+        const systemPrompt = `You are a Senior Technical Curriculum Strategist for Tolzy Academy. 
+Your role is to translate and enrich international online course metadata into high-quality, professional Arabic.
+Output ONLY a strictly valid JSON object with a "courses" array.`;
         const userPrompt = `
-        I am passing you a JSON array of ${courseBatch.length} online courses.
-        Translate them to highly professional Arabic.
+        Translate and enhance this batch of ${courseBatch.length} online courses into engaging, modern Arabic.
         
-        Return a JSON object: {"courses": [ {"id": "...", "title": "...", "description": "...", "category": "...", "metadata": {...} } ]}
+        For each course, provide:
+        - id: exact original id
+        - title: clear, attractive Arabic title preserving core tech keywords (e.g. Docker, Python, Next.js)
+        - description: inspiring and comprehensive Arabic summary (2-3 paragraphs)
+        - category: strictly one of ['برمجة الويب', 'الذكاء الاصطناعي', 'الأمن السيبراني', 'علم البيانات', 'تصميم واجهات', 'عام']
+        - metadata: { level: 'مبتدئ' | 'متوسط' | 'متقدم', duration: 'مثال: 4 أسابيع', what_you_will_learn: ['مهارة 1', 'مهارة 2', 'مهارة 3', 'مهارة 4'] }
         
-        Categories: ['برمجة الويب', 'الذكاء الاصطناعي', 'الأمن السيبراني', 'علم البيانات', 'تصميم واجهات', 'عام']
+        Return JSON structure: {"courses": [ { "id": "...", "title": "...", "description": "...", "category": "...", "metadata": {...} } ]}
         
         Input Data:
         ${JSON.stringify(courseBatch.map(c => ({ id: c.id, name: c.name, description: c.description })), null, 2)}

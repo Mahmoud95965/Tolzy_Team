@@ -17,19 +17,21 @@ function corsHeaders() {
 async function enrichWithAI(title: string, description: string) {
     try {
         const openai = getAzureAiClient();
-        const prompt = `You are an expert technical translator. 
-Analyze this course metadata and return a JSON object with:
-- title: Professional Arabic title
-- description: Detailed Arabic description
-- category: One of ['برمجة الويب', 'الذكاء الاصطناعي', 'الأمن السيبراني', 'علم البيانات', 'تصميم واجهات', 'عام']
-- level: One of ['مبتدئ', 'متوسط', 'متقدم']
-- what_you_will_learn: Array of 3 key points in Arabic.
+        const prompt = `You are a Senior Technical Curriculum Specialist and Copywriter for Tolzy Academy.
+Analyze this online technical course metadata and generate high-impact, professional Arabic course details.
 
-Input:
+Guidelines:
+1. Title: Catchy, professional Arabic title preserving well-known tech names (e.g. React, Python, Docker).
+2. Description: Compelling, structured Arabic overview (2-3 paragraphs) highlighting who it's for, key takeaways, and why it matters.
+3. Category: Must be strictly one of ['برمجة الويب', 'الذكاء الاصطناعي', 'الأمن السيبراني', 'علم البيانات', 'تصميم واجهات', 'عام'].
+4. Level: Must be strictly one of ['مبتدئ', 'متوسط', 'متقدم'].
+5. what_you_will_learn: Exactly 4 distinct, highly practical skill bullet points in Arabic (e.g. "بناء وتأمين واجهات برمجة التطبيقات REST APIs").
+
+Input Course Data:
 Title: ${title}
 Description: ${description}
 
-Output ONLY valid JSON.`;
+Output ONLY valid JSON with keys: title, description, category, level, what_you_will_learn.`;
 
         const response = await openai.chat.completions.create({
             model: AZURE_AI_MODEL,
