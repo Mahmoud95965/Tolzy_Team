@@ -139,7 +139,7 @@ export default function RootLayout({
     };
 
     return (
-        <html lang="ar" dir="rtl" suppressHydrationWarning>
+        <html lang="ar" dir="rtl" data-scroll-behavior="smooth" suppressHydrationWarning>
             <head>
                 {/* DNS Prefetch for better performance */}
                 <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
