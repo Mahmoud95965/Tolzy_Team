@@ -7,6 +7,7 @@
  * - build.tolzy.me (/build)
  * - flow.tolzy.me (/axiom)
  * - community.tolzy.me (/community)
+ * - copilot.tolzy.me (/copilot)
  * and local/fallback routing.
  */
 
@@ -17,8 +18,9 @@ export const OMNILEARN_SUBDOMAIN = 'omnilearn.tolzy.me';
 export const BUILD_SUBDOMAIN = 'build.tolzy.me';
 export const FLOW_SUBDOMAIN = 'flow.tolzy.me';
 export const COMMUNITY_SUBDOMAIN = 'community.tolzy.me';
+export const COPILOT_SUBDOMAIN = 'copilot.tolzy.me';
 
-export type SubdomainType = 'tools' | 'learn' | 'omnilearn' | 'build' | 'flow' | 'community' | 'main';
+export type SubdomainType = 'tools' | 'learn' | 'omnilearn' | 'build' | 'flow' | 'community' | 'copilot' | 'main';
 
 /**
  * Returns the appropriate base URL or path for a given service.
@@ -47,6 +49,8 @@ export function getSubdomainUrl(type: SubdomainType, path: string = ''): string 
                     return `https://${FLOW_SUBDOMAIN}${cleanPath === '/axiom' ? '' : cleanPath}`;
                 case 'community':
                     return `https://${COMMUNITY_SUBDOMAIN}${cleanPath === '/community' ? '' : cleanPath}`;
+                case 'copilot':
+                    return `https://${COPILOT_SUBDOMAIN}${cleanPath === '/copilot' ? '' : cleanPath}`;
                 case 'main':
                 default:
                     return `https://${MAIN_DOMAIN}${cleanPath}`;
@@ -68,6 +72,8 @@ export function getSubdomainUrl(type: SubdomainType, path: string = ''): string 
             return cleanPath === '' || cleanPath === '/' ? '/axiom' : (cleanPath.startsWith('/axiom') ? cleanPath : `/axiom${cleanPath}`);
         case 'community':
             return cleanPath === '' || cleanPath === '/' ? '/community' : (cleanPath.startsWith('/community') ? cleanPath : `/community${cleanPath}`);
+        case 'copilot':
+            return cleanPath === '' || cleanPath === '/' ? '/copilot' : (cleanPath.startsWith('/copilot') ? cleanPath : `/copilot${cleanPath}`);
         case 'main':
         default:
             return cleanPath || '/';
@@ -99,6 +105,9 @@ export function parseSubdomain(host: string | null): SubdomainType {
     }
     if (normalizedHost.startsWith('community.') || normalizedHost === 'community.tolzy.me' || normalizedHost === 'community.localhost') {
         return 'community';
+    }
+    if (normalizedHost.startsWith('copilot.') || normalizedHost === 'copilot.tolzy.me' || normalizedHost === 'copilot.localhost') {
+        return 'copilot';
     }
 
     return 'main';

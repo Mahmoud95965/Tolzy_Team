@@ -1,6 +1,6 @@
 "use client";
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import type { User, Auth, GoogleAuthProvider, GithubAuthProvider } from 'firebase/auth';
+import type { User, Auth } from 'firebase/auth';
 import type { UserProfile } from '../types/user';
 import { useFCMToken } from '../hooks/useFCMToken';
 import { getAuthErrorMessage } from '../utils/authErrorHandler';
@@ -20,9 +20,6 @@ export interface AuthContextType {
   resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
 }
-
-// ─── Error Message Mapping (Imported from authErrorHandler) ──────────────────────
-// Using getAuthErrorMessage from utils/authErrorHandler.ts
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -63,9 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const saveTokenToSupabase = async () => {
       if (!user?.uid || !fcmToken) return;
       
-      // Skip if already saved for this user (rate limiting)
       if (lastSavedUid === user.uid) {
-        console.log('⏳ FCM token already saved for this user, skipping');
         return;
       }
       
@@ -77,12 +72,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           updated_at: new Date().toISOString()
         }, { onConflict: 'id' });
         lastSavedUid = user.uid;
-        console.log('✅ FCM Token saved to Supabase');
       } catch (e: any) {
-        // Silent fail on quota errors to prevent console spam
-        if (e?.message?.includes('quota') || e?.message?.includes('restricted')) {
-          console.warn('⚠️ Supabase quota exceeded, FCM token not saved');
-        } else {
+        if (!e?.message?.includes('quota') && !e?.message?.includes('restricted')) {
           console.error('❌ Failed to save FCM token:', e?.message || e);
         }
       }
@@ -101,14 +92,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return 'free';
   };
 
+  // Helper to sync cross-subdomain SSO session cookie
+  const syncSsoSession = async (firebaseUser: User | null) => {
+    if (!firebaseUser) return;
+    try {
+      const idToken = await firebaseUser.getIdToken();
+      await fetch('/api/auth/sso/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
+    } catch (e) {
+      console.warn('⚠️ [SSO] Failed to sync session cookie:', e);
+    }
+  };
+
   useEffect(() => {
     let unsubscribe: () => void;
     let mounted = true;
 
     const initAuth = async () => {
       try {
-        // Dynamic import of Firebase Configuration
-        // This ensures the heavy bundle is NOT in the initial chunk
         const { auth, db } = await import('../config/firebase');
         const { onAuthStateChanged } = await import('firebase/auth');
         const { doc, getDoc, setDoc } = await import('firebase/firestore');
@@ -118,11 +122,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
           if (!mounted) return;
+
+          // 🔄 Auto SSO: If not authenticated in this subdomain's IndexedDB, check cross-subdomain cookie
+          if (!firebaseUser) {
+            try {
+              const ssoRes = await fetch('/api/auth/sso/token', { cache: 'no-store' });
+              if (ssoRes.ok) {
+                const ssoData = await ssoRes.json();
+                if (ssoData.authenticated && ssoData.customToken) {
+                  const { signInWithCustomToken } = await import('firebase/auth');
+                  await signInWithCustomToken(auth, ssoData.customToken);
+                  return; // onAuthStateChanged will fire automatically with the newly signed in user
+                }
+              }
+            } catch (ssoErr) {
+              console.warn('⚠️ [SSO] Token check failed:', ssoErr);
+            }
+          }
+
           setUser(firebaseUser);
 
           if (firebaseUser) {
+            // Keep session cookie fresh across .tolzy.me
+            syncSsoSession(firebaseUser);
+
             try {
-              const { supabase } = await import('../config/supabaseClient');
               const userDocRef = doc(db, 'users', firebaseUser.uid);
               
               let baseData: any = {};
@@ -130,7 +154,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const userDocSnap = await getDoc(userDocRef);
                 if (userDocSnap.exists()) {
                   baseData = userDocSnap.data();
-                  // Warm up the shared useUserData hook's memory cache to avoid double Firestore fetch
                   cachedUserData[firebaseUser.uid] = {
                     email: baseData.email || firebaseUser.email || '',
                     firstName: baseData.firstName || '',
@@ -145,12 +168,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   };
                 }
               } catch (fsErr) {
-                console.warn('⚠️ [AuthContext] Firestore user fetch failed (offline or quota exceeded):', fsErr);
+                console.warn('⚠️ [AuthContext] Firestore user fetch failed:', fsErr);
               }
 
               let truePlan = 'free';
               try {
-                // Read plan from backend admin endpoint to avoid RLS/session mismatch
                 const res = await fetch(`/api/user/plan?uid=${encodeURIComponent(firebaseUser.uid)}`, {
                   cache: 'no-store'
                 });
@@ -177,7 +199,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               // Admin Check
               if (firebaseUser.email === 'mahmoud.m.moussa5310@gmail.com') {
                 const adminDocRef = doc(db, 'admins', firebaseUser.uid);
-                // Non-blocking write
                 setDoc(adminDocRef, {
                   role: 'admin',
                   email: firebaseUser.email,
@@ -213,10 +234,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    // Initialize immediately (async) or wait?
-    // User requested "Background Initialization".
-    // We will let AuthInitializer trigger the heavy lift, or just let this run.
-    // Since this is all async dynamic imports, it yields to main thread.
     initAuth();
 
     return () => {
@@ -225,7 +242,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  // Refresh plan only on window focus - removed aggressive polling to prevent quota exhaustion
+  // Refresh plan on window focus
   useEffect(() => {
     if (!user?.uid) return;
 
@@ -233,32 +250,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let cancelled = false;
     
     const refreshPlan = async () => {
-      // Rate limit: max once per minute
       const now = Date.now();
       if (now - lastRefresh < 60000) {
-        console.log(`⏳ Plan refresh skipped (rate limited)`);
         return;
       }
       lastRefresh = now;
       
       try {
-        console.log(`🔄 Refreshing plan for user ${user.uid}`);
         const res = await fetch(`/api/user/plan?uid=${encodeURIComponent(user.uid)}`, {
           cache: 'no-store'
         });
-        if (!res.ok) {
-          console.warn(`⚠️ Plan API returned status ${res.status}`);
-          return;
-        }
+        if (!res.ok) return;
         const result = await res.json();
         const latestPlan = normalizePlan(result?.plan);
 
         if (!cancelled) {
-          console.log(`✅ Plan refreshed: ${latestPlan}`);
           setUserProfile((prev) => {
             if (!prev || prev.uid !== user.uid) return prev;
             if (prev.plan === latestPlan) return prev;
-            console.log(`🔄 Updating plan from ${prev.plan} to ${latestPlan}`);
             return { ...prev, plan: latestPlan };
           });
         }
@@ -268,11 +277,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const onWindowFocus = () => {
-      console.log('📍 Window focus detected, refreshing plan');
       refreshPlan();
     };
 
-    // Refresh on window focus only (no polling to save quota)
     if (typeof window !== 'undefined') {
       window.addEventListener('focus', onWindowFocus);
     }
@@ -294,6 +301,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const result = await signInWithPopup(auth, googleProvider);
       setUser(result.user);
+
+      // Sync SSO cross-domain session
+      await syncSsoSession(result.user);
 
       // Async profile update
       const userDocRef = doc(db, 'users', result.user.uid);
@@ -327,6 +337,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const result = await signInWithPopup(auth, githubProvider);
       setUser(result.user);
 
+      // Sync SSO cross-domain session
+      await syncSsoSession(result.user);
+
       const userDocRef = doc(db, 'users', result.user.uid);
       await setDoc(userDocRef, {
         email: result.user.email,
@@ -352,7 +365,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setError(null);
       const { auth } = await import('../config/firebase');
       const { signInWithEmailAndPassword } = await import('firebase/auth');
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Sync SSO cross-domain session
+      await syncSsoSession(userCredential.user);
     } catch (error: any) {
       const userFriendlyError = getAuthErrorMessage(error);
       console.error('Sign in error:', { code: error?.code, message: error?.message });
@@ -375,6 +391,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email, firstName: firstName || '', lastName: lastName || '', displayName,
         createdAt: new Date().toISOString(), photoURL: null, role: 'user', plan: 'free'
       });
+
+      // Sync SSO cross-domain session
+      await syncSsoSession(result.user);
 
     } catch (error: any) {
       const userFriendlyError = getAuthErrorMessage(error);
@@ -399,6 +418,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
+      // Clear SSO cross-domain session cookie and revoke server tokens
+      await fetch('/api/auth/sso/logout', { method: 'POST' }).catch(() => {});
+
       const { auth } = await import('../config/firebase');
       const { signOut } = await import('firebase/auth');
       await signOut(auth);
@@ -409,7 +431,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         document.cookie = "tolzy_admin_session=; path=/; max-age=0; Secure; SameSite=Strict";
       }
     } catch (error) {
-      console.error(error);
+      console.error('Logout error:', error);
     }
   };
 
@@ -424,4 +446,3 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   );
 };
-

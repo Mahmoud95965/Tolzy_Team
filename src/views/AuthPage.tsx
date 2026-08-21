@@ -26,7 +26,22 @@ const AuthPage: React.FC = () => {
   const getRedirectPath = () => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      return params.get('redirect') || '/';
+      const redirect = params.get('redirect');
+      if (redirect) {
+        // Safe relative path
+        if (redirect.startsWith('/') && !redirect.startsWith('//')) {
+          return redirect;
+        }
+        // Safe absolute URL check (tolzy.me or localhost)
+        try {
+          const parsed = new URL(redirect);
+          if (parsed.hostname.endsWith('tolzy.me') || parsed.hostname === 'localhost' || parsed.hostname.endsWith('.localhost')) {
+            return redirect;
+          }
+        } catch {
+          return '/';
+        }
+      }
     }
     return '/';
   };
