@@ -3,7 +3,7 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { adminDb } from '@/src/config/firebase-admin';
 
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
+import { getAzureAiClient, AZURE_AI_MODEL } from '@/src/config/azure-ai';
 
 // Helper to set CORS headers
 function corsHeaders() {
@@ -15,9 +15,8 @@ function corsHeaders() {
 }
 
 async function enrichWithAI(title: string, description: string) {
-    if (!GROQ_API_KEY) return { title, description, category: 'عام', level: 'متوسط', what_you_will_learn: [] };
-
     try {
+        const openai = getAzureAiClient();
         const prompt = `You are an expert technical translator. 
 Analyze this course metadata and return a JSON object with:
 - title: Professional Arabic title
@@ -32,22 +31,15 @@ Description: ${description}
 
 Output ONLY valid JSON.`;
 
-        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${GROQ_API_KEY}`
-            },
-            body: JSON.stringify({
-                model: "llama-3.3-70b-versatile",
-                messages: [{ role: "user", content: prompt }],
-                temperature: 0.1,
-                response_format: { type: "json_object" }
-            })
+        const response = await openai.chat.completions.create({
+            model: AZURE_AI_MODEL,
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.1,
+            response_format: { type: "json_object" }
         });
 
-        const data = await response.json();
-        return JSON.parse(data.choices[0].message.content);
+        const rawContent = response.choices[0]?.message?.content || '{}';
+        return JSON.parse(rawContent);
     } catch (e) {
         console.error('AI Enrichment Error:', e);
         return { title, description, category: 'عام', level: 'متوسط', what_you_will_learn: [] };

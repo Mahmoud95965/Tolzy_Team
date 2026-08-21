@@ -179,7 +179,7 @@ export default function EcosystemHome() {
         },
         {
             title: 'تطوير وتدريب المساعدات المخصصة (Custom AI Agents)',
-            description: 'نطور مساعدين وموديلات ذكاء اصطناعي مخصصة لشركتك أو مشروعك مدربة على بياناتك الخاصة ومربوطة بـ OpenRouter و Gemini و RAG.',
+            description: 'نطور مساعدين وموديلات ذكاء اصطناعي مخصصة لشركتك أو مشروعك مدربة على بياناتك الخاصة ومربوطة بـ Azure AI و RAG المتطور.',
             icon: Bot,
             color: 'from-purple-500 to-pink-600',
             badge: 'ذكاء اصطناعي'
@@ -204,7 +204,7 @@ export default function EcosystemHome() {
         { title: 'إطار العمل', detail: 'Next.js 16 (App Router), React, TypeScript', icon: Code, color: 'text-indigo-500' },
         { title: 'الواجهات والتصميم', detail: 'Tailwind CSS, Lucide Icons, Glassmorphism, Bento Grid Layout', icon: Sparkles, color: 'text-purple-500' },
         { title: 'قواعد البيانات والـ Backend', detail: 'Supabase (Central DB + Vectors 1024-dim) & Firebase (Auth + Firestore)', icon: Database, color: 'text-emerald-500' },
-        { title: 'محركات الذكاء الاصطناعي', detail: 'OpenRouter API + Google AI Studio (Gemini 2.5 Flash)', icon: Cpu, color: 'text-amber-500' },
+        { title: 'محركات الذكاء الاصطناعي', detail: 'Azure AI Studio (axiom-core via OpenAI SDK)', icon: Cpu, color: 'text-amber-500' },
         { title: 'إدارة الجلسات والحسابات', detail: 'Unified Single Sign-On (SSO Cookie on .tolzy.me)', icon: ShieldCheck, color: 'text-blue-500' },
         { title: 'الاستضافة والتوزيع', detail: 'Single Repository on GitHub deployed on Vercel', icon: Server, color: 'text-rose-500' }
     ];

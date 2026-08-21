@@ -33,59 +33,49 @@ const LIMIT = limitArg ? parseInt(limitArg.split('=')[1]) : 50;
 // ── Setup ──────────────────────────────────────────────────────────────
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+import OpenAI from 'openai';
+
+const AZURE_AI_ENDPOINT = process.env.AZURE_AI_ENDPOINT || 'https://mahmoudmuhammad212024-6-resource.services.ai.azure.com/openai/v1';
+const AZURE_AI_KEY = process.env.AZURE_AI_KEY;
+const AZURE_AI_MODEL = process.env.AZURE_AI_MODEL || process.env.AZURE_AI_DEPLOYMENT || 'axiom-core';
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
     console.error('❌ Missing Supabase credentials in .env');
     process.exit(1);
 }
-if (!OPENROUTER_API_KEY) {
-    console.error('❌ Missing OPENROUTER_API_KEY in .env');
+if (!AZURE_AI_KEY) {
+    console.error('❌ Missing AZURE_AI_KEY in .env');
     process.exit(1);
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const openai = new OpenAI({ baseURL: AZURE_AI_ENDPOINT, apiKey: AZURE_AI_KEY });
 
 const BATCH_SIZE = 5;          // Courses per API call
-const RATE_LIMIT_DELAY = 4000; // ms between batches
+const RATE_LIMIT_DELAY = 2000; // ms between batches
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-// ── OpenRouter API Call ─────────────────────────────────────────────────
-async function callOpenRouter(prompt) {
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-            'HTTP-Referer': 'https://www.tolzy.me/learn',
-            'X-Title': 'Tolzy Academy Enrichment'
-        },
-        body: JSON.stringify({
-            model: 'deepseek/deepseek-v3.2',
-            messages: [
-                {
-                    role: 'system',
-                    content: 'أنت خبير تعليمي متخصص في تحليل الكورسات التقنية. أجب دائماً بـ JSON فقط.'
-                },
-                {
-                    role: 'user',
-                    content: prompt
-                }
-            ],
-            temperature: 0.7,
-            max_tokens: 4000,
-            response_format: { type: 'json_object' }
-        })
+// ── Azure AI API Call ─────────────────────────────────────────────────
+async function callAzureAI(prompt) {
+    const response = await openai.chat.completions.create({
+        model: AZURE_AI_MODEL,
+        messages: [
+            {
+                role: 'system',
+                content: 'أنت خبير تعليمي متخصص في تحليل الكورسات التقنية. أجب دائماً بـ JSON فقط.'
+            },
+            {
+                role: 'user',
+                content: prompt
+            }
+        ],
+        temperature: 0.7,
+        max_tokens: 4000,
+        response_format: { type: 'json_object' }
     });
 
-    if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`OpenRouter API Error ${response.status}: ${errText.slice(0, 300)}`);
-    }
-
-    const data = await response.json();
-    let content = data.choices[0]?.message?.content || null;
+    let content = response.choices[0]?.message?.content || null;
     
     // Robust JSON extraction
     if (content && content.includes('{')) {
@@ -126,13 +116,13 @@ ${courseList}
 }`;
 
     try {
-        const content = await callOpenRouter(prompt);
+        const content = await callAzureAI(prompt);
         if (!content) throw new Error('Empty response');
         
         const parsed = JSON.parse(content);
         return parsed.courses || [];
     } catch (err) {
-        console.error('   ❌ OpenRouter Error:', err.message);
+        console.error('   ❌ Azure AI Error:', err.message);
         return [];
     }
 }
@@ -141,7 +131,7 @@ ${courseList}
 async function main() {
     console.log('==========================================');
     console.log('  🤖 Tolzy Course Skills Enrichment');
-    console.log('  🔥 Powered by OpenRouter (DeepSeek V3.2)');
+    console.log('  🔥 Powered by Azure AI (axiom-core)');
     console.log('==========================================\n');
     console.log(`⚙️  Options: processAll=${processAll} | limit=${LIMIT}\n`);
 

@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { adminDb } from '@/src/config/firebase-admin';
 import * as admin from 'firebase-admin';
 import { createClient } from '@supabase/supabase-js';
+import { getAzureAiClient, AZURE_AI_MODEL } from '@/src/config/azure-ai';
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'placeholder-key';
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -139,10 +138,6 @@ Return ONLY JSON.
 
 export async function POST(req: NextRequest) {
     try {
-        if (!GEMINI_API_KEY) {
-            return NextResponse.json({ error: 'Server Configuration Error: Missing Gemini API Key' }, { status: 500 });
-        }
-
         const body = await req.json();
         const { idea, userLevel = 'beginner', userId } = body;
 
@@ -173,33 +168,29 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        // --- Generate with Gemini ---
-        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({
-            model: 'gemini-2.5-flash',
-            generationConfig: {
-                temperature: 0.8,
-                maxOutputTokens: 8192,
-                responseMimeType: 'application/json',
-            },
+        // --- Generate with Azure AI ---
+        const openai = getAzureAiClient();
+        const completion = await openai.chat.completions.create({
+            model: AZURE_AI_MODEL,
+            messages: [
+                { role: 'system', content: SYSTEM_PROMPT(userLevel) },
+                { role: 'user', content: `🚀 فكرة المستخدم:\n"${idea.trim()}"\n\nGenerate the complete build plan now as valid JSON:` }
+            ],
+            temperature: 0.7,
+            response_format: { type: 'json_object' }
         });
 
-        const prompt = `${SYSTEM_PROMPT(userLevel)}\n\n═══════════════════════════════════════\n🚀 فكرة المستخدم:\n"${idea.trim()}"\n═══════════════════════════════════════\n\nGenerate the complete build plan now as valid JSON:`;
-
-        const result = await model.generateContent(prompt);
-        const responseText = result.response.text();
+        const responseText = completion.choices[0]?.message?.content || '{}';
 
         // Parse JSON to validate
         let parsedResult;
         try {
             parsedResult = JSON.parse(responseText);
         } catch {
-            // Try to extract JSON from potential markdown wrapping
             const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)```/);
             if (jsonMatch) {
                 parsedResult = JSON.parse(jsonMatch[1]);
             } else {
-                // Try trimming and finding the first { to last }
                 const start = responseText.indexOf('{');
                 const end = responseText.lastIndexOf('}');
                 if (start !== -1 && end !== -1) {

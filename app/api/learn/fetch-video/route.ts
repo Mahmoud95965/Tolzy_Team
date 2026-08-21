@@ -234,13 +234,12 @@ function chunkTranscript(segments: TranscriptSegment[], targetDurationSeconds = 
     return chunks;
 }
 
-// AI Topic Enrichment using Groq Llama 3.3
+// AI Topic Enrichment using Azure AI axiom-core
 async function generateTopicsWithAI(title: string, description: string): Promise<string[]> {
-    if (!process.env.GROQ_API_KEY) {
-        return ["برمجة 💻", "تطوير ⚙️", "تعليم 🧠"];
-    }
-
     try {
+        const { getAzureAiClient, AZURE_AI_MODEL } = await import('@/src/config/azure-ai');
+        const openai = getAzureAiClient();
+
         const prompt = `You are a high-quality educational content analyzer.
 Analyze this YouTube video metadata and suggest exactly 4 technical topics or categories covered in the video, in Arabic with a relevant emoji.
 
@@ -250,29 +249,17 @@ Description: ${description}
 Output ONLY a valid JSON array of strings, like this:
 ["برمجة الويب 🌐", "تطوير التطبيقات 📱", "قواعد البيانات 🗄️", "هندسة البرمجيات 🏗️"]`;
 
-        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
-            },
-            body: JSON.stringify({
-                model: "llama-3.3-70b-versatile",
-                messages: [{ role: "user", content: prompt }],
-                temperature: 0.1,
-                response_format: { type: "json_object" }
-            }),
-            signal: AbortSignal.timeout(5000)
+        const response = await openai.chat.completions.create({
+            model: AZURE_AI_MODEL,
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.1,
+            response_format: { type: "json_object" }
         });
 
-        if (!response.ok) {
-            return ["برمجة 💻", "تطوير ⚙️", "تعليم 🧠"];
-        }
-
-        const data = await response.ok ? await response.json() : null;
-        if (!data) return ["برمجة 💻", "تطوير ⚙️", "تعليم 🧠"];
+        const rawContent = response.choices[0]?.message?.content;
+        if (!rawContent) return ["برمجة 💻", "تطوير ⚙️", "تعليم 🧠"];
         
-        const parsed = JSON.parse(data.choices[0].message.content);
+        const parsed = JSON.parse(rawContent);
         if (Array.isArray(parsed)) return parsed.slice(0, 4);
         if (parsed.topics && Array.isArray(parsed.topics)) return parsed.topics.slice(0, 4);
         return ["برمجة 💻", "تطوير ⚙️", "تعليم 🧠"];

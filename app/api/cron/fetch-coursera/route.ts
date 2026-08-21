@@ -6,32 +6,14 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || 'placeholder-key'; 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+import { getAzureAiClient, AZURE_AI_MODEL } from '@/src/config/azure-ai';
 
 // ==========================================
-// COURSE ENRICHMENT WITH OPENROUTER (DeepSeek V3.2)
+// COURSE ENRICHMENT WITH AZURE AI (axiom-core)
 // ==========================================
 async function enrichCourseWithAI(courseBatch: any[]) {
-    if (!OPENROUTER_API_KEY) {
-        console.warn('OPENROUTER_API_KEY is not set. Skipping AI enrichment.');
-        return courseBatch.map(c => ({
-            external_id: `coursera-${c.id}`,
-            title: c.name || 'Untitled', 
-            description: c.description || '', 
-            url: `https://www.coursera.org/learn/${c.slug}`,
-            provider: 'Coursera',
-            category: 'عام',
-            thumbnail: c.photoUrl || null,
-            metadata: {
-                level: 'مبتدئ',
-                duration: 'غير محدد',
-                what_you_will_learn: []
-            },
-            updated_at: new Date().toISOString()
-        }));
-    }
-
     try {
+        const openai = getAzureAiClient();
         const systemPrompt = `You are an expert AI translator. Translate course metadata into professional Arabic. Output ONLY a valid JSON object with a "courses" key.`;
         const userPrompt = `
         I am passing you a JSON array of ${courseBatch.length} online courses.
@@ -45,34 +27,18 @@ async function enrichCourseWithAI(courseBatch: any[]) {
         ${JSON.stringify(courseBatch.map(c => ({ id: c.id, name: c.name, description: c.description })), null, 2)}
         `;
 
-        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-                'HTTP-Referer': 'https://www.tolzy.me/learn',
-                'X-Title': 'Tolzy Academy'
-            },
-            body: JSON.stringify({
-                model: "deepseek/deepseek-v3.2",
-                messages: [
-                    { role: "system", content: systemPrompt },
-                    { role: "user", content: userPrompt }
-                ],
-                temperature: 0.1,
-                max_tokens: 4000,
-                response_format: { type: "json_object" }
-            })
+        const response = await openai.chat.completions.create({
+            model: AZURE_AI_MODEL,
+            messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: userPrompt }
+            ],
+            temperature: 0.1,
+            max_tokens: 4000,
+            response_format: { type: "json_object" }
         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('OpenRouter API Error:', errorText);
-            throw new Error(`OpenRouter failed: ${response.status}`);
-        }
-
-        const data = await response.json();
-        let aiText = data.choices[0].message.content.trim();
+        let aiText = response.choices[0]?.message?.content?.trim() || '{}';
         
         // Robust JSON extraction for object
         if (aiText.includes('{')) {

@@ -4,6 +4,7 @@ import * as cheerio from 'cheerio';
 import { generateGoogleEmbedding } from '@/src/lib/google-embeddings';
 import { adminDb } from '@/src/config/firebase-admin';
 import * as admin from 'firebase-admin';
+import { getAzureAiClient, AZURE_AI_MODEL } from '@/src/config/azure-ai';
 
 // =======================
 // 🔥 GLOBAL INIT
@@ -13,82 +14,7 @@ const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'placeholder-key'
 );
 
-const GROQ_KEY   = process.env.GROQ_API_KEY!;
-const GROQ_BASE  = 'https://api.groq.com/openai/v1/chat/completions';
-const ENCODER    = new TextEncoder();
-
-// =======================
-// 🤖 MODEL TIERS
-// =======================
-// Tier is chosen automatically based on complexity — invisible to the user.
-// All appear as "TOLZY Copilot V2.5" in the UI.
-const MODELS = {
-    // 🟢 Fast: short/simple messages, tool lookups
-    fast: [
-        'llama-3.1-8b-instant',
-    ],
-    // 🟡 Balanced: medium complexity, general questions
-    balanced: [
-        'llama-3.1-8b-instant',
-    ],
-    // 🔴 Smart: code mode, long complex queries (Pro only)
-    smart: [
-        'llama-3.3-70b-versatile',
-    ],
-} as const;
-
-type Tier = keyof typeof MODELS;
-
-function selectModel(
-    sanitized: string,
-    mode: string,
-    isProPlan: boolean
-): { tier: Tier; model: string } {
-    const words = sanitized.split(/\s+/).length;
-    const isCode = mode === 'code';
-    const isComplex = words > 40 || /شرح|تحليل|قارن|اشرح|اكتب|صمم|خطة|مفصل|detailed|explain|compare|design|plan/i.test(sanitized);
-
-    // 🔒 قصر النموذج الذكي القوي (smart) على المشتركين في الخطة المدفوعة Pro فقط
-    if (isProPlan && (isCode || isComplex)) {
-        const tier: Tier = 'smart';
-        return { tier, model: MODELS.smart[0] };
-    }
-    if (isComplex || words > 15 || isCode) {
-        const tier: Tier = 'balanced';
-        return { tier, model: MODELS.balanced[0] };
-    }
-    const tier: Tier = 'fast';
-    return { tier, model: MODELS.fast[0] };
-}
-
-
-// =======================
-// ⚡ GROQ COMPLETIONS FETCH
-// =======================
-async function groqFetch(
-    model: string,
-    messages: object[],
-    temperature: number
-): Promise<Response> {
-    const body = {
-        model,
-        messages,
-        stream: true,
-        temperature,
-        max_tokens: 2048,
-    };
-
-    const res = await fetch(GROQ_BASE, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${GROQ_KEY}`,
-        },
-        body: JSON.stringify(body),
-    });
-
-    return res;
-}
+const ENCODER = new TextEncoder();
 
 // =======================
 // ⚡ FAQ CACHE (O(1) Map)
@@ -130,10 +56,6 @@ const send = (c: ReadableStreamDefaultController, t: string) =>
 // =======================
 export async function POST(req: NextRequest) {
     try {
-        if (!GROQ_KEY) {
-            return NextResponse.json({ error: 'Missing Groq API Key' }, { status: 500 });
-        }
-
         const {
             message,
             history,
@@ -141,7 +63,6 @@ export async function POST(req: NextRequest) {
             userId,
             enableSearch = false,
             mode = 'general',
-            isGmailConnected = false,
         } = await req.json();
 
         if (!message || message.trim().length < 2) {
@@ -157,7 +78,7 @@ export async function POST(req: NextRequest) {
         if (faqDirect) {
             return new NextResponse(faqDirect, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
         }
-        const faqPartial = [...FAQ_MAP.entries()].find(([k]) => normalizedMsg.includes(k))?.[1];
+        const faqPartial = Array.from(FAQ_MAP.entries()).find(([k]) => normalizedMsg.includes(k))?.[1];
         if (faqPartial) {
             return new NextResponse(faqPartial, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
         }
@@ -178,7 +99,6 @@ export async function POST(req: NextRequest) {
 
         if (userId && adminDb) {
             try {
-                // Wrap Firestore get in a 1.5s timeout to prevent serverless function hangs
                 const firestorePromise = adminDb.collection('users').doc(userId).get();
                 const timeoutPromise = new Promise<never>((_, reject) =>
                     setTimeout(() => reject(new Error('Firestore Timeout')), 1500)
@@ -201,12 +121,8 @@ export async function POST(req: NextRequest) {
         // ⚡ FLAGS
         // =======================
         const words: string[] = sanitized.split(/\s+/);
-
         const SIMPLE_SET = new Set(['hi','hello','hey','مرحبا','السلام','ازيك'].map(normalize));
-        const shouldUseRAG = words.length > 2 && sanitized.length > 15 && !SIMPLE_SET.has(normalizedMsg);
-        const shouldUseWebSearch =
-            enableSearch &&
-            /(news|latest|update|breaking|2026|اخبار|اليوم|جديد|recent)/i.test(sanitized);
+        const shouldUseRAG = sanitized.length >= 2 && !SIMPLE_SET.has(normalizedMsg);
 
         // =======================
         // 🔒 FREE PLAN LIMIT (5 req/day)
@@ -214,8 +130,6 @@ export async function POST(req: NextRequest) {
         if (!isProPlan && userId && adminDb) {
             try {
                 const userRef = adminDb.collection('users').doc(userId);
-                
-                // Wrap Firestore get in a 1.5s timeout to prevent freezes
                 const firestoreGetPromise = userRef.get();
                 const getTimeoutPromise = new Promise<never>((_, reject) =>
                     setTimeout(() => reject(new Error('Firestore Get Timeout')), 1500)
@@ -232,215 +146,184 @@ export async function POST(req: NextRequest) {
                 if (currentCount >= 5) {
                     const hoursLeft = Math.ceil((ONE_DAY - elapsed) / 3600000);
                     return NextResponse.json({
-                        response: `🎯 **لقد استنفدت حدك اليومي في Copilot (5 طلبات يومياً)!**\n\n⏰ سيتم تجديد طلباتك خلال **${hoursLeft} ساعة**\n\n💎 **الخطة المدفوعة Pro تشمل:**\n✅ طلبات غير محدودة ومستمرة وبدون أي قيود\n✅ الوصول لأقوى نماذج الذكاء الاصطناعي (Llama 3.3 70B)\n✅ سرعة وأولوية فائقة في معالجة طلباتك`
-                    });
+                        error: `لقد استهلكت جميع رسائلك اليومية المجانية (5 رسائل). ستتجدد بعد ${hoursLeft} ساعة، أو اشترك في خطة Pro لرسائل غير محدودة!`
+                    }, { status: 429 });
                 }
 
-                // Wrap Firestore set in a 1.5s timeout to prevent freezes
-                const firestoreSetPromise = userRef.set({
+                userRef.set({
                     copilotRequestCount: currentCount + 1,
-                    lastCopilotRequestDate: admin.firestore.Timestamp.now()
-                }, { merge: true });
-                const setTimeoutPromise = new Promise<never>((_, reject) =>
-                    setTimeout(() => reject(new Error('Firestore Set Timeout')), 1500)
-                );
-                await Promise.race([firestoreSetPromise, setTimeoutPromise]);
-            } catch (e) { 
-                console.error('Free limit error or timeout:', e); 
+                    lastCopilotRequestDate: admin.firestore.FieldValue.serverTimestamp()
+                }, { merge: true }).catch(console.error);
+
+            } catch (err) {
+                console.error("Error verifying free quota with Firestore:", err);
             }
         }
 
         // =======================
-        // ⚡ EMBEDDING (LAZY)
-        // =======================
-        let embedding: any = null;
-        if (shouldUseRAG) {
-            try { embedding = await generateGoogleEmbedding(sanitized); } catch {}
-        }
-
-        // =======================
-        // ⚡ RAG FETCH
-        // =======================
-        let tools: any[] = [];
-        let courses: any[] = [];
-
-        if (embedding) {
-            try {
-                const [t, c] = await Promise.all([
-                    supabase.rpc('match_tools', { query_embedding: embedding, match_threshold: 0.65, match_count: 4 }),
-                    supabase.rpc('match_courses', { query_embedding: embedding, match_threshold: 0.65, match_count: 3 })
-                ]);
-                tools   = Array.isArray(t?.data) ? t.data : [];
-                courses = Array.isArray(c?.data) ? c.data : [];
-            } catch {}
-        }
-
-        // =======================
-        // ⚡ KEYWORD FALLBACK
-        // =======================
-        const keywords = words
-            .map((w: string) => w.replace(/^(ال|وال|بال|لل|كال|فال)/, ''))
-            .filter((w: string) => w.length > 2 && !STOP_WORDS.has(w));
-
-        if (keywords.length) {
-            const filter = keywords
-                .map((k: string) => `name.ilike.%${k}%,description.ilike.%${k}%,category.ilike.%${k}%`)
-                .join(',');
-            try {
-                const { data: kTools } = await supabase.from('tools_embeddings').select('*').or(filter).limit(6);
-                if (kTools?.length) {
-                    const map = new Map(tools.map(t => [t.id, t]));
-                    kTools.forEach(t => map.set(t.id, t));
-                    tools = [...map.values()];
-                }
-            } catch {}
-            try {
-                const { data: kCourses } = await supabase.from('courses').select('id,title,description,category,level').or(filter).limit(5);
-                if (kCourses?.length) {
-                    const map = new Map(courses.map(c => [c.id, c]));
-                    kCourses.forEach(c => map.set(c.id, c));
-                    courses = [...map.values()];
-                }
-            } catch {}
-        }
-
-        // =======================
-        // ⚡ WEB SEARCH
-        // =======================
-        let webResults = '';
-        if (shouldUseWebSearch) {
-            try {
-                const res = await fetch(
-                    `https://html.duckduckgo.com/html/?q=${encodeURIComponent(sanitized)}`,
-                    { headers: { 'User-Agent': 'Mozilla/5.0' } }
-                );
-                const $ = cheerio.load(await res.text());
-                $('.result__body').slice(0, 3).each((_, el) => {
-                    webResults += `\n- **${$(el).find('.result__title').text().trim()}**: ${$(el).find('.result__snippet').text().trim()}`;
-                });
-            } catch {}
-        }
-
-        // =======================
-        // ⚡ CONTEXT ASSEMBLY
+        // ⚡ RAG SEARCH (Hybrid)
         // =======================
         let context = '';
-        if (tools.length) {
-            context += `\n📌 أدوات Tolzy المتاحة (استخدم صيغة بطاقة tool لكل أداة):\n`;
-            context += tools.slice(0, 4).map((t, i) =>
-                `${i + 1}. name: ${t.name} | description: ${t.description?.slice(0, 120) || ''} | link: ${t.link || t.url || ''} | category: ${t.category || ''}`
-            ).join('\n');
+        if (shouldUseRAG) {
+            try {
+                const searchKeywords = words
+                    .filter(w => w.length > 2 && !STOP_WORDS.has(w.toLowerCase()))
+                    .slice(0, 3);
+
+                const keywordFilter = searchKeywords.length > 0 ? searchKeywords[0] : sanitized.slice(0, 20);
+
+                const embeddingPromise = (async () => {
+                    const vector = await generateGoogleEmbedding(sanitized);
+                    return supabase.rpc('match_content_combined', {
+                        query_embedding: vector,
+                        match_threshold: 0.15,
+                        match_count: 5
+                    });
+                })();
+
+                const keywordPromise = (async () => {
+                    if (!keywordFilter) return { data: [] };
+                    return supabase
+                        .from('tools')
+                        .select('id, name, description, category, pricing, website_url')
+                        .or(`name.ilike.%${keywordFilter}%,description.ilike.%${keywordFilter}%`)
+                        .limit(4);
+                })();
+
+                const coursesKeywordPromise = (async () => {
+                    if (!keywordFilter) return { data: [] };
+                    return supabase
+                        .from('courses')
+                        .select('id, title, description, category, level, url, provider')
+                        .or(`title.ilike.%${keywordFilter}%,description.ilike.%${keywordFilter}%`)
+                        .limit(4);
+                })();
+
+                const [vectorRes, keywordRes, coursesKeywordRes] = await Promise.allSettled([
+                    embeddingPromise,
+                    keywordPromise,
+                    coursesKeywordPromise
+                ]);
+
+                const combined: any[] = [];
+                const seenIds = new Set<string>();
+
+                if (vectorRes.status === 'fulfilled' && vectorRes.value?.data) {
+                    for (const item of vectorRes.value.data) {
+                        const id = item.id || item.title || item.name;
+                        if (!seenIds.has(id)) {
+                            seenIds.add(id);
+                            combined.push(item);
+                        }
+                    }
+                }
+
+                if (keywordRes.status === 'fulfilled' && keywordRes.value?.data) {
+                    for (const item of keywordRes.value.data) {
+                        if (!seenIds.has(item.id)) {
+                            seenIds.add(item.id);
+                            combined.push({
+                                type: 'tool',
+                                id: item.id,
+                                title: item.name,
+                                content: item.description,
+                                category: item.category,
+                                pricing: item.pricing,
+                                link: `/tools/${item.id}`,
+                                url: item.website_url
+                            });
+                        }
+                    }
+                }
+
+                if (coursesKeywordRes.status === 'fulfilled' && coursesKeywordRes.value?.data) {
+                    for (const item of coursesKeywordRes.value.data) {
+                        if (!seenIds.has(item.id)) {
+                            seenIds.add(item.id);
+                            combined.push({
+                                type: 'course',
+                                id: item.id,
+                                title: item.title,
+                                content: item.description,
+                                category: item.category,
+                                level: item.level,
+                                link: `/learn/course/${item.id}`,
+                                url: item.url
+                            });
+                        }
+                    }
+                }
+
+                context = combined.slice(0, 8).map(d => {
+                    const typeLabel = d.type === 'course' ? 'كورس' : 'أداة ذكاء اصطناعي';
+                    const link = d.link || (d.type === 'course' ? `/learn/course/${d.id}` : `/tools/${d.id}`);
+                    const name = d.title || d.name || '';
+                    return `### [${typeLabel}] TOOL_NAME_AS_LINK: [${name}](${link})\n- الاسم: ${name}\n- الرابط المباشر الدقيق: ${link}\n- الوصف: ${d.content || d.description || ''}\n- التصنيف: ${d.category || ''}\n- ${d.type === 'course' ? `المستوى: ${d.level || 'جميع المستويات'}` : `التسعير: ${d.pricing || 'مجاني'}`}`;
+                }).join('\n\n');
+
+            } catch (err) {
+                console.error("RAG search failed:", err);
+            }
         }
-        if (courses.length) {
-            context += `\n\n🎓 كورسات Tolzy المتاحة (استخدم صيغة بطاقة course لكل كورس):\n`;
-            context += courses.slice(0, 3).map((c, i) =>
-                `${i + 1}. title: ${c.title} | description: ${c.description?.slice(0, 120) || ''} | level: ${c.level || 'جميع المستويات'} | duration: ${c.duration || ''} | instructor: ${c.instructor || ''} | link: ${c.link || c.url || ''}`
-            ).join('\n');
+
+        // =======================
+        // ⚡ WEB SEARCH (Tavily/DuckDuckGo fallback)
+        // =======================
+        let webContext = '';
+        if (enableSearch) {
+            try {
+                const tavilyKey = process.env.TAVILY_API_KEY;
+                if (tavilyKey) {
+                    const tvRes = await fetch('https://api.tavily.com/search', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            api_key: tavilyKey,
+                            query: sanitized,
+                            search_depth: 'basic',
+                            include_answer: true,
+                            max_results: 3
+                        })
+                    });
+                    if (tvRes.ok) {
+                        const tvData = await tvRes.json();
+                        webContext = tvData.results?.map((r: any) => `* [${r.title}](${r.url}): ${r.content}`).join('\n') || '';
+                        if (tvData.answer) {
+                            webContext = `ملخص البحث المباشر: ${tvData.answer}\n\n${webContext}`;
+                        }
+                    }
+                }
+            } catch (searchErr) {
+                console.warn('Web search failed:', searchErr);
+            }
         }
-        if (webResults) context += `\n\n🌐 نتائج البحث:\n${webResults}`;
-        if (!context) context = '💡 لم أجد نتائج مباشرة في قاعدة بيانات Tolzy، سأساعدك من خبرتي العامة 👇';
 
         // =======================
         // ⚡ MODE INSTRUCTIONS
         // =======================
-        const MODES: Record<string, string> = {
-            general: 'قدم إجابات شاملة وواضحة مع أمثلة عند الحاجة.',
-            code:    'استخدم code blocks مع تحديد اللغة واشرح الكود بوضوح.',
-            tools:   'أولوية لأدوات Tolzy مع ذكر الاسم والوصف.',
-            learn:   'قسّم الشرح لخطوات متسلسلة واقترح كورسات Tolzy.',
-        };
-        const modeInstruction = MODES[mode] || MODES.general;
+        const modeInstruction = mode === 'code' ? `
+## 💻 وضع البرمجة والمطورين (Code Mode):
+- ركز على تقديم كود نظيف، حديث، قابل للتنفيذ ومبني على أفضل الممارسات البرمجية.
+` : '';
 
         // =======================
         // ⚡ SYSTEM PROMPT
         // =======================
-        // =============================================
-        // ⚡ GMAIL CONTEXT INSTRUCTIONS
-        // =============================================
-        const gmailInstructions = isGmailConnected ? `
-
-📧 Gmail متصل — تعليمات خاصة بالبريد الإلكتروني:
-عندما يطلب المستخدم عرض البريد الوارد أو رسائله، أرسل بلوك كود بصيغة \`\`\`gmail-inbox بهذا الشكل:
-\`\`\`gmail-inbox
-from: اسم المرسل <email@example.com>
-subject: موضوع الرسالة
-date: منذ ٣ ساعات
-preview: أول جملة أو سطرين من محتوى الرسالة...
-body: النص الكامل للرسالة هنا. يمكن أن يكون طويلاً.
-unread: true
----
-from: مرسل آخر <other@example.com>
-subject: موضوع آخر
-date: أمس
-preview: ملخص قصير للرسالة الثانية
-body: محتوى الرسالة الثانية
-unread: false
-\`\`\`
-
-عندما يريد المستخدم كتابة أو إرسال رسالة، أرسل بلوك كود بصيغة \`\`\`gmail-compose بهذا الشكل:
-\`\`\`gmail-compose
-to: البريد المستلم
-subject: موضوع الرسالة
-body: محتوى الرسالة المقترح هنا
-\`\`\`
-
-قواعد مهمة للـ Gmail:
-- استخدم هذه الصيغ دائماً عند أي طلب متعلق بالبريد الإلكتروني.
-- لا ترد بنص عادي عند طلبات البريد — استخدم البلوكات فقط.
-- يمكنك دمج شرح قصير مع البلوك.
-- فاصل الرسائل في gmail-inbox هو --- في سطر منفرد.
-` : '';
-
         const systemPrompt = `أنت "TOLZY Copilot ✨" — المساعد الذكي من تطوير Tolzy AI. الموقع: ai.tolzy.me
 
-## هويتك
-- اسمك TOLZY Copilot، لست ChatGPT أو Gemini أو Claude.
-- تم تطويرك بواسطة فريق Tolzy AI.
-- لديك قاعدة بيانات تضم أكثر من 600 أداة ذكاء اصطناعي وأكثر من 150 كورس تقني.
-
-## قواعد الرد
-1. الرد دائماً بالعربية ما لم يطلب المستخدم صريحاً غير ذلك.
-2. اجعل ردودك منظمة ومرتبة باستخدام:
-   - **عناوين** (##) للمحاور الكبرى
-   - **قوائم نقطية** للخطوات والاقتراحات
-   - **نص굵 Bold** للكلمات المهمة
-   - **مقتطفات كود** للأمثلة التقنية
-3. كن دافئاً وودوداً وداعماً ومحترفاً.
-4. أجب على أي سؤال بلا استثناء.
-
-## عرض الأدوات والكورسات
-عندما تجد أدوات أو كورسات مناسبة في قاعدة البيانات، **يجب** عرضها كبطاقات بهذه الصيغة بالضبط:
-
-للأداة:
-\`\`\`tool
-name: اسم الأداة
-description: وصف الأداة
-category: الفئة
-link: الرابط
-\`\`\`
-
-للكورس:
-\`\`\`course
-name: عنوان الكورس
-description: وصف الكورس
-level: المستوى
-duration: المدة
-instructor: المدرب
-link: الرابط
-\`\`\`
-
-**لا تكتب الأدوات والكورسات كنص عادي — استخدم بطاقات الكود دائماً.**
+## 👤 شخصيتك وطريقتك في الرد
+- تحدث بأسلوب مبرمج أو مهندس تقني خبير وودود.
+- ادخل في صلب الموضوع أو الحل فوراً وبشكل طبيعي.
+- جميع إجاباتك واقتراحاتك للأدوات والكورسات يجب أن تعتمد على قسم "ذاكرتك ومعرفتك التقنية الحالية".
+- استخدم الروابط من السياق حرفياً واجعلها قابلة للضغط بصيغة [الاسم](الرابط).
 
 ${modeInstruction}
-${gmailInstructions}
 
-## بيانات Tolzy المتاحة الآن
-${context}`;
+## ذاكرتك ومعرفتك التقنية الحالية (Supabase)
+${context}
 
-        // =======================
-        // ⚡ SELECT MODEL (Auto)
-        // =======================
-        const { model } = selectModel(sanitized, mode, isProPlan);
+${webContext ? `## نتائج البحث المباشر في الويب:\n${webContext}` : ''}`;
+
         const temperature = mode === 'code' ? 0.2 : 0.6;
 
         // =======================
@@ -450,7 +333,6 @@ ${context}`;
             { role: 'system', content: systemPrompt }
         ];
 
-        // Add last 4 conversation pairs from history
         if (history?.length) {
             const pairs: any[] = [];
             for (let i = 0; i < history.length - 1; i++) {
@@ -466,47 +348,30 @@ ${context}`;
         chatMessages.push({ role: 'user', content: sanitized });
 
         // =======================
-        // ⚡ STREAM RESPONSE
+        // ⚡ AZURE AI STREAM RESPONSE
         // =======================
+        const openai = getAzureAiClient();
+
         const stream = new ReadableStream({
             async start(controller) {
                 try {
-                    const res = await groqFetch(model, chatMessages, temperature);
+                    const completionStream = await openai.chat.completions.create({
+                        model: AZURE_AI_MODEL,
+                        messages: chatMessages,
+                        temperature,
+                        max_tokens: 2048,
+                        stream: true,
+                    });
 
-                    if (!res.ok) {
-                        const errText = await res.text();
-                        console.error('[Groq Error]', res.status, model, errText);
-                        if (res.status === 429) {
-                            send(controller, '⚠️ تجاوزت حد الطلبات المسموح به لنموذج Groq. حاول مرة أخرى لاحقاً.');
-                        } else {
-                            send(controller, `⚠️ خطأ ${res.status}: تعذّر الاتصال بخادم Groq. حاول مرة أخرى.`);
-                        }
-                        controller.close();
-                        return;
-                    }
-
-                    const reader = res.body!.getReader();
-                    const decoder = new TextDecoder();
-
-                    while (true) {
-                        const { value, done } = await reader.read();
-                        if (done) break;
-
-                        for (const line of decoder.decode(value, { stream: true }).split('\n')) {
-                            if (!line.startsWith('data: ')) continue;
-                            const data = line.slice(6).trim();
-                            if (!data || data === '[DONE]') continue;
-
-                            try {
-                                const delta = JSON.parse(data).choices?.[0]?.delta?.content;
-                                if (delta) send(controller, delta);
-                            } catch {}
+                    for await (const chunk of completionStream) {
+                        const delta = chunk.choices[0]?.delta?.content || '';
+                        if (delta) {
+                            send(controller, delta);
                         }
                     }
-
-                } catch (e) {
-                    console.error('Stream error:', e);
-                    send(controller, '⚠️ عذراً، حدث خطأ في الاتصال.');
+                } catch (e: any) {
+                    console.error('❌ [Azure AI Stream Error]:', e);
+                    send(controller, '⚠️ عذراً، حدث خطأ أثناء الاتصال بمحرك الذكاء الاصطناعي.');
                 } finally {
                     controller.close();
                 }

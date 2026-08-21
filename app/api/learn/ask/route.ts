@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/src/utils/supabaseAdmin';
 import { adminDb } from '@/src/config/firebase-admin';
+import { getAzureAiClient, AZURE_AI_MODEL } from '@/src/config/azure-ai';
 
 // Enable CORS
 function corsHeaders() {
@@ -59,11 +60,6 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'videoId and question are required' }, { status: 400, headers: corsHeaders() });
         }
 
-        const GROQ_API_KEY = process.env.GROQ_API_KEY;
-        if (!GROQ_API_KEY) {
-            return NextResponse.json({ error: 'عذراً، محرك الذكاء الاصطناعي غير مهيأ في الخادم (GROQ_API_KEY).' }, { status: 500, headers: corsHeaders() });
-        }
-
         // 1. Retrieve the most relevant transcript chunks using Supabase Full-Text / Keyword search
         const { data: chunks, error: rpcError } = await supabaseAdmin.rpc('match_transcript_chunks', {
             p_video_id: videoId,
@@ -99,52 +95,37 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        // 2. Format context text with precise timestamps or sections
-        const isYouTube = videoId.length === 11;
-        const contextText = relevantChunks && relevantChunks.length > 0 
-            ? relevantChunks.map((c: any) => {
-                const label = isYouTube 
-                    ? `Timestamp: ${formatTime(Number(c.start_time))}`
-                    : `القسم: ${Number(c.chunk_index) + 1}`;
-                return `[T-${label}] ${c.text}`;
-              }).join('\n\n')
-            : 'محتوى المادة التعليمية غير متوفر حالياً.';
+        // 2. Build Context from relevant chunks
+        let contextText = '';
+        let approximateRef = '';
 
-        // Approximate reference of the first matched chunk
-        const firstMatchStartTime = relevantChunks && relevantChunks.length > 0 ? Number(relevantChunks[0].start_time) : 0;
-        const firstMatchIndex = relevantChunks && relevantChunks.length > 0 ? Number(relevantChunks[0].chunk_index) : 0;
-        const approximateRef = isYouTube 
-            ? formatTime(firstMatchStartTime)
-            : `القسم ${firstMatchIndex + 1}`;
+        if (relevantChunks && relevantChunks.length > 0) {
+            contextText = relevantChunks
+                .map((chunk: any) => `[الوقت: ${formatTime(chunk.start_time)}] ${chunk.text}`)
+                .join('\n\n');
 
-        // 3. Construct System Prompt with strict Arabic RAG instructions and AXIOM persona
-        const systemPrompt = `أنت "TOLZY OmniLearn ✨" — معالج ومساعد التعلم الذكي الفائق المتكامل مع محرك AXIOM الذكي من Tolzy AI.
-مهمتك هي الإجابة عن أسئلة المستخدمين بدقة واحترافية عالية بالاعتماد على سياق المادة التعليمية المرفقة بالأسفل (سواء كانت تفريغ فيديو يوتيوب، محتوى مساق من Coursera، أو مقال/مدونة من موقع تعليمي).
+            const firstChunkTime = relevantChunks[0].start_time || 0;
+            approximateRef = formatTime(firstChunkTime);
+        } else {
+            contextText = 'لا يتوفر تفريغ نصي دقيق لهذه اللحظة، يرجى الإجابة بناءً على الفهم العام لمحتوى الفيديو.';
+            approximateRef = '00:00';
+        }
 
-قواعد صارمة للإجابة والتفاعل (بشخصية AXIOM الهندسية):
-1. يجب أن تكون إجابتك باللغة العربية الفصحى، بأسلوب خبير هندسي وتقني مخضرم، واضح ومنظم للغاية ومنسق بشكل ممتاز.
-2. أجب فقط من خلال المعلومات المذكورة في سياق المادة التعليمية المرفقة.
-3. إذا لم تكن الإجابة موجودة في السياق، وضح ذلك بأدب ("هذه المعلومة غير مذكورة في المصدر ولكن...")، ثم قدم إجابة هندسية وعلمية دقيقة من ذاكرتك التقنية العامة مع توضيح أنها إضافية ومكملة للمصدر.
-4. استخدم التنسيق المنسق الجميل (Markdown) بشكل كامل مثل العناوين الفرعية، القوائم المنقطة، الكلمات الهامة (Bold)، وبلوكات الأكواد البرمجية الملونة إذا لزم الأمر.
-5. ${isYouTube ? 'أشر دائماً إلى التوقيت الزمني (مثال: [04:15]) عند مناقشة مواضيع تم اقتباسها من هذا التوقيت في الشرح.' : 'أشر دائماً إلى رقم القسم (مثال: [القسم 2]) عند الإشارة إلى أجزاء تم اقتباسها من هذا القسم في الشرح.'}
-6. إذا طلب المستخدم "اختبار"، "أسئلة"، "سؤال"، "تقييم"، "اختبرني"، "quiz" (أو إذا كان السؤال يحمل معنى تقييم الفهم أو طلب المزيد من الأسئلة)، قم بصياغة اختبار تفاعلي (Quiz) يحتوي على 10 أسئلة اختيار من متعدد (MCQ) متعلقة بمحتوى المادة.
-   هام جداً: يجب عليك قراءة تاريخ الدردشة (chatHistory) المرفق أدناه، وإذا كان هناك أسئلة اختبار قد تم تقديمها مسبقاً، فيجب أن تكون الـ 10 أسئلة الجديدة مختلفة تماماً وغير مكررة في الأفكار أو الصياغة لتغطية جوانب جديدة من المادة.
-   أرفق هيكل هذا الاختبار في حقل "quiz" في مخرجات الـ JSON كما هو موضح بالأسفل. وفي حال لم يطلب اختباراً، ضع قيمة حقل "quiz" كـ null.
+        // 3. System Prompt for strict JSON response format
+        const systemPrompt = `أنت مساعد تعليمي ذكي مدمج داخل منصة Tolzy OmniLearn.
+مهمتك هي الإجابة عن أسئلة الطالب بناءً على محتوى وتفريغ الفيديو المرفق، وتقديم تجربة تعليمية تفاعلية.
 
-تنسيق الاستجابة المطلوبة:
-يجب أن تكون مخرجاتك عبارة عن كائن JSON صالح بنسبة 100% يحتوي على الحقول التالية فقط وبدون أي إضافات خارج الهيكل:
+القواعد الصارمة:
+1. أجب باللغة العربية بأسلوب واضح ومباشر ومشجع.
+2. اعتمد على سياق الفيديو أدناه كمصدر رئيسي. إذا لم تكن المعلومة مذكورة بوضوح، أجب بأفضل معرفة عامة ذات صلة مع التنويه بلطف.
+3. يجب أن تكون إجابتك بصيغة JSON حصراً بدون أي نصوص أو markdown خارج كائن الـ JSON.
+4. إذا كان السؤال متعلقاً بمفهوم تعليمي أو اختباري، يمكنك تضمين كويز سريع اختياري (quiz) لقياس فهم الطالب.
+
+هيكل الـ JSON المطلوب بدقة:
 {
-  "text": "نص الإجابة العربية المنسقة بالكامل بـ Markdown مع الإشارة للـ ${isYouTube ? 'timestamps' : 'الأقسام'} للفقرات...",
-  "timestamp": "${isYouTube ? 'التوقيت الزمني التقريبي لبداية موضوع السؤال كـ MM:SS' : 'رقم القسم التقريبي لموضوع السؤال كـ القسم X'}",
-  "quiz": [
-    {
-      "id": 1,
-      "question": "السؤال الأول حول محتوى المادة؟",
-      "options": ["الخيار الأول", "الخيار الثاني (الافتراض الصحيح مثلاً)", "الخيار الثالث", "الخيار الرابع"],
-      "correctIndex": 1,
-      "explanation": "شرح سبب صحة هذا الخيار بالتحديد بناءً على ما جاء في المصدر..."
-    }
-  ]
+  "text": "نص الإجابة التفصيلي والمنسق باللغة العربية",
+  "timestamp": "${approximateRef}",
+  "quiz": null // أو كائن كويز إذا كان مناسباً للسؤال: { "question": "السؤال", "options": ["أ", "ب", "ج", "د"], "correctAnswer": 0, "explanation": "التفسير" }
 }
 
 سياق المادة التعليمية المتاحة حالياً كمرجع لك:
@@ -153,9 +134,8 @@ ${contextText}
 --------------------`;
 
         // 4. Format chat history
-        const formattedMessages = [];
+        const formattedMessages: any[] = [];
         if (chatHistory && Array.isArray(chatHistory)) {
-            // Include last 16 messages for conversational context to prevent token bloat and avoid quiz question overlap
             const limitedHistory = chatHistory.slice(-16);
             for (const msg of limitedHistory) {
                 formattedMessages.push({
@@ -165,87 +145,20 @@ ${contextText}
             }
         }
 
-        // 5. Call Groq Completions API with Llama 3.3 70B model in JSON mode with automatic resilient fallback to Llama 3.1 8B model and AbortController timeouts
-        let groqResponse;
-        let responseData;
+        // 5. Call Azure AI completions
+        const openai = getAzureAiClient();
+        const completion = await openai.chat.completions.create({
+            model: AZURE_AI_MODEL,
+            messages: [
+                { role: 'system', content: systemPrompt },
+                ...formattedMessages,
+                { role: 'user', content: question }
+            ],
+            temperature: 0.3,
+            response_format: { type: 'json_object' }
+        });
 
-        // Primary attempt: llama-3.3-70b-versatile with 4 seconds timeout
-        const primaryController = new AbortController();
-        const primaryTimeoutId = setTimeout(() => primaryController.abort(), 4000);
-
-        try {
-            groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${GROQ_API_KEY}`
-                },
-                body: JSON.stringify({
-                    model: 'llama-3.3-70b-versatile',
-                    messages: [
-                        { role: 'system', content: systemPrompt },
-                        ...formattedMessages,
-                        { role: 'user', content: question }
-                    ],
-                    temperature: 0.3,
-                    response_format: { type: 'json_object' }
-                }),
-                signal: primaryController.signal
-            });
-            clearTimeout(primaryTimeoutId);
-
-            if (!groqResponse.ok) {
-                const errBody = await groqResponse.text();
-                console.warn('Groq 70B model failed or rate-limited. Error:', errBody);
-                throw new Error(`GROQ_70B_FAILED: ${errBody}`);
-            }
-            responseData = await groqResponse.json();
-        } catch (error: any) {
-            clearTimeout(primaryTimeoutId);
-            const isTimeout = error.name === 'AbortError';
-            console.warn(`Groq primary attempt ${isTimeout ? 'TIMED OUT' : 'FAILED'}, initiating fallback to llama-3.1-8b-instant... Error:`, error.message || error);
-            
-            // Fallback attempt: llama-3.1-8b-instant with 5 seconds timeout
-            const fallbackController = new AbortController();
-            const fallbackTimeoutId = setTimeout(() => fallbackController.abort(), 5000);
-
-            try {
-                groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${GROQ_API_KEY}`
-                    },
-                    body: JSON.stringify({
-                        model: 'llama-3.1-8b-instant',
-                        messages: [
-                            { role: 'system', content: systemPrompt },
-                            ...formattedMessages,
-                            { role: 'user', content: question }
-                        ],
-                        temperature: 0.3,
-                        response_format: { type: 'json_object' }
-                    }),
-                    signal: fallbackController.signal
-                });
-                clearTimeout(fallbackTimeoutId);
-
-                if (!groqResponse.ok) {
-                    const errBody = await groqResponse.text();
-                    console.error('Groq API fallback model also returned an error:', errBody);
-                    throw new Error(`فشل محرك الذكاء الاصطناعي في الاستجابة (خطأ من Groq: ${errBody.substring(0, 150)})`);
-                }
-
-                responseData = await groqResponse.json();
-            } catch (fallbackError: any) {
-                clearTimeout(fallbackTimeoutId);
-                const isFallbackTimeout = fallbackError.name === 'AbortError';
-                console.error(`Groq API fallback model also ${isFallbackTimeout ? 'TIMED OUT' : 'FAILED'}:`, fallbackError);
-                throw new Error(`فشل محرك الذكاء الاصطناعي في الاستجابة (تفاصيل الخطأ: ${isFallbackTimeout ? 'انتهاء وقت الاتصال بالخادم' : (fallbackError.message || fallbackError)})`);
-            }
-        }
-
-        const rawContent = responseData.choices[0].message.content.trim();
+        const rawContent = completion.choices[0]?.message?.content?.trim() || '{}';
 
         // 6. Parse and structure the response
         let finalResponse = {
@@ -262,7 +175,7 @@ ${contextText}
                 quiz: parsed.quiz || null
             };
         } catch (parseError) {
-            console.warn('Failed to parse Groq response as JSON, falling back to raw text payload:', parseError);
+            console.warn('Failed to parse Azure AI response as JSON, falling back to raw text payload:', parseError);
         }
 
         return NextResponse.json(finalResponse, { headers: corsHeaders() });
