@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/src/utils/supabaseAdmin';
 import { getAzureAiClient, AZURE_AI_MODEL } from '@/src/config/azure-ai';
-import { checkAndConsumeAiQuota } from '@/src/lib/ai-quota';
+import { checkAndConsumeAiQuota, recordActualTokenUsage } from '@/src/lib/ai-quota';
 
 export const maxDuration = 60;
 
@@ -39,11 +39,11 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'يرجى تسجيل الدخول أولاً للتحقق من الصلاحية.' }, { status: 401, headers: corsHeaders() });
         }
 
-        // --- Unified AI Quota Check (5 free requests across all tools) ---
-        const quota = await checkAndConsumeAiQuota(userId);
+        // --- Unified AI Token Quota Check ---
+        const quota = await checkAndConsumeAiQuota(userId, undefined, 400);
         if (!quota.allowed) {
             return NextResponse.json({
-                error: quota.error || 'لقد استهلكت جميع طلباتك المجانية المتاحة (5 طلبات). يرجى الترقية إلى باقة Pro للحصول على وصول غير محدود!'
+                error: quota.error || 'لقد استهلكت رصيد التوكنات المتاح في باقتك. يرجى الترقية لفتح المزيد!'
             }, { status: 429, headers: corsHeaders() });
         }
 
@@ -55,35 +55,37 @@ export async function POST(req: NextRequest) {
         const { data: chunks, error: rpcError } = await supabaseAdmin.rpc('match_transcript_chunks', {
             p_video_id: videoId,
             p_query: question,
-            p_limit: 4
+            p_limit: 6
         });
 
         let relevantChunks = chunks;
 
-        // Fallback if RPC fails or returns empty results
+        // Fallback 1: Manual ilike search if RPC fails or returns empty results
         if (rpcError || !relevantChunks || relevantChunks.length === 0) {
-            console.warn('RPC match_transcript_chunks failed, using fallback manual search:', rpcError);
+            if (rpcError) {
+                console.warn('RPC match_transcript_chunks failed, using fallback manual search:', rpcError);
+            }
             
             const { data: fallbackChunks } = await supabaseAdmin
                 .from('youtube_transcript_chunks')
                 .select('*')
                 .eq('video_id', videoId)
                 .ilike('text', `%${question}%`)
-                .limit(4);
+                .limit(6);
 
             relevantChunks = fallbackChunks;
+        }
 
-            // Fallback 2: Get first few chunks of the video so the AI has some context
-            if (!relevantChunks || relevantChunks.length === 0) {
-                const { data: defaultChunks } = await supabaseAdmin
-                    .from('youtube_transcript_chunks')
-                    .select('*')
-                    .eq('video_id', videoId)
-                    .order('chunk_index', { ascending: true })
-                    .limit(4);
-                
-                relevantChunks = defaultChunks;
-            }
+        // Fallback 2: Comprehensive distributed coverage across the video if no exact match is found
+        if (!relevantChunks || relevantChunks.length === 0) {
+            const { data: distributedChunks } = await supabaseAdmin
+                .from('youtube_transcript_chunks')
+                .select('*')
+                .eq('video_id', videoId)
+                .order('chunk_index', { ascending: true })
+                .limit(8); // سحب سياق أكبر حتى يمتلك الموديل نظرة شاملة عن الفيديو
+            
+            relevantChunks = distributedChunks;
         }
 
         // 2. Build Context from relevant chunks
@@ -154,6 +156,9 @@ ${contextText}`;
             max_tokens: 2500,
             response_format: { type: 'json_object' }
         });
+
+        const actualTokens = completion.usage?.total_tokens || 400;
+        await recordActualTokenUsage(userId, actualTokens, 400);
 
         const rawContent = completion.choices[0]?.message?.content?.trim() || '{}';
 

@@ -33,9 +33,9 @@ const NEWS_ITEMS: NewsItem[] = [
     badgeColor: 'text-indigo-700 dark:text-indigo-400',
     badgeBg: 'bg-indigo-100 dark:bg-indigo-500/15',
     emoji: '✨',
-    title: 'Tolzy Copilot V2.5',
-    desc: 'نماذج أذكى، تفكير أعمق، وتجربة محادثة أسرع مع Gemini 2.5 Flash.',
-    link: '/copilot',
+    title: 'TOLZY AXIOM 2.5',
+    desc: 'نماذج أذكى، تفكير أعمق، وتجربة محادثة أسرع مع أقوى المحركات.',
+    link: '/axiom',
   },
   {
     id: '3',

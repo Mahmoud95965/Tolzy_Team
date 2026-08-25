@@ -41,7 +41,7 @@ export default function HomeClient() {
             <SEO
                 title="Tolzy - منظومة الذكاء الاصطناعي والتعليم التقني بالعالم العربي"
                 description="منظومة Tolzy الشاملة تجمع بين أضخم دليل لأدوات الذكاء الاصطناعي (tools.tolzy.me)، منصة التعلم التفاعلية (learn.tolzy.me)، المساعد الذكي، وصانع المشاريع بـ AI. حساب موحد وبنية خلفية موحدة."
-                keywords="tolzy, تولزي, منظومة تولزي, tools.tolzy.me, learn.tolzy.me, دليل أدوات الذكاء الاصطناعي, منصة تعليمية عربية, Tolzy Copilot, Build with AI"
+                keywords="tolzy, تولزي, منظومة تولزي, tools.tolzy.me, learn.tolzy.me, دليل أدوات الذكاء الاصطناعي, منصة تعليمية عربية, Tolzy AXIOM, Build with AI"
                 url="/"
             />
 

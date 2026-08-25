@@ -2,9 +2,24 @@
 import { useState, useEffect } from 'react';
 import {
     Users, Mail, Search, CheckSquare, Square,
-    MoreVertical, Send, X, Loader2, Filter
+    MoreVertical, Send, X, Loader2, Filter,
+    CreditCard, CheckCircle2, XCircle, ExternalLink, Clock, Phone, AlertCircle
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+
+interface PaymentRequest {
+    id: string;
+    userId: string;
+    userEmail: string;
+    fullName: string;
+    phoneNumber: string;
+    plan: 'pro' | 'max';
+    amount: number;
+    promoCode?: string;
+    receiptUrl: string;
+    status: 'pending' | 'approved' | 'rejected';
+    createdAt: string;
+}
 
 interface User {
     uid: string;
@@ -13,7 +28,7 @@ interface User {
     photoURL: string;
     creationTime: string;
     lastSignInTime: string;
-    plan: 'free' | 'pro';
+    plan: 'free' | 'pro' | 'max';
     emailVerified?: boolean;
     disabled?: boolean;
     providers?: string[];
@@ -21,13 +36,16 @@ interface User {
 
 export default function UsersManagementPage() {
     const [users, setUsers] = useState<User[]>([]);
+    const [paymentRequests, setPaymentRequests] = useState<PaymentRequest[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadingRequests, setLoadingRequests] = useState(true);
+    const [processingRequestId, setProcessingRequestId] = useState<string | null>(null);
     const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
     const [savingPlanForUid, setSavingPlanForUid] = useState<string | null>(null);
-    const [pendingPlans, setPendingPlans] = useState<Record<string, 'free' | 'pro'>>({});
-    const [planFilter, setPlanFilter] = useState<'all' | 'free' | 'pro'>('all');
+    const [pendingPlans, setPendingPlans] = useState<Record<string, 'free' | 'pro' | 'max'>>({});
+    const [planFilter, setPlanFilter] = useState<'all' | 'free' | 'pro' | 'max'>('all');
     const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'disabled'>('all');
     const [verifyFilter, setVerifyFilter] = useState<'all' | 'verified' | 'unverified'>('all');
 
@@ -38,7 +56,85 @@ export default function UsersManagementPage() {
 
     useEffect(() => {
         fetchUsers();
+        fetchPaymentRequests();
     }, []);
+
+    const fetchPaymentRequests = async () => {
+        try {
+            const authHeader = await getAdminAuthHeader();
+            const res = await fetch('/api/admin/payment-requests', {
+                headers: authHeader,
+            });
+            const data = await res.json();
+            if (data.requests) {
+                setPaymentRequests(data.requests);
+            }
+        } catch (error) {
+            console.error('Failed to fetch payment requests:', error);
+        } finally {
+            setLoadingRequests(false);
+        }
+    };
+
+    const handleApprovePaymentRequest = async (reqItem: PaymentRequest) => {
+        setProcessingRequestId(reqItem.id);
+        try {
+            const authHeader = await getAdminAuthHeader();
+            const res = await fetch('/api/admin/payment-requests', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...authHeader
+                },
+                body: JSON.stringify({
+                    requestId: reqItem.id,
+                    userId: reqItem.userId,
+                    email: reqItem.userEmail,
+                    plan: reqItem.plan,
+                    action: 'approve'
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to approve');
+
+            setPaymentRequests(prev => prev.map(r => r.id === reqItem.id ? { ...r, status: 'approved' } : r));
+            setUsers(prev => prev.map(u => u.uid === reqItem.userId ? { ...u, plan: reqItem.plan } : u));
+            toast.success(`✅ تم تفعيل باقة ${reqItem.plan.toUpperCase()} للمستخدم ${reqItem.fullName}`);
+        } catch (err: any) {
+            toast.error(`❌ فشل التفعيل: ${err.message}`);
+        } finally {
+            setProcessingRequestId(null);
+        }
+    };
+
+    const handleRejectPaymentRequest = async (reqItem: PaymentRequest) => {
+        setProcessingRequestId(reqItem.id);
+        try {
+            const authHeader = await getAdminAuthHeader();
+            const res = await fetch('/api/admin/payment-requests', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...authHeader
+                },
+                body: JSON.stringify({
+                    requestId: reqItem.id,
+                    action: 'reject'
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to reject');
+
+            setPaymentRequests(prev => prev.map(r => r.id === reqItem.id ? { ...r, status: 'rejected' } : r));
+            toast.success('تم رفض الطلب');
+        } catch (err: any) {
+            toast.error(`❌ فشل رفض الطلب: ${err.message}`);
+        } finally {
+            setProcessingRequestId(null);
+        }
+    };
 
     const getAdminAuthHeader = async () => {
         try {
@@ -88,7 +184,7 @@ export default function UsersManagementPage() {
             }
             if (data.users) {
                 setUsers(data.users);
-                const nextPendingPlans: Record<string, 'free' | 'pro'> = {};
+                const nextPendingPlans: Record<string, 'free' | 'pro' | 'max'> = {};
                 for (const user of data.users as User[]) {
                     nextPendingPlans[user.uid] = user.plan || 'free';
                 }
@@ -256,6 +352,7 @@ export default function UsersManagementPage() {
     });
 
     const proUsersCount = users.filter((u) => u.plan === 'pro').length;
+    const maxUsersCount = users.filter((u) => u.plan === 'max').length;
     const activeUsersCount = users.filter((u) => !u.disabled && isActiveUser(u)).length;
     const verifiedUsersCount = users.filter((u) => u.emailVerified).length;
 
@@ -271,7 +368,7 @@ export default function UsersManagementPage() {
                                 {users.length} مستخدم
                             </span>
                         </h1>
-                        <p className="text-slate-500 mt-2 text-sm sm:text-base">عرض وإدارة جميع المستخدمين المسجلين في المنصة</p>
+                        <p className="text-slate-500 mt-2 text-sm sm:text-base">عرض وإدارة وتفعيل باقات جميع المستخدمين في المنصة</p>
                     </div>
 
                     <div className="w-full md:w-auto space-y-2">
@@ -290,12 +387,13 @@ export default function UsersManagementPage() {
                                 <Filter className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                                 <select
                                     value={planFilter}
-                                    onChange={(e) => setPlanFilter(e.target.value as 'all' | 'free' | 'pro')}
+                                    onChange={(e) => setPlanFilter(e.target.value as 'all' | 'free' | 'pro' | 'max')}
                                     className="w-full pl-3 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151725] text-sm outline-none"
                                 >
                                     <option value="all">كل الخطط</option>
-                                    <option value="free">Free</option>
-                                    <option value="pro">Pro</option>
+                                    <option value="free">Free (10K)</option>
+                                    <option value="pro">Pro (500K)</option>
+                                    <option value="max">MAX (2.5M) 👑</option>
                                 </select>
                             </div>
                             <select
@@ -331,7 +429,7 @@ export default function UsersManagementPage() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
                     <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151725] p-4">
                         <p className="text-xs text-slate-500">إجمالي المستخدمين</p>
                         <p className="text-2xl font-extrabold mt-1">{users.length}</p>
@@ -339,6 +437,10 @@ export default function UsersManagementPage() {
                     <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151725] p-4">
                         <p className="text-xs text-slate-500">مشتركين Pro</p>
                         <p className="text-2xl font-extrabold mt-1 text-emerald-600">{proUsersCount}</p>
+                    </div>
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151725] p-4">
+                        <p className="text-xs text-slate-500">مشتركين MAX 👑</p>
+                        <p className="text-2xl font-extrabold mt-1 text-purple-600">{maxUsersCount}</p>
                     </div>
                     <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151725] p-4">
                         <p className="text-xs text-slate-500">نشطين (30 يوم)</p>
@@ -349,6 +451,86 @@ export default function UsersManagementPage() {
                         <p className="text-2xl font-extrabold mt-1 text-blue-600">{verifiedUsersCount}</p>
                     </div>
                 </div>
+
+                {/* 🔔 Pending Subscription Requests Section */}
+                {paymentRequests.filter(r => r.status === 'pending').length > 0 && (
+                    <div className="mb-8 p-5 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border-2 border-amber-300 dark:border-amber-700/50 shadow-sm animate-in fade-in">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2.5 text-amber-900 dark:text-amber-300 font-bold text-base">
+                                <span className="w-3 h-3 rounded-full bg-amber-500 animate-ping"></span>
+                                <AlertCircle className="w-5 h-5" />
+                                <span>طلبات الاشتراك المعلقة وتأكيد التحويل ({paymentRequests.filter(r => r.status === 'pending').length})</span>
+                            </div>
+                            <span className="text-xs text-amber-700 dark:text-amber-400 font-medium">راجع الإيصال وقم بالتفعيل بنقرة واحدة</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {paymentRequests.filter(r => r.status === 'pending').map((reqItem) => (
+                                <div key={reqItem.id} className="p-4 rounded-xl bg-white dark:bg-black border border-amber-200 dark:border-amber-900/60 shadow-sm space-y-3">
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <h4 className="font-bold text-sm text-slate-900 dark:text-white">{reqItem.fullName}</h4>
+                                            <p className="text-xs text-slate-500 font-mono">{reqItem.userEmail}</p>
+                                        </div>
+                                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                                            reqItem.plan === 'max' 
+                                                ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800'
+                                                : 'bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-800'
+                                        }`}>
+                                            {reqItem.plan === 'max' ? 'MAX (2.5M) 👑' : 'Pro (500K)'}
+                                        </span>
+                                    </div>
+
+                                    <div className="text-xs text-slate-600 dark:text-slate-400 space-y-1 bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-lg font-mono">
+                                        <div className="flex justify-between">
+                                            <span>الجوال / واتساب:</span>
+                                            <span className="font-bold text-slate-900 dark:text-white" dir="ltr">{reqItem.phoneNumber}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span>المبلغ:</span>
+                                            <span className="font-bold text-slate-900 dark:text-white">{reqItem.amount} ج.م</span>
+                                        </div>
+                                        {reqItem.promoCode && (
+                                            <div className="flex justify-between text-emerald-600">
+                                                <span>كود الخصم:</span>
+                                                <span className="font-bold">{reqItem.promoCode}</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div className="flex items-center gap-2 pt-1">
+                                        <a
+                                            href={reqItem.receiptUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 transition-colors"
+                                        >
+                                            <ExternalLink className="w-3.5 h-3.5" />
+                                            <span>الإيصال</span>
+                                        </a>
+                                        <button
+                                            onClick={() => handleApprovePaymentRequest(reqItem)}
+                                            disabled={processingRequestId === reqItem.id}
+                                            className="flex-1 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold disabled:opacity-50 flex items-center justify-center gap-1 transition-colors"
+                                        >
+                                            <CheckCircle2 className="w-3.5 h-3.5" />
+                                            <span>{processingRequestId === reqItem.id ? 'جاري التفعيل...' : 'تفعيل فوري'}</span>
+                                        </button>
+                                        <button
+                                            onClick={() => handleRejectPaymentRequest(reqItem)}
+                                            disabled={processingRequestId === reqItem.id}
+                                            className="p-2 rounded-lg bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-600 dark:text-rose-400 text-xs font-bold transition-colors"
+                                            title="رفض الطلب"
+                                        >
+                                            <XCircle className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Mobile cards */}
                 <div className="md:hidden space-y-3 mb-4">
@@ -384,13 +566,14 @@ export default function UsersManagementPage() {
                                         onChange={(e) =>
                                             setPendingPlans((prev) => ({
                                                 ...prev,
-                                                [user.uid]: e.target.value === 'pro' ? 'pro' : 'free',
+                                                [user.uid]: e.target.value as 'free' | 'pro' | 'max',
                                             }))
                                         }
                                         className="flex-1 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1A1D2D] text-sm"
                                     >
-                                        <option value="free">Free</option>
-                                        <option value="pro">Pro</option>
+                                        <option value="free">Free (10K)</option>
+                                        <option value="pro">Pro (500K)</option>
+                                        <option value="max">MAX (2.5M) 👑</option>
                                     </select>
                                     <button
                                         type="button"
@@ -481,13 +664,14 @@ export default function UsersManagementPage() {
                                                     onChange={(e) =>
                                                         setPendingPlans((prev) => ({
                                                             ...prev,
-                                                            [user.uid]: e.target.value === 'pro' ? 'pro' : 'free',
+                                                            [user.uid]: e.target.value as 'free' | 'pro' | 'max',
                                                         }))
                                                     }
                                                     className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1A1D2D] text-sm"
                                                 >
-                                                    <option value="free">Free</option>
-                                                    <option value="pro">Pro</option>
+                                                    <option value="free">Free (10K)</option>
+                                                    <option value="pro">Pro (500K)</option>
+                                                    <option value="max">MAX (2.5M) 👑</option>
                                                 </select>
                                                 <button
                                                     type="button"

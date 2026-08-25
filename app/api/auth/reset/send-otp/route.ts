@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/src/config/firebase-admin';
 import { formatApiError } from '@/src/utils/authErrorHandler';
+import { sendAuthEmail } from '@/src/utils/sendAuthEmail';
 
 export async function POST(req: NextRequest) {
     try {
@@ -10,6 +11,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'البريد الإلكتروني مطلوب' }, { status: 400 });
         }
 
+        const normalizedEmail = email.trim().toLowerCase();
+
         if (!adminAuth || !adminDb) {
             return NextResponse.json({ error: 'مشكلة في إعدادات الخادم (Admin SDK)' }, { status: 500 });
         }
@@ -17,7 +20,7 @@ export async function POST(req: NextRequest) {
         // 1. Verify user exists in Firebase Auth
         let userRecord;
         try {
-            userRecord = await adminAuth.getUserByEmail(email);
+            userRecord = await adminAuth.getUserByEmail(normalizedEmail);
         } catch (error: any) {
             if (error.code === 'auth/user-not-found') {
                 return NextResponse.json({ 
@@ -33,27 +36,21 @@ export async function POST(req: NextRequest) {
         const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes expiry
 
         // 3. Save OTP to Firestore `password_resets` collection using email as Doc ID
-        await adminDb.collection('password_resets').doc(email).set({
+        await adminDb.collection('password_resets').doc(normalizedEmail).set({
             otp,
             uid: userRecord.uid,
             expiresAt: expiresAt.toISOString(),
             createdAt: new Date().toISOString()
         });
 
-        // 4. Send Email via Brevo
-        const brevoApiKey = process.env.BREVO_API_KEY;
-        if (!brevoApiKey) {
-            return NextResponse.json({ error: 'مفتاح BREVO_API_KEY غير متوفر في الخادم' }, { status: 500 });
-        }
-
-        const senderEmail = process.env.EMAIL_USER || 'newstolzy.ai@gmail.com';
-        const emailData = {
-            sender: { email: senderEmail, name: 'Tolzy Support' },
-            to: [{ email: email }],
+        // 4. Send Email via resilient dispatcher
+        const emailResult = await sendAuthEmail({
+            to: normalizedEmail,
             subject: 'رمز تحقق إعادة تعيين كلمة المرور - Tolzy',
+            otp,
             htmlContent: `
                 <div dir="rtl" style="font-family: Arial, sans-serif; text-align: right; background-color: #f9f9f9; padding: 20px;">
-                    <div style="max-w: 500px; margin: auto; background: white; padding: 30px; border-radius: 15px; border: 1px solid #e2e8f0;">
+                    <div style="max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 15px; border: 1px solid #e2e8f0;">
                         <h2 style="color: #4f46e5; margin-bottom: 20px;">إعادة تعيين كلمة المرور</h2>
                         <p style="color: #333; font-size: 16px;">لقد طلبنا استعادة كلمة المرور الخاصة بك. يرجى استخدام رمز التحقق التالي:</p>
                         <div style="background-color: #f1f5f9; padding: 15px; text-align: center; border-radius: 10px; margin: 20px 0;">
@@ -62,25 +59,14 @@ export async function POST(req: NextRequest) {
                         <p style="color: #64748b; font-size: 14px;">هذا الرمز صالح لمدة 15 دقيقة فقط. إذا لم تقم بطلب هذا الرمز، يمكنك تجاهل هذه الرسالة بأمان.</p>
                     </div>
                 </div>
-            `
-        };
-
-        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'api-key': brevoApiKey
-            },
-            body: JSON.stringify(emailData)
+            `,
         });
 
-        if (!response.ok) {
-            const errorDetails = await response.text();
-            console.error('Brevo Error:', errorDetails);
-            return NextResponse.json({ error: 'حدثت مشكلة أثناء إرسال البريد عبر Brevo' }, { status: 500 });
-        }
-
-        return NextResponse.json({ success: true, message: 'تم إرسال رمز التحقق إلى بريدك الإلكتروني' });
+        return NextResponse.json({ 
+            success: true, 
+            message: 'تم إرسال رمز التحقق إلى بريدك الإلكتروني',
+            delivery: emailResult.method,
+        });
 
     } catch (error: any) {
         console.error('❌ Send OTP Error:', {

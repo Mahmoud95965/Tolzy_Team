@@ -3,12 +3,10 @@ import ProjectDetailPage from '@/src/views/ProjectDetailPage';
 
 export const metadata: Metadata = {
     title: 'تفاصيل المشروع | Tolzy Build',
-    description: 'عرض تفاصيل خطة البناء الكاملة لمشروعك.',
+    description: 'عرض تفاصيل خطة البناء الكاملة لمشروعك ورابطه المباشر.',
 };
 
-export async function generateStaticParams() {
-    return [{ id: 'placeholder' }];
-}
+export const dynamic = 'force-dynamic';
 
 export default function Page() {
     return <ProjectDetailPage />;

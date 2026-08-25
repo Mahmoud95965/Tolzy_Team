@@ -2,11 +2,11 @@ import type { Metadata } from 'next';
 import DocsPage from '@/src/views/DocsPage';
 
 export const metadata: Metadata = {
-    title: 'توثيق Tolzy: دليلك الشامل لمنصة الذكاء الاصطناعي',
-    description: 'دليل الاستخدام الشامل لأدوات وإعدادات منصة Tolzy. تعلم كيفية استخدام T O L Z Y AI و Copilot وكتابة المطالبات باحترافية.',
+    title: 'توثيق TOLZY AI: الدليل الشامل لمنظومة الذكاء الاصطناعي',
+    description: 'الدليل الرسمي الشامل لمنظومة TOLZY AI — تعرّف على مستشار AXIOM 2.5 Pro، بيئة Build With AI، منصة OmniLearn للتعلم الذكي، دليل الأدوات، ونظام التوكن الموحد.',
     openGraph: {
-        title: 'توثيق Tolzy: دليلك الشامل',
-        description: 'دليل الاستخدام والمساعدة لمنصة Tolzy AI',
+        title: 'توثيق TOLZY AI: الدليل الشامل لمنظومة الذكاء الاصطناعي',
+        description: 'دليل الاستخدام والمساعدة الشامل لمنظومة أدوات وخدمات TOLZY AI',
         url: 'https://tolzy.me/docs',
     },
     alternates: {

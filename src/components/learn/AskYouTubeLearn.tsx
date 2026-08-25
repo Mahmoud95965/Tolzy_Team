@@ -399,53 +399,6 @@ export default function AskYouTubeLearn({ onStateChange, isForceOpen, onCloseFor
 
     // Render Floating Launcher Widget if NOT currently in active workspace analysis
     if (!isProcessing && !isAnalyzed) {
-        if (!isPro) {
-            return (
-                <motion.div
-                    layout
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ type: "spring", stiffness: 260, damping: 25 }}
-                    className={`fixed bottom-20 right-4 md:bottom-6 md:right-6 z-[999] flex flex-col justify-center overflow-hidden transition-all duration-300 ${
-                        isBarOpen 
-                            ? 'w-[calc(100vw-2rem)] sm:w-[420px] h-[300px] p-6 bg-slate-900/95 dark:bg-[#0c0d14]/95 backdrop-blur-2xl border border-violet-500/30 rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.4)]' 
-                            : 'w-12 h-12 md:w-16 md:h-16 p-0 bg-white dark:bg-[#090a0f] border-2 border-violet-500/50 hover:border-violet-400 rounded-full shadow-[0_10px_35px_rgba(139,92,246,0.35)] dark:shadow-[0_15px_35px_rgba(0,0,0,0.6)] cursor-pointer'
-                    }`}
-                    onClick={!isBarOpen ? () => {
-                        setIsBarOpen(true);
-                    } : undefined}
-                >
-                    {!isBarOpen ? (
-                        <div className="w-full h-full flex items-center justify-center relative">
-                            <span className="absolute inset-0 rounded-full bg-violet-500/15 animate-ping pointer-events-none" />
-                            <Youtube className="w-5 h-5 md:w-7 md:h-7 text-violet-500 animate-pulse" />
-                        </div>
-                    ) : (
-                        <div className="w-full h-full flex flex-col justify-between text-right relative">
-                            <button
-                                onClick={(e) => { e.stopPropagation(); setIsBarOpen(false); }}
-                                className="absolute top-0 left-0 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white flex items-center justify-center transition-all shrink-0 animate-fade-in"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
-                            <div className="mt-4">
-                                <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-xl shadow-lg shadow-violet-500/25 mb-4 animate-bounce">💎</div>
-                                <h3 className="text-lg font-black text-white mb-2">ميزة Ask YouTube Learn الذكية</h3>
-                                <p className="text-slate-400 text-xs leading-relaxed">
-                                    هذه الميزة حصرية لمشتركي باقة <span className="text-violet-400 font-bold">Pro</span>. قم بترقية حسابك الآن لتتمكن من تلخيص أي كورس يوتيوب والدردشة مع محتواه واستخراج أسئلة واختبارات تفاعلية ذكية!
-                                </p>
-                            </div>
-                            <div className="mt-4">
-                                <Link href="/pricing" className="block w-full py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-2xl font-black text-xs text-center transition-all shadow-md shadow-violet-500/20">
-                                    ترقية الحساب الآن ✨
-                                </Link>
-                            </div>
-                        </div>
-                    )}
-                </motion.div>
-            );
-        }
-
         return (
             <motion.div
                 layout

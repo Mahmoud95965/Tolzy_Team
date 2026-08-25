@@ -26,7 +26,7 @@ const OnboardingModal = () => {
 
     const handleStartNow = () => {
         handleClose();
-        router.push('/copilot');
+        router.push('/axiom');
     };
 
     const startTour = () => {

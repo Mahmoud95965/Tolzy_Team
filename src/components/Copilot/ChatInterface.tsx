@@ -53,7 +53,7 @@ const AT_COMMANDS = [
     { id: 'code', label: 'برمجة', description: 'وضع تحليل وكتابة الأكواد', icon: <span className="material-symbols-outlined text-[15px]">code</span>, color: 'text-blue-400', comingSoon: true },
     { id: 'tools', label: 'أدوات', description: 'اكتشف أدوات AI المناسبة', icon: <span className="material-symbols-outlined text-[15px]">layers</span>, color: 'text-emerald-400', comingSoon: false },
     { id: 'learn', label: 'تعلم', description: 'مسارات التعلم والكورسات', icon: <span className="material-symbols-outlined text-[15px]">school</span>, color: 'text-amber-400', comingSoon: false },
-    { id: 'general', label: 'عام', description: 'محادثة عامة مع Copilot', icon: <span className="material-symbols-outlined text-[15px]">chat_bubble_outline</span>, color: 'text-indigo-400', comingSoon: false },
+    { id: 'general', label: 'عام', description: 'محادثة عامة مع معالج AXIOM', icon: <span className="material-symbols-outlined text-[15px]">chat_bubble_outline</span>, color: 'text-indigo-400', comingSoon: false },
 ];
 
 const QUICK_SUGGESTIONS = [
@@ -63,10 +63,10 @@ const QUICK_SUGGESTIONS = [
     { text: 'مسار تعلم الذكاء الاصطناعي 🎓', mode: 'learn' }
 ];
 
-type CopilotMode = 'general' | 'code' | 'tools' | 'learn';
+type AxiomMode = 'general' | 'code' | 'tools' | 'learn';
 
 interface ModeConfig {
-    id: CopilotMode;
+    id: AxiomMode;
     label: string;
     icon: React.ReactNode;
     placeholder: string;
@@ -490,17 +490,13 @@ const MessageItem = React.memo(({ msg, user, onResend }: {
                     /* ── AXIOM assistant bubble ── */
                     <div className="w-full">
                         {msg.status === 'thinking' ? (
-                            /* Thinking dots */
-                            <div className="flex items-center gap-2 px-1 py-3">
-                                {[0, 1, 2].map(i => (
-                                    <motion.span
-                                        key={i}
-                                        className="w-2 h-2 rounded-full bg-indigo-400/60 dark:bg-indigo-400/50"
-                                        animate={{ y: [0, -5, 0], opacity: [0.4, 1, 0.4] }}
-                                        transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.18, ease: 'easeInOut' }}
-                                    />
-                                ))}
-                                <span className="text-[13px] text-slate-400 dark:text-slate-500 font-medium mr-1">جاري التحليل...</span>
+                            /* Simple elegant pulsing dot */
+                            <div className="flex items-center py-3 px-1">
+                                <motion.span
+                                    className="w-2.5 h-2.5 rounded-full bg-blue-600 dark:bg-blue-400 inline-block shadow-xs"
+                                    animate={{ opacity: [0.15, 1, 0.15], scale: [0.8, 1.2, 0.8] }}
+                                    transition={{ repeat: Infinity, duration: 1.2, ease: 'easeInOut' }}
+                                />
                             </div>
                         ) : (
                             /* Response content */
@@ -746,7 +742,7 @@ const MessageItem = React.memo(({ msg, user, onResend }: {
 
                 {/* ── Action buttons ── */}
                 {msg.role === 'assistant' && !msg.isStreaming && msg.status !== 'thinking' && (
-                    <div className="flex items-center gap-1 mt-2.5 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                    <div className="flex items-center gap-1 mt-2.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200">
                         <button
                             onClick={handleCopy}
                             className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium rounded-lg border transition-colors duration-200
@@ -763,7 +759,7 @@ const MessageItem = React.memo(({ msg, user, onResend }: {
                 )}
 
                 {msg.role === 'user' && (
-                    <div className="flex items-center gap-1 mt-2 justify-end opacity-0 group-hover:opacity-100 transition-all duration-200">
+                    <div className="flex items-center gap-1 mt-2 justify-end opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200">
                         <button
                             onClick={handleUserCopy}
                             className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium rounded-lg border transition-colors duration-200
@@ -811,10 +807,22 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isInputExpanded, setIsInputExpanded] = useState(true);
     const { isListening, transcript, toggleListening, hasSupport } = useSpeechRecognition();
+    const baseSpeechInputRef = useRef('');
+
+    useEffect(() => {
+        if (isListening) {
+            baseSpeechInputRef.current = input ? (input.endsWith(' ') ? input : input + ' ') : '';
+        }
+    }, [isListening]);
 
     useEffect(() => {
         if (isListening && transcript) {
-            setInput(transcript);
+            const combined = baseSpeechInputRef.current + transcript;
+            setInput(combined);
+            if (textareaRef.current) {
+                textareaRef.current.style.height = 'auto';
+                textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 192)}px`;
+            }
         }
     }, [transcript, isListening]);
     const [isMounted, setIsMounted] = useState(false);
@@ -834,7 +842,11 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [currentConversationId, setCurrentConversationId] = useState<string | null>(initialChatId || null);
     const [selectedTool, setSelectedTool] = useState(TOOLS[0]);
-    const [mode, setMode] = useState<CopilotMode>('general');
+    const [mode, setMode] = useState<AxiomMode>('general');
+    const [selectedModel, setSelectedModel] = useState<'pro' | 'flash' | 'thinker'>('pro');
+    const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [isInputModeDropdownOpen, setIsInputModeDropdownOpen] = useState(false);
     const [isHeaderModeDropdownOpen, setIsHeaderModeDropdownOpen] = useState(false);
     const [isAccountPopoverOpen, setIsAccountPopoverOpen] = useState(false);
@@ -941,8 +953,17 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
             return;
         }
 
-        const promptText = customPrompt || input.trim();
-        if (!promptText || isLoading) return;
+        let promptText = customPrompt || input.trim();
+        if (!promptText && selectedFiles.length === 0) return;
+        if (isLoading) return;
+
+        if (selectedFiles.length > 0) {
+            const filesList = selectedFiles.map(f => `📄 ${f.name}`).join('\n');
+            promptText = promptText 
+                ? `${promptText}\n\n[الملفات المرفقة]:\n${filesList}`
+                : `[الملفات المرفقة]:\n${filesList}`;
+            setSelectedFiles([]);
+        }
 
         const userMessage: Message = {
             id: generateId(),
@@ -990,7 +1011,14 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                 })
             });
 
-            if (!response.ok) throw new Error('API Error');
+            if (!response.ok) {
+                let errorData: any = null;
+                try {
+                    errorData = await response.json();
+                } catch {}
+                const quotaError = errorData?.error || 'عذراً، رصيدك من التوكن غير كافٍ. يجب شحن الرصيد أو ترقية الباقة للمتابعة.';
+                throw new Error(quotaError);
+            }
             if (!response.body) throw new Error('No response body');
 
             const reader = response.body.getReader();
@@ -1076,12 +1104,27 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
             // read on every single chat turn. User data is refreshed on auth state
             // change and on explicit profile actions only.
 
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            toast.error('حدث خطأ أثناء الاتصال');
+            const errorMsg = error?.message || "عذراً، حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.";
+            const isTokenDepleted = errorMsg.includes('توكن') || errorMsg.includes('شحن') || errorMsg.includes('ترقية') || errorMsg.includes('حصة');
+            
+            if (isTokenDepleted) {
+                toast.error(errorMsg, { duration: 6000 });
+            } else {
+                toast.error('حدث خطأ أثناء الاتصال');
+            }
+
             setMessages(prev => prev.map(m =>
                 m.id === assistantMessageId
-                    ? { ...m, content: m.content || "عذراً، حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.", isStreaming: false, status: 'complete' as const }
+                    ? { 
+                        ...m, 
+                        content: isTokenDepleted
+                            ? `${errorMsg}\n\n👉 [**اضغط هنا لشحن الرصيد وترقية الباقة الآن ⚡**](/pricing)`
+                            : (m.content || errorMsg), 
+                        isStreaming: false, 
+                        status: 'complete' as const 
+                      }
                     : m
             ));
         } finally {
@@ -1117,7 +1160,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
         const lastAtIdx = input.lastIndexOf('@');
         const cleaned = lastAtIdx !== -1 ? input.slice(0, lastAtIdx) : input;
         setInput(cleaned);
-        setMode(cmdId as CopilotMode);
+        setMode(cmdId as AxiomMode);
         setShowAtMenu(false);
         textareaRef.current?.focus();
     };
@@ -1189,40 +1232,22 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
     const renderInputPill = (isCentered = false) => {
         if (!user) {
             return (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full p-4 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.07] rounded-xl" dir="rtl">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full p-4 bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 rounded-2xl" dir="rtl">
                     <div className="flex items-center gap-3 text-right">
-                        <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] flex items-center justify-center flex-shrink-0">
-                            <span className="text-sm">🔒</span>
+                        <div className="w-8 h-8 rounded-xl bg-neutral-150 dark:bg-neutral-800 flex items-center justify-center flex-shrink-0 text-sm">
+                            🔒
                         </div>
                         <div className="text-right">
-                            <h4 className="text-xs font-semibold text-slate-800 dark:text-white leading-tight">أنت تتصفح في وضع المعاينة</h4>
-                            <p className="text-[11px] text-slate-500 mt-0.5">سجل دخولك للبدء بمحادثة حية.</p>
+                            <h4 className="text-xs font-bold text-neutral-900 dark:text-white leading-tight">أنت تتصفح في وضع المعاينة</h4>
+                            <p className="text-[11px] text-neutral-500 mt-0.5">سجل دخولك للبدء بمحادثة ذكية حية.</p>
                         </div>
                     </div>
                     <Link
                         href="/auth"
-                        className="w-full sm:w-auto px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-bold text-center transition-colors duration-200 whitespace-nowrap"
+                        className="w-full sm:w-auto px-4 py-2 bg-[#d97757] hover:bg-[#c46647] text-white rounded-xl text-xs font-bold text-center transition-colors shadow-xs whitespace-nowrap"
                     >
                         تسجيل الدخول
                     </Link>
-                </div>
-            );
-        }
-        if (!isInputExpanded && !isCentered) {
-            return (
-                <div className="flex justify-center w-full relative z-30 pb-4">
-                    <motion.button
-                        layoutId="inputPillContainer"
-                        onClick={() => setIsInputExpanded(true)}
-                        whileHover={{ scale: 1.08 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-600 via-indigo-650 to-indigo-700 dark:from-indigo-650 dark:via-purple-600 dark:to-pink-650 text-white flex items-center justify-center shadow-[0_8px_32px_rgba(99,102,241,0.4)] dark:shadow-[0_8px_32px_rgba(168,85,247,0.3)] cursor-pointer relative group border border-white/10"
-                    >
-                        <span className="absolute inset-0 rounded-full bg-indigo-500/25 animate-ping pointer-events-none" />
-                        <svg className="w-7 h-7 relative z-10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 3C12 3 12 9 6 12C12 15 12 21 12 21C12 21 12 15 18 12C12 9 12 3 12 3Z" fill="currentColor" />
-                        </svg>
-                    </motion.button>
                 </div>
             );
         }
@@ -1230,26 +1255,48 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
         return (
             <motion.div
                 layoutId="inputPillContainer"
-                initial={{ opacity: 0, scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="relative w-full transition-all duration-300 z-30"
+                exit={{ opacity: 0, scale: 0.98 }}
+                className="relative w-full max-w-2xl mx-auto transition-all duration-300 z-30"
             >
+                {/* Hidden File Upload Input */}
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                        if (e.target.files) {
+                            const filesArray = Array.from(e.target.files);
+                            setSelectedFiles(prev => [...prev, ...filesArray]);
+                        }
+                    }}
+                />
 
+                {/* Claude-Style Floating Composer Card */}
+                <div className="flex flex-col bg-white dark:bg-[#18181b] rounded-[22px] border border-neutral-200/90 dark:border-neutral-800 shadow-[0_0.25rem_1.25rem_rgba(0,0,0,0.035),0_0_0_1px_rgba(0,0,0,0.04)] hover:shadow-[0_0.25rem_1.25rem_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.08)] focus-within:shadow-[0_0.25rem_1.5rem_rgba(0,0,0,0.08),0_0_0_1.5px_rgba(217,119,87,0.5)] dark:shadow-[0_0.25rem_1.25rem_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.06)] dark:focus-within:border-neutral-700 transition-all duration-200 p-3.5 gap-2.5">
+                    
+                    {/* Attached Files Chips Bar */}
+                    {selectedFiles.length > 0 && (
+                        <div className="flex items-center gap-2 pb-1 overflow-x-auto border-b border-neutral-100 dark:border-neutral-800/80">
+                            {selectedFiles.map((file, idx) => (
+                                <div key={idx} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700 text-xs">
+                                    <span className="text-[11px] font-medium text-neutral-700 dark:text-neutral-300 truncate max-w-[130px]">{file.name}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedFiles(prev => prev.filter((_, i) => i !== idx))}
+                                        className="text-neutral-400 hover:text-red-500 transition-colors ml-0.5 text-sm font-bold"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
 
-                <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2 rounded-full bg-white dark:bg-[#131314]/90 backdrop-blur-xl border border-slate-200 dark:border-white/[0.08] focus-within:border-blue-400 dark:focus-within:border-blue-500/40 shadow-md dark:shadow-none transition-all duration-200" dir="rtl">
-                    <div className="flex-shrink-0 mb-0.5">
-                        <button
-                            onClick={() => toast('قريباً: إمكانية إرفاق الملفات! 📎', { icon: '✨' })}
-                            title="التحميل والأدوات"
-                            type="button"
-                            className="w-10 h-10 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-white/[0.06] transition-all duration-200 active:scale-95 cursor-pointer"
-                        >
-                            <span className="material-symbols-outlined text-[24px] font-semibold">add</span>
-                        </button>
-                    </div>
-
-                    <div className="flex-grow min-w-0 relative">
+                    {/* Textarea Editor */}
+                    <div className="relative w-full">
                         <textarea
                             ref={textareaRef}
                             value={input}
@@ -1258,14 +1305,14 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                 if (showAtMenu && e.key === 'Escape') { setShowAtMenu(false); e.preventDefault(); return; }
                                 if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); }
                             }}
-                            placeholder={MODES.find(m => m.id === mode)?.placeholder || "اسأل AXIOM الذكي..."}
+                            placeholder="How can I help you today?"
                             rows={1}
                             disabled={isLoading}
-                            className="w-full bg-transparent border-none focus:ring-0 resize-none py-2 px-1 text-[16px] sm:text-[18px] font-bold text-slate-900 dark:text-white placeholder:text-slate-450 dark:placeholder:text-slate-500 max-h-40 min-h-[40px] scrollbar-hide text-right leading-6 outline-none"
-                            style={{ height: '40px' }}
-                            dir="rtl"
+                            className="w-full bg-transparent border-none focus:ring-0 resize-none px-1.5 py-1 text-[15px] sm:text-[16px] font-medium text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 max-h-72 min-h-[48px] outline-none leading-relaxed"
+                            dir="auto"
                         />
 
+                        {/* @ Command Popover */}
                         <AnimatePresence>
                             {showAtMenu && (
                                 <motion.div
@@ -1273,10 +1320,10 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: 6 }}
                                     transition={{ duration: 0.12 }}
-                                    className="absolute bottom-full left-0 mb-2.5 w-60 bg-white dark:bg-[#0b0c10] border border-slate-200 dark:border-white/[0.10] rounded-xl shadow-2xl p-1 z-50"
+                                    className="absolute bottom-full right-0 mb-2.5 w-64 bg-white dark:bg-[#18181b] border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-2xl p-1.5 z-50 overflow-hidden"
                                 >
-                                    <div className="px-3 py-2 border-b border-slate-100 dark:border-white/[0.06]">
-                                        <span className="text-[10px] font-medium text-slate-500 block text-right">وضع المحادثة</span>
+                                    <div className="px-3 py-2 border-b border-neutral-100 dark:border-neutral-800">
+                                        <span className="text-[10px] font-bold text-neutral-400 block text-right uppercase">الأوامر السريعة</span>
                                     </div>
                                     <div className="p-1 space-y-0.5">
                                         {AT_COMMANDS
@@ -1285,21 +1332,21 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                                 <button
                                                     key={cmd.id}
                                                     onClick={() => !cmd.comingSoon && handleAtSelect(cmd.id)}
-                                                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-right transition-colors duration-150 ${
-                                                        cmd.comingSoon ? 'opacity-40 cursor-not-allowed' : 'hover:bg-slate-50 dark:hover:bg-white/[0.05] cursor-pointer'
+                                                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-right transition-colors duration-150 ${
+                                                        cmd.comingSoon ? 'opacity-40 cursor-not-allowed' : 'hover:bg-neutral-50 dark:hover:bg-neutral-800 cursor-pointer'
                                                     }`}
                                                 >
-                                                    <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.07] text-slate-400">
+                                                    <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-neutral-100 dark:bg-neutral-800 text-neutral-500">
                                                         {cmd.icon}
                                                     </span>
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center gap-1.5">
-                                                            <span className="text-[12px] font-medium text-slate-800 dark:text-slate-200">@{cmd.label}</span>
+                                                            <span className="text-[12px] font-semibold text-neutral-800 dark:text-neutral-200">@{cmd.label}</span>
                                                             {cmd.comingSoon && (
-                                                                <span className="text-[9px] font-medium bg-slate-200 dark:bg-white/[0.07] text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded">قريباً</span>
+                                                                <span className="text-[9px] font-medium bg-neutral-200 dark:bg-neutral-800 text-neutral-500 px-1.5 py-0.5 rounded">قريباً</span>
                                                             )}
                                                         </div>
-                                                        <p className="text-[10px] text-slate-550 truncate">{cmd.description}</p>
+                                                        <p className="text-[10px] text-neutral-400 truncate">{cmd.description}</p>
                                                     </div>
                                                 </button>
                                             ))
@@ -1310,121 +1357,85 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                         </AnimatePresence>
                     </div>
 
-                    <div className="flex items-center gap-1.5 flex-shrink-0 mb-0.5 relative">
-                        {/* MOBILE CONTROLS */}
-                        <div className="flex items-center gap-2 lg:hidden">
-                            {input.trim() === '' ? (
-                                <div className="flex items-center gap-1 p-1 rounded-full bg-blue-50/80 dark:bg-blue-900/10 border border-blue-100/50 dark:border-blue-500/10">
-                                    {hasSupport && (
-                                        <button
-                                            onClick={toggleListening}
-                                            type="button"
-                                            title="الميكروفون"
-                                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                                                isListening ? 'text-red-500 bg-red-500/10 animate-pulse' : 'text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/10'
-                                            }`}
-                                        >
-                                            <span className="material-symbols-outlined text-[18px]">mic</span>
-                                        </button>
-                                    )}
-                                    <button
-                                        type="button"
-                                        onClick={() => toast('قريباً: إدخل المحادثات الصوتية الحية! 🎙️', { icon: '✨' })}
-                                        className="w-8 h-8 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/10"
-                                        title="التحليل الصوتي"
-                                    >
-                                        <span className="material-symbols-outlined text-[18px]">graphic_eq</span>
-                                    </button>
-                                </div>
-                            ) : (
+                    {/* Bottom Toolbar: Attach + Segmented Control + Spacer + Model + Mic + Send */}
+                    <div className="relative flex items-center justify-between w-full gap-2 pt-1 border-t border-neutral-100/80 dark:border-neutral-800/80">
+                        
+                        {/* Left Side: Attachment + Segmented Control */}
+                        <div className="flex items-center gap-1.5">
+                            {/* Attachment Button */}
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                title="إرفاق ملفات أو مستندات أو صور"
+                                className="p-1.5 rounded-lg text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors flex items-center justify-center cursor-pointer"
+                            >
+                                <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                                </svg>
+                            </button>
+
+                            {/* Segmented Control Pill: Chat / Code */}
+                            <div className="inline-flex rounded-lg p-0.5 bg-neutral-100 dark:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-800 text-[11px] font-semibold">
                                 <button
-                                    onClick={() => handleSendMessage()}
-                                    disabled={isLoading}
                                     type="button"
-                                    title="إرسال رسالة"
-                                    className="w-9 h-9 rounded-full flex items-center justify-center bg-blue-500 text-white hover:bg-blue-600 shadow-md active:scale-95 transition-all"
+                                    onClick={() => setMode('general')}
+                                    className={`px-3 py-1 rounded-md transition-all ${mode === 'general' ? 'bg-white dark:bg-neutral-750 text-neutral-900 dark:text-white shadow-xs font-bold' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}`}
                                 >
-                                    <span className="material-symbols-outlined text-[18px] font-bold">arrow_upward</span>
+                                    دردشة (Chat)
                                 </button>
-                            )}
+                                <button
+                                    type="button"
+                                    onClick={() => setMode('code')}
+                                    className={`px-3 py-1 rounded-md transition-all ${mode === 'code' ? 'bg-white dark:bg-neutral-750 text-neutral-900 dark:text-white shadow-xs font-bold' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}`}
+                                >
+                                    برمجة (Code)
+                                </button>
+                            </div>
                         </div>
 
-                        {/* DESKTOP CONTROLS */}
-                        <div className="hidden lg:flex items-center gap-2">
-                            <div className="relative">
-                                <button
-                                    onClick={() => setIsInputModeDropdownOpen(!isInputModeDropdownOpen)}
-                                    type="button"
-                                    className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-200/50 hover:bg-slate-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-slate-300/30 dark:border-white/[0.05] transition-all duration-200 active:scale-95 cursor-pointer select-none"
-                                >
-                                    <span>{MODES.find(m => m.id === mode)?.label || 'عام'}</span>
-                                    <span className="material-symbols-outlined text-[14px] sm:text-[16px] transition-transform duration-200" style={{ transform: isInputModeDropdownOpen ? 'rotate(180deg)' : 'none' }}>
-                                        keyboard_arrow_down
-                                    </span>
-                                </button>
-
-                                <AnimatePresence>
-                                    {isInputModeDropdownOpen && (
-                                        <motion.div
-                                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                                            className="absolute bottom-full left-0 mb-3 w-44 bg-white dark:bg-[#131314] border border-slate-200 dark:border-white/[0.08] rounded-2xl shadow-2xl p-1.5 z-50 overflow-hidden"
-                                        >
-                                            <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-white/[0.04] mb-1">
-                                                <span className="text-[10px] font-bold text-slate-400 block text-right">وضع المحادثة</span>
-                                            </div>
-                                            <div className="space-y-0.5">
-                                                {MODES.map((m) => (
-                                                    <button
-                                                        key={m.id}
-                                                        onClick={() => {
-                                                            setMode(m.id as CopilotMode);
-                                                            setIsInputModeDropdownOpen(false);
-                                                            textareaRef.current?.focus();
-                                                        }}
-                                                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all ${
-                                                            mode === m.id ? 'bg-blue-500/10 text-blue-500 font-bold dark:bg-blue-500/20' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04]'
-                                                        }`}
-                                                    >
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-slate-400 dark:text-slate-500 flex items-center">{m.icon}</span>
-                                                            <span>{m.label}</span>
-                                                        </div>
-                                                        {mode === m.id && (
-                                                            <span className="material-symbols-outlined text-[14px] text-blue-500">check</span>
-                                                        )}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
+                        {/* Right Side: AXIOM Model Badge + Mic Audio Wave + Send */}
+                        <div className="flex items-center gap-1 sm:gap-1.5">
+                            {/* Pure AXIOM Model Badge */}
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold text-neutral-800 dark:text-neutral-200 bg-neutral-100/70 dark:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-800 select-none">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                <span className="text-[11px] sm:text-xs">AXIOM</span>
                             </div>
 
-                            {hasSupport && (
-                                <button
-                                    onClick={toggleListening}
-                                    type="button"
-                                    title={isListening ? 'إيقاف التسجيل' : 'الميكروفون'}
-                                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-200 ${
-                                        isListening ? 'text-red-500 bg-red-500/10 border border-red-500/20 animate-pulse' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-white/[0.06] border border-transparent'
-                                    }`}
-                                >
-                                    <span className="material-symbols-outlined text-[18px] sm:text-[20px]">mic</span>
-                                </button>
-                            )}
-
+                            {/* Voice Audio Wave Button */}
                             <button
-                                onClick={() => input.trim() && handleSendMessage()}
-                                disabled={isLoading || !input.trim()}
                                 type="button"
-                                title="إرسال رسالة"
-                                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-200 ${
-                                    input.trim() ? 'bg-blue-500 text-white hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-500/20 active:scale-95' : 'bg-transparent text-slate-300 dark:text-slate-650 cursor-not-allowed'
+                                onClick={toggleListening}
+                                title={isListening ? "إيقاف الاستماع" : "التحدث الصوتي"}
+                                className={`p-1.5 rounded-lg transition-all flex items-center justify-center cursor-pointer ${isListening ? 'bg-red-500/10 text-red-500 border border-red-500/30 animate-pulse' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800'}`}
+                            >
+                                <svg width="18" height="18" viewBox="0 0 21.2 21.2" fill="none" xmlns="http://www.w3.org/2000/svg" className="inline-block overflow-visible">
+                                    <g>
+                                        <rect x="0" y="7.6" width="1.2" height="6" rx="0.6" fill="currentColor" />
+                                        <rect x="4" y="5.6" width="1.2" height="10" rx="0.6" fill="currentColor" />
+                                        <rect x="8" y="2.6" width="1.2" height="16" rx="0.6" fill="currentColor" />
+                                        <rect x="12" y="5.6" width="1.2" height="10" rx="0.6" fill="currentColor" />
+                                        <rect x="16" y="2.6" width="1.2" height="16" rx="0.6" fill="currentColor" />
+                                        <rect x="20" y="7.6" width="1.2" height="6" rx="0.6" fill="currentColor" />
+                                    </g>
+                                </svg>
+                            </button>
+
+                            {/* Send Button */}
+                            <button
+                                type="button"
+                                onClick={() => (input.trim() || selectedFiles.length > 0) && handleSendMessage()}
+                                disabled={isLoading || (!input.trim() && selectedFiles.length === 0)}
+                                title="إرسال"
+                                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                                    input.trim() || selectedFiles.length > 0
+                                        ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs active:scale-95 cursor-pointer'
+                                        : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-600 cursor-not-allowed'
                                 }`}
                             >
-                                <span className="material-symbols-outlined text-[20px] sm:text-[22px] font-bold">arrow_upward</span>
+                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="12" y1="19" x2="12" y2="5" />
+                                    <polyline points="5 12 12 5 19 12" />
+                                </svg>
                             </button>
                         </div>
                     </div>
@@ -1584,7 +1595,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.85c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                             </svg>
                             <h2 className="text-base font-black text-white">تسجيل الدخول باستخدام Google</h2>
-                            <p className="text-[11px] text-slate-400 mt-1 font-medium">للربط والتكامل مع TOLZY Copilot</p>
+                            <p className="text-[11px] text-slate-400 mt-1 font-medium">للربط والتكامل مع TOLZY AXIOM</p>
                         </div>
 
                         <div className="p-6">
@@ -1868,40 +1879,51 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                 <main className="flex-1 flex flex-col relative h-full w-full overflow-hidden z-10">
 
                     {/* ── Premium Header ── */}
-                    <header className="flex items-center justify-between h-14 px-4 sm:px-5 border-b border-slate-200/60 dark:border-white/[0.05] bg-white/80 dark:bg-[#070a12]/90 backdrop-blur-xl z-40 flex-shrink-0">
-                        {/* Left: Archive + New Chat */}
-                        <div className="flex items-center gap-1.5">
+                    <header className="flex items-center justify-between h-14 px-3 sm:px-5 border-b border-slate-200/60 dark:border-white/[0.06] bg-white/90 dark:bg-[#070a12]/95 backdrop-blur-xl z-40 flex-shrink-0">
+                        {/* Right (Start in RTL): Sidebar + New Chat */}
+                        <div className="flex items-center gap-1 sm:gap-2">
                             <button
                                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                                className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-600 dark:text-slate-400 transition-all active:scale-95"
-                                title="أرشيف المحادثات"
+                                className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-300 transition-all active:scale-95 border border-slate-200/50 dark:border-white/[0.05]"
+                                title="سجل المحادثات"
                             >
                                 <span className="material-symbols-outlined text-[20px]">menu</span>
                             </button>
                             <button
                                 onClick={startNewChat}
-                                className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-600 dark:text-slate-400 transition-all active:scale-95"
+                                className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-300 transition-all active:scale-95 border border-slate-200/50 dark:border-white/[0.05]"
                                 title="محادثة جديدة"
                             >
-                                <span className="material-symbols-outlined text-[20px]">edit_square</span>
+                                <span className="material-symbols-outlined text-[18px]">add</span>
                             </button>
                         </div>
 
-                        {/* Center: Brand */}
+                        {/* Center: Brand & Active Model Badge */}
                         <div className="flex items-center gap-2 select-none">
-                            <div className="w-7 h-7 rounded-lg border border-slate-200 dark:border-white/10 overflow-hidden flex items-center justify-center shadow-md">
+                            <div className="w-7 h-7 rounded-lg border border-slate-200 dark:border-white/10 overflow-hidden flex items-center justify-center shadow-md shrink-0">
                                 <img
                                     src="/image/tools/11zon_cropped (1).webp"
                                     alt="AXIOM Logo"
                                     className="w-full h-full object-cover"
                                 />
                             </div>
-                            <span className="text-sm font-black text-slate-900 dark:text-white tracking-tight">TOLZY <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-pink-500 font-bold">AXIOM</span></span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm font-black text-slate-900 dark:text-white tracking-tight">AXIOM</span>
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Active" />
+                            </div>
                         </div>
 
-                        {/* Right: Mode indicator + Account */}
-                        <div className="flex items-center gap-1.5">
-
+                        {/* Left (End in RTL): Theme toggle + Account */}
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                            <button
+                                onClick={toggleDarkMode}
+                                className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-white/[0.05] hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-600 dark:text-slate-350 flex items-center justify-center transition-all"
+                                title="تبديل المظهر"
+                            >
+                                <span className="material-symbols-outlined text-[16px]">
+                                    {isDarkMode ? 'light_mode' : 'dark_mode'}
+                                </span>
+                            </button>
 
                             <button
                                 onClick={() => { setIsAccountPopoverOpen(!isAccountPopoverOpen); setIsSettingsPopoverOpen(false); }}
@@ -1924,30 +1946,15 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                         </div>
                     ) : (
                         <>
-                            <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 flex flex-col relative z-10 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-white/[0.05] scrollbar-track-transparent">
+                            <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 sm:px-4 flex flex-col relative z-10 scrollbar-thin scrollbar-thumb-neutral-200 dark:scrollbar-thumb-neutral-800 scrollbar-track-transparent">
                                 {messages.length === 0 ? (
-                                    <div className="flex-1 flex flex-col h-full justify-center min-h-[calc(100dvh-160px)]">
+                                    <div className="flex-1 flex flex-col h-full justify-center min-h-[calc(100dvh-140px)]">
                                         <WelcomeScreen
                                             onQuickAction={(text) => handleSendMessage(text)}
                                             userName={userData?.displayName || user?.displayName || undefined}
+                                            userPlan={normalizedPlan}
                                         >
-                                            <div className="w-full max-w-2xl mx-auto mt-6 px-2">
-                                                {/* Suggestions Chips above Welcome Input */}
-                                                <div className="flex items-center gap-2 overflow-x-auto pb-2.5 mb-3 scrollbar-hide w-full justify-center" dir="rtl">
-                                                    {QUICK_SUGGESTIONS.map((sug, i) => (
-                                                        <button
-                                                            key={i}
-                                                            onClick={() => {
-                                                                setInput(sug.text);
-                                                                setMode(sug.mode as CopilotMode);
-                                                                textareaRef.current?.focus();
-                                                            }}
-                                                            className="shrink-0 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-350 text-[11px] font-bold border border-slate-200/50 dark:border-white/[0.06] hover:border-slate-300 dark:hover:border-white/[0.12] transition-all duration-200 active:scale-95 cursor-pointer"
-                                                        >
-                                                            {sug.text}
-                                                        </button>
-                                                    ))}
-                                                </div>
+                                            <div className="w-full mx-auto">
                                                 {renderInputPill(true)}
                                             </div>
                                         </WelcomeScreen>

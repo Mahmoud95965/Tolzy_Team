@@ -22,25 +22,12 @@ export async function OPTIONS() {
     return NextResponse.json({}, { headers: corsHeaders() });
 }
 
-// Custom Fetch wrapper using Axios to support proxy routing
-async function customProxyFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-    const url = typeof input === 'string'
-        ? input
-        : input instanceof URL
-            ? input.toString()
-            : input.url;
-
+function getProxyConfig() {
     const proxyUrl = process.env.YOUTUBE_PROXY_URL;
-    
-    // If no proxy is set, use standard global fetch directly
-    if (!proxyUrl) {
-        return fetch(input, init);
-    }
-
-    let proxyConfig = undefined;
+    if (!proxyUrl) return undefined;
     try {
         const parsed = new URL(proxyUrl);
-        proxyConfig = {
+        return {
             protocol: parsed.protocol.replace(':', ''),
             host: parsed.hostname,
             port: parseInt(parsed.port || (parsed.protocol === 'https:' ? '443' : '80')),
@@ -51,7 +38,64 @@ async function customProxyFetch(input: RequestInfo | URL, init?: RequestInit): P
         };
     } catch (e) {
         console.error('Invalid YOUTUBE_PROXY_URL format:', e);
-        return fetch(url, init);
+        return undefined;
+    }
+}
+
+// Extract JSON object by variable name from HTML
+function extractJsonFromHtml(html: string, varName: string): any {
+    const idx = html.indexOf(varName);
+    if (idx === -1) return null;
+    const startIdx = html.indexOf('{', idx);
+    if (startIdx === -1) return null;
+
+    let depth = 0;
+    let inString = false;
+    let escape = false;
+
+    for (let i = startIdx; i < html.length; i++) {
+        const char = html[i];
+        if (escape) {
+            escape = false;
+            continue;
+        }
+        if (char === '\\') {
+            escape = true;
+            continue;
+        }
+        if (char === '"') {
+            inString = !inString;
+            continue;
+        }
+        if (!inString) {
+            if (char === '{') depth++;
+            else if (char === '}') {
+                depth--;
+                if (depth === 0) {
+                    const jsonStr = html.substring(startIdx, i + 1);
+                    try {
+                        return JSON.parse(jsonStr);
+                    } catch (err) {
+                        return null;
+                    }
+                }
+            }
+        }
+    }
+    return null;
+}
+
+// Custom Fetch wrapper using Axios to support proxy routing
+async function customProxyFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+    const url = typeof input === 'string'
+        ? input
+        : input instanceof URL
+            ? input.toString()
+            : input.url;
+
+    const proxyConfig = getProxyConfig();
+    if (!proxyConfig) {
+        return fetch(input, init);
     }
 
     // Convert Headers object to plain object
@@ -187,6 +231,119 @@ interface TranscriptChunk {
     text: string;
     start_time: number;
     duration: number;
+}
+
+// Robust 3-Tier Multi-Strategy YouTube Transcript Fetcher
+async function getFullYoutubeTranscript(videoId: string): Promise<TranscriptSegment[]> {
+    const proxyConfig = getProxyConfig();
+
+    // 1. المحاولة الأولى: جلب الترجمة العربية أو التلقائية (Arabic / Auto Arabic)
+    try {
+        const transcript = await YoutubeTranscript.fetchTranscript(videoId, {
+            lang: 'ar',
+            fetch: customProxyFetch,
+        });
+        if (transcript && transcript.length > 0) {
+            console.log(`[OmniLearn] Fetched Arabic transcript (${transcript.length} items) via YoutubeTranscript.`);
+            return transcript;
+        }
+    } catch (e: any) {
+        console.log('[OmniLearn] Arabic transcript direct fetch failed, trying default/auto fallback...', e?.message || e);
+    }
+
+    // 2. المحاولة الثانية: جلب أي لغة متاحة (Default fallback - en, auto, any language)
+    try {
+        const transcript = await YoutubeTranscript.fetchTranscript(videoId, {
+            fetch: customProxyFetch,
+        });
+        if (transcript && transcript.length > 0) {
+            console.log(`[OmniLearn] Fetched default transcript (${transcript.length} items) via YoutubeTranscript.`);
+            return transcript;
+        }
+    } catch (e: any) {
+        console.log('[OmniLearn] Default transcript fetch failed, trying raw Innertube player scraping...', e?.message || e);
+    }
+
+    // 3. المحاولة الثالثة: سحب مسار الترجمة الخام من صفحة الفيديو مباشرة (Raw Innertube player caption extraction)
+    try {
+        const res = await axios.get(`https://www.youtube.com/watch?v=${videoId}`, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+                'Accept-Language': 'ar,en;q=0.9',
+            },
+            timeout: 10000,
+            proxy: proxyConfig
+        });
+
+        const html = res.data;
+        const playerResponse = extractJsonFromHtml(html, 'ytInitialPlayerResponse') || (() => {
+            const match = html.match(/ytInitialPlayerResponse\s*=\s*({.+?});/s);
+            return match ? JSON.parse(match[1]) : null;
+        })();
+
+        if (playerResponse) {
+            const captionTracks = playerResponse?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+
+            if (captionTracks && Array.isArray(captionTracks) && captionTracks.length > 0) {
+                // تفضيل المسار العربي إن وجد، ثم الإنجليزي، ثم أول مسار متاح
+                const targetTrack = captionTracks.find((t: any) => t.languageCode === 'ar' || t.vssId?.includes('.ar') || t.vssId?.includes('a.ar'))
+                    || captionTracks.find((t: any) => t.languageCode === 'en' || t.vssId?.includes('.en'))
+                    || captionTracks[0];
+
+                if (targetTrack?.baseUrl) {
+                    const transcriptXmlRes = await axios.get(targetTrack.baseUrl, {
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+                            'Accept-Language': 'ar,en;q=0.9',
+                        },
+                        timeout: 10000,
+                        proxy: proxyConfig
+                    });
+
+                    const xmlData = transcriptXmlRes.data;
+                    const $ = cheerio.load(xmlData, { xmlMode: true });
+
+                    const segments: TranscriptSegment[] = [];
+                    $('text').each((_, el) => {
+                        const rawText = $(el).text();
+                        const start = parseFloat($(el).attr('start') || '0');
+                        const dur = parseFloat($(el).attr('dur') || $(el).attr('duration') || '0');
+                        if (rawText && rawText.trim()) {
+                            segments.push({
+                                text: decodeHTMLEntities(rawText.trim()),
+                                duration: dur * 1000,
+                                offset: start * 1000,
+                            });
+                        }
+                    });
+
+                    if (segments.length === 0) {
+                        $('p').each((_, el) => {
+                            const rawText = $(el).text();
+                            const startMs = parseFloat($(el).attr('t') || '0');
+                            const durMs = parseFloat($(el).attr('d') || '0');
+                            if (rawText && rawText.trim()) {
+                                segments.push({
+                                    text: decodeHTMLEntities(rawText.trim()),
+                                    duration: durMs,
+                                    offset: startMs,
+                                });
+                            }
+                        });
+                    }
+
+                    if (segments.length > 0) {
+                        console.log(`[OmniLearn] Successfully extracted ${segments.length} transcript segments via raw player scraping.`);
+                        return segments;
+                    }
+                }
+            }
+        }
+    } catch (rawError: any) {
+        console.error('[OmniLearn] Raw player scraping failed:', rawError?.message || rawError);
+    }
+
+    return [];
 }
 
 function chunkTranscript(segments: TranscriptSegment[], targetDurationSeconds = 240): TranscriptChunk[] {
@@ -335,11 +492,11 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'يرجى تسجيل الدخول أولاً للتحقق من الصلاحية.' }, { status: 401, headers: corsHeaders() });
         }
 
-        // --- Unified AI Quota Check (5 free requests across all tools) ---
-        const quota = await checkAndConsumeAiQuota(userId);
+        // --- Unified AI Token Quota Check ---
+        const quota = await checkAndConsumeAiQuota(userId, undefined, 200);
         if (!quota.allowed) {
             return NextResponse.json({
-                error: quota.error || 'لقد استهلكت جميع طلباتك المجانية المتاحة (5 طلبات). يرجى الترقية إلى باقة Pro للحصول على وصول غير محدود!'
+                error: quota.error || 'لقد استهلكت رصيد التوكنات المتاح في باقتك. يرجى الترقية للحصول على رصيد إضافي!'
             }, { status: 429, headers: corsHeaders() });
         }
 
@@ -385,65 +542,14 @@ export async function POST(req: NextRequest) {
         let chunksToInsert: any[] = [];
 
         if (isYouTube) {
-            // 2. Fetch Transcript for YouTube
-            let transcriptSegments: TranscriptSegment[] = [];
-            try {
-                transcriptSegments = await YoutubeTranscript.fetchTranscript(videoId, {
-                    fetch: customProxyFetch
-                });
-            } catch (transcriptError: any) {
-                console.error('Transcript fetch failed for video:', videoId, transcriptError);
-                
-                const errMsg = transcriptError?.message || '';
-                let userFriendlyError = 'لم نتمكن من جلب النص التلقائي لهذا الفيديو. يرجى التأكد من أن الفيديو يحتوي على ترجمة/نص تلقائي (Subtitles/Transcript) مفعل.';
-                
-                if (errMsg.includes('unavailable') || errMsg.includes('no longer available')) {
-                    userFriendlyError = 'عذراً، هذا الفيديو غير متوفر (قد يكون خاصاً، غير مدرج، أو تم حذفه).';
-                } else if (errMsg.includes('disabled') || errMsg.includes('Disabled')) {
-                    userFriendlyError = 'الترجمة أو النص التلقائي غير مفعل لهذا الفيديو من قبل صاحب القناة.';
-                } else if (errMsg.includes('too many requests') || errMsg.includes('captcha')) {
-                    userFriendlyError = 'تم حظر الطلب مؤقتاً من قِبل يوتيوب بسبب كثرة الطلبات. يرجى إعادة المحاولة لاحقاً.';
-                } else if (errMsg.includes('No transcripts are available')) {
-                    userFriendlyError = 'لا يوجد نص تلقائي أو ترجمة متوفرة لهذا الفيديو على يوتيوب.';
-                }
-
-                return NextResponse.json({ 
-                    error: userFriendlyError
-                }, { status: 400, headers: corsHeaders() });
-            }
-
-            if (!transcriptSegments || transcriptSegments.length === 0) {
-                return NextResponse.json({ 
-                    error: 'الترجمة التلقائية لهذا الفيديو فارغة أو غير متوفرة.' 
-                }, { status: 400, headers: corsHeaders() });
-            }
-
             title = "فيديو تعليمي";
             channel = "قناة يوتيوب";
             durationStr = "00:00";
             thumbnail = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
 
-            // Scrape page first as reliable zero-key fallback
+            // Scrape page metadata first as reliable zero-key fallback
             try {
-                const proxyUrl = process.env.YOUTUBE_PROXY_URL;
-                let proxyConfig = undefined;
-                if (proxyUrl) {
-                    try {
-                        const parsed = new URL(proxyUrl);
-                        proxyConfig = {
-                            protocol: parsed.protocol.replace(':', ''),
-                            host: parsed.hostname,
-                            port: parseInt(parsed.port || (parsed.protocol === 'https:' ? '443' : '80')),
-                            auth: parsed.username ? {
-                                username: decodeURIComponent(parsed.username),
-                                password: decodeURIComponent(parsed.password)
-                            } : undefined
-                        };
-                    } catch (e) {
-                        console.error('Invalid YOUTUBE_PROXY_URL format for scraping:', e);
-                    }
-                }
-
+                const proxyConfig = getProxyConfig();
                 const response = await axios.get(`https://www.youtube.com/watch?v=${videoId}`, {
                     headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36' },
                     timeout: 8000,
@@ -494,15 +600,39 @@ export async function POST(req: NextRequest) {
                 }
             }
 
-            // Apply Smart Chunking Algorithm for YouTube
-            const chunks = chunkTranscript(transcriptSegments);
-            chunksToInsert = chunks.map(chunk => ({
-                video_id: resourceId,
-                chunk_index: chunk.chunk_index,
-                text: chunk.text,
-                start_time: chunk.start_time,
-                duration: chunk.duration
-            }));
+            // 2. Fetch Transcript for YouTube using 3-Tier Multi-Strategy Pipeline
+            const transcriptSegments = await getFullYoutubeTranscript(videoId);
+
+            if (transcriptSegments && transcriptSegments.length > 0) {
+                // Apply Smart Temporal Chunking Algorithm for YouTube
+                const chunks = chunkTranscript(transcriptSegments);
+                chunksToInsert = chunks.map(chunk => ({
+                    video_id: resourceId,
+                    chunk_index: chunk.chunk_index,
+                    text: chunk.text,
+                    start_time: chunk.start_time,
+                    duration: chunk.duration
+                }));
+            } else {
+                // Tier 3 Fallback: Rely on video description & metadata if no captions/transcript available
+                console.log(`[OmniLearn] No transcript tracks available for ${videoId}. Using video metadata fallback.`);
+                const fallbackText = `عنوان الفيديو: ${title}\nالقناة: ${channel}\n\nتفاصيل ووصف المحتوى التعليمي:\n${description}`;
+                
+                if (description && description.trim().length > 30) {
+                    const textChunks = chunkText(fallbackText);
+                    chunksToInsert = textChunks.map((txt, idx) => ({
+                        video_id: resourceId,
+                        chunk_index: idx,
+                        text: txt,
+                        start_time: idx * 60,
+                        duration: 60
+                    }));
+                } else {
+                    return NextResponse.json({ 
+                        error: 'لم نتمكن من العثور على ترجمة أو تفريغ نصي لهذا الفيديو، ووصف الفيديو غير كافٍ لتوليد محتوى تفاعلي.' 
+                    }, { status: 400, headers: corsHeaders() });
+                }
+            }
 
         } else {
             // 2. Scraping general web page / Coursera

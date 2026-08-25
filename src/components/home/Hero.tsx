@@ -18,7 +18,7 @@ export default function HeroSection() {
     : 'سجّل دخولك وابدأ مع Tolzy مجاناً واستكشف أفضل الأدوات.';
 
   const categories = [
-    { name: 'Tolzy Copilot', icon: <Bot size={28} />, color: 'from-blue-500 to-indigo-500' },
+    { name: 'TOLZY AXIOM', icon: <Bot size={28} />, color: 'from-blue-500 to-indigo-500' },
     { name: 'المفكر (Pro)', icon: <BrainCircuit size={28} />, color: 'from-violet-500 to-fuchsia-500' },
     { name: 'سرعة وأولوية', icon: <Zap size={28} />, color: 'from-amber-500 to-orange-500' },
     { name: 'حماية وموثوقية', icon: <ShieldCheck size={28} />, color: 'from-emerald-500 to-teal-500' },

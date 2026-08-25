@@ -45,19 +45,19 @@ export default function WelcomeBanner() {
             </div>
             <p className="text-sm font-medium truncate">
               {isNewVisitor ? (
-                <>مرحباً بك في Tolzy! 👋 دليلك الشامل لأدوات AI - اكتشف 1000+ أداة أو اسأل Copilot</>
+                <>مرحباً بك في Tolzy! 👋 دليلك الشامل لأدوات AI - اكتشف 1000+ أداة أو اسأل AXIOM</>
               ) : (
-                <>💡 جرب Copilot للحصول على توصيات ذكية للأدوات المناسبة لمشروعك</>
+                <>💡 جرب AXIOM للحصول على توصيات ذكية وإجابات فائقة لمشروعك</>
               )}
             </p>
           </div>
           
           <div className="flex items-center gap-2 flex-shrink-0">
             <Link
-              href={isNewVisitor ? '/tools' : '/copilot'}
+              href={isNewVisitor ? '/tools' : '/axiom'}
               className="hidden sm:inline-flex items-center px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-sm font-medium transition-colors"
             >
-              {isNewVisitor ? 'استكشف الأدوات' : 'جرب Copilot'}
+              {isNewVisitor ? 'استكشف الأدوات' : 'جرب AXIOM'}
             </Link>
             <button
               onClick={dismissBanner}

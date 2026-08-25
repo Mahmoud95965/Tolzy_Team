@@ -73,22 +73,6 @@ export default function BuildWithAIPage() {
         );
     }
 
-    // Free plan users
-    if (!isPro) {
-        return (
-            <div className="min-h-screen bg-slate-50 dark:bg-[#0a0a0a] flex items-center justify-center px-4">
-                <div className="text-center max-w-md">
-                    <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-3xl shadow-xl">💎</div>
-                    <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-3">ميزة حصرية للمشتركين</h2>
-                    <p className="text-slate-500 dark:text-slate-400 mb-6 text-sm">ميزة "ابنِ مع الذكاء الاصطناعي" متاحة فقط لمشتركي خطة PRO وأعلى. ارتقِ بحسابك الآن للوصول الكامل.</p>
-                    <Link href="/pricing" className="inline-flex items-center gap-2 px-6 py-3 bg-violet-600 text-white rounded-xl font-bold hover:bg-violet-700 transition-all shadow-lg shadow-violet-500/20">
-                        ترقية الحساب <ArrowRight className="w-4 h-4 rtl:rotate-180" />
-                    </Link>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-[#0a0a0a] relative overflow-hidden">
             {/* Background Effects */}
@@ -107,8 +91,20 @@ export default function BuildWithAIPage() {
 
                 {/* Error State */}
                 {error && (
-                    <div className="max-w-2xl mx-auto mb-8 p-4 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800/30 rounded-2xl text-center">
-                        <p className="text-sm text-red-600 dark:text-red-400 font-bold">{error}</p>
+                    <div className="max-w-2xl mx-auto mb-8 p-5 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 border border-red-200 dark:border-red-800/40 rounded-2xl text-center shadow-sm">
+                        <div className="flex flex-col items-center gap-3">
+                            <span className="text-2xl">⚡</span>
+                            <p className="text-sm text-red-700 dark:text-red-300 font-bold leading-relaxed">{error}</p>
+                            {(error.includes('توكن') || error.includes('شحن') || error.includes('ترقية') || error.includes('باقة')) && (
+                                <Link 
+                                    href="/pricing" 
+                                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-xl font-black text-xs shadow-md shadow-violet-500/20 transition-all"
+                                >
+                                    <span>شحن الرصيد / ترقية الباقة الآن 🚀</span>
+                                    <ArrowRight className="w-4 h-4 rtl:rotate-180" />
+                                </Link>
+                            )}
+                        </div>
                     </div>
                 )}
 
@@ -155,6 +151,7 @@ export default function BuildWithAIPage() {
                         isLoading={isLoading}
                         idea={currentIdea}
                         userId={user?.uid}
+                        projectId={projectId}
                         onNewResult={(newResult: any) => setResult(newResult)}
                     />
                     </>

@@ -12,7 +12,8 @@ import { updateProfile } from 'firebase/auth';
 import { 
   User, Camera, Loader, Mail, Calendar, Shield, Settings, 
   Edit2, Check, X, Award, Heart, Bookmark, Activity, 
-  Upload, BookOpen, FileText, Zap, ChevronRight, LogOut, Bell, Lock, Phone, MapPin, Globe, AlertCircle, MessageSquare 
+  Upload, BookOpen, FileText, Zap, ChevronRight, LogOut, Bell, Lock, Phone, MapPin, Globe, AlertCircle, MessageSquare,
+  Crown, Gauge, ArrowUpRight
 } from 'lucide-react';
 import { auth, db } from '../config/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -53,9 +54,7 @@ const ProfilePage: React.FC = () => {
   const [viewedLoading, setViewedLoading] = useState(false);
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const [loadingUserPosts, setLoadingUserPosts] = useState(false);
-
-  const normalizedPlan = String(viewedUser?.plan || userProfile?.plan || 'free').toLowerCase();
-  const isProPlan = normalizedPlan.includes('pro') || normalizedPlan.includes('ultra');
+  const [tokenUsage, setTokenUsage] = useState<any>(null);
 
   // Determine if viewing own profile or someone else's
   const isOwnProfile = !profileUsername || (viewedUser?.uid === user?.uid) || (userData?.displayName && profileUsername === userData.displayName.trim().toLowerCase().replace(/[^a-zA-Z0-9]/g, ''));
@@ -72,6 +71,29 @@ const ProfilePage: React.FC = () => {
     role: userData?.role || 'user',
     plan: userProfile?.plan || 'free',
   };
+
+  // Fetch real token usage for the active user
+  useEffect(() => {
+    const fetchUsage = async () => {
+      const targetUid = activeUser.uid;
+      if (!targetUid) return;
+      try {
+        const res = await fetch(`/api/user/token-usage?userId=${targetUid}`);
+        if (res.ok) {
+          const data = await res.json();
+          setTokenUsage(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch user token usage on profile:', err);
+      }
+    };
+    fetchUsage();
+  }, [activeUser.uid]);
+
+  const rawPlan = tokenUsage?.plan || String(viewedUser?.plan || userProfile?.plan || 'free').toLowerCase();
+  const isMaxPlan = rawPlan.includes('max') || rawPlan.includes('ultra');
+  const isProPlan = !isMaxPlan && (rawPlan.includes('pro') || rawPlan.includes('plus'));
+  const isAdminPlan = rawPlan === 'admin' || (isOwnProfile && (userData?.role === 'admin' || user?.email?.toLowerCase() === 'mahmoud.m.moussa5310@gmail.com'));
 
   // Check admin privileges (only for own profile)
   const isAdmin = isOwnProfile && (userData?.role === 'admin' || user?.email?.toLowerCase() === 'mahmoud.m.moussa5310@gmail.com');
@@ -508,11 +530,72 @@ const ProfilePage: React.FC = () => {
                 <Calendar className="w-3.5 h-3.5 text-purple-500" />
                 <span>عضو منذ {activeUser.createdAt ? new Date(activeUser.createdAt).toLocaleDateString('ar-EG') : 'غير محدد'}</span>
               </div>
-              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-full border border-slate-100 dark:border-slate-700/50">
+              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-3.5 py-1.5 rounded-full border border-slate-100 dark:border-slate-700/50">
                 <Shield className="w-3.5 h-3.5 text-amber-500" />
-                <span>الخطة: {isProPlan ? 'Pro' : 'Free'}</span>
+                <span className="font-bold">
+                  الخطة: {
+                    isAdminPlan ? 'حساب الإدارة (Admin 👑)' :
+                    isMaxPlan ? 'خطة الاستوديو (MAX 2.5M) 👑' :
+                    isProPlan ? 'الخطة الاحترافية (Pro 500K) ⭐' :
+                    'الخطة المجانية (Free 10K)'
+                  }
+                </span>
               </div>
             </div>
+
+            {/* Real Token Usage Box */}
+            {isOwnProfile && tokenUsage && (
+              <div className="mb-8 max-w-xl mx-auto p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 text-right space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Gauge className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">رصيد واستخدام التوكن الحقيقي (AI Tokens)</h3>
+                  </div>
+                  <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300">
+                    {tokenUsage.percentageUsed || 0}% مستهلك
+                  </span>
+                </div>
+
+                {/* Progress bar */}
+                <div className="w-full h-2.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full ${
+                      (tokenUsage.percentageUsed || 0) >= 90 ? 'bg-rose-500' :
+                      (tokenUsage.percentageUsed || 0) >= 75 ? 'bg-amber-500' : 'bg-blue-600'
+                    } transition-all duration-500 rounded-full`}
+                    style={{ width: `${tokenUsage.percentageUsed || 0}%` }}
+                  />
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-2 text-xs font-mono pt-1 text-center">
+                  <div className="bg-white dark:bg-slate-900/80 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 block mb-0.5">المستهلك</span>
+                    <span className="font-bold text-slate-900 dark:text-white">{(tokenUsage.tokensUsed || 0).toLocaleString()}</span>
+                  </div>
+                  <div className="bg-white dark:bg-slate-900/80 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 block mb-0.5">المتبقي</span>
+                    <span className="font-bold text-blue-600 dark:text-blue-400">{(tokenUsage.tokensRemaining || 0).toLocaleString()}</span>
+                  </div>
+                  <div className="bg-white dark:bg-slate-900/80 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 block mb-0.5">إجمالي الباقة</span>
+                    <span className="font-bold text-slate-700 dark:text-slate-300">{(tokenUsage.tokenAllowance || 0).toLocaleString()}</span>
+                  </div>
+                </div>
+
+                {!isAdminPlan && (
+                  <div className="pt-1 text-left">
+                    <Link 
+                      href="/pricing"
+                      className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      <span>ترقية الباقة أو زيادة الرصيد</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row w-full sm:w-auto items-center justify-center gap-3">

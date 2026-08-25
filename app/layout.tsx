@@ -8,7 +8,6 @@ import { I18nProvider } from '@/src/components/providers/I18nProvider';
 import { Toaster } from 'react-hot-toast';
 import { generateSearchActionSchema } from '@/src/utils/seoHelpers';
 import PwaInstallPrompt from '@/src/components/common/PwaInstallPrompt';
-import MaintenanceGate from '@/src/components/common/MaintenanceGate';
 import '@/src/index.css';
 
 // Removed Almarai config to bypass build-time fetch. Using standard <link> in <head> instead.
@@ -189,9 +188,7 @@ export default function RootLayout({
                     <AuthProvider>
                         <ToolsProvider>
                             <I18nProvider>
-                                <MaintenanceGate>
-                                    {children}
-                                </MaintenanceGate>
+                                {children}
                                 <PwaInstallPrompt />
                                 <Toaster position="bottom-center" toastOptions={{ duration: 3000 }} />
                             </I18nProvider>

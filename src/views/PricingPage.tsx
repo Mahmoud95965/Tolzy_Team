@@ -1,51 +1,27 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AlertCircle, Phone, Send, Wallet, X, Upload, Loader, Check, Zap, Gift, Copy, Sparkles, Rocket, Brain, HelpCircle, Shield, CreditCard, ChevronDown, CheckCircle2, MinusCircle } from 'lucide-react';
+import { 
+  Check, ArrowRight, Wallet, X, Upload, Loader, 
+  Copy, CheckCircle2, Shield, Sparkles, HelpCircle, Phone, Send,
+  Download, Clock, ExternalLink, CreditCard, Zap, CheckCheck, AlertCircle
+} from 'lucide-react';
 import { useAuth } from '@/src/context/AuthContext';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
-
-const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;700;800;900&display=swap');
-
-  .font-display {
-    font-family: 'Cairo', sans-serif;
-  }
-  .font-body {
-    font-family: 'Cairo', sans-serif;
-  }
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(156, 163, 175, 0.3);
-    border-radius: 10px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(156, 163, 175, 0.5);
-  }
-  
-  /* Smooth transitions */
-  * {
-    transition-property: background-color, border-color, color, fill, stroke;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 200ms;
-  }
-`;
+import UserProfile from '@/src/components/auth/UserProfile';
 
 interface Plan {
+  id: 'free' | 'pro' | 'max';
   title: string;
-  price: number;
-  description: string;
+  badge?: string;
+  subtitle: string;
+  priceEgp: number;
+  priceUsd: number;
+  tokenCount: string;
   features: string[];
   cta: string;
-  serviceKey?: string;
-  isPro?: boolean;
-  icon: any;
+  isPopular?: boolean;
 }
 
 export default function PricingPage() {
@@ -58,6 +34,14 @@ export default function PricingPage() {
   const [compressing, setCompressing] = useState(false);
   const [isManualPaymentModalOpen, setIsManualPaymentModalOpen] = useState(false);
   const [paymentStep, setPaymentStep] = useState(1);
+  const [selectedPlanId, setSelectedPlanId] = useState<'free' | 'pro' | 'max'>('pro');
+  
+  // XPay Payment Integration states
+  const [paymentMode, setPaymentMode] = useState<'xpay' | 'manual'>('xpay');
+  const [isXPayLoading, setIsXPayLoading] = useState(false);
+  const [xpaySuccessModalOpen, setXpaySuccessModalOpen] = useState(false);
+  const [xpaySuccessPlan, setXpaySuccessPlan] = useState<'pro' | 'max'>('pro');
+  const [xpaySuccessTokens, setXpaySuccessTokens] = useState<number>(500000);
   
   // Promo code states
   const [promoCode, setPromoCode] = useState('');
@@ -67,22 +51,53 @@ export default function PricingPage() {
   const [promoLoading, setPromoLoading] = useState(true);
   const { user } = useAuth();
   
-  // Pricing constants
-  const ORIGINAL_PRICE = 299;
-  const PROMO_PRICE = 209;
+  // Clean, official prices requested by the user with 50% discount on TOLZY2030
+  const PRO_ORIGINAL_PRICE = 650;
+  const PRO_PROMO_PRICE = 325; // 50% off
+  const MAX_ORIGINAL_PRICE = 1950;
+  const MAX_PROMO_PRICE = 975; // 50% off
 
   // File upload validation constants
   const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/bmp'];
   const MAX_FILE_SIZE_MB = 5;
   const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
-  const VALID_PROMO_CODES: { [key: string]: number } = {
-    'MOFATHY10': PROMO_PRICE,
+  const VALID_PROMO_CODES: { [key: string]: boolean } = {
+    'TOLZY2030': true,
   };
 
   // Payment details
   const whatsappNumber = '201027016529';
   const vodafoneCash = '01027016529';
   const instapay = 'mahmoud159208@instapay';
+
+  const [activePlan, setActivePlan] = useState<'free' | 'pro' | 'max' | 'admin'>('free');
+
+  // Handle XPay return redirect verification
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const urlParams = new URLSearchParams(window.location.search);
+    const xpayStatus = urlParams.get('xpay');
+    const sessionId = urlParams.get('session_id');
+
+    if (xpayStatus === 'success' && sessionId) {
+      const verifyXPay = async () => {
+        try {
+          const res = await fetch(`/api/payment/xpay/verify?session_id=${sessionId}`);
+          const data = await res.json();
+          if (data.success) {
+            const planResult = data.plan === 'max' ? 'max' : 'pro';
+            setXpaySuccessPlan(planResult);
+            setXpaySuccessTokens(planResult === 'max' ? 2500000 : 500000);
+            setActivePlan(planResult);
+            setXpaySuccessModalOpen(true);
+          }
+        } catch (e) {
+          console.error('Failed to verify XPay session on load:', e);
+        }
+      };
+      verifyXPay();
+    }
+  }, []);
 
   useEffect(() => {
     const fetchPromoStatus = async () => {
@@ -100,6 +115,35 @@ export default function PricingPage() {
     fetchPromoStatus();
   }, []);
 
+  // Fetch the user's true active plan from DB
+  useEffect(() => {
+    if (!user?.uid) {
+      setActivePlan('free');
+      return;
+    }
+    const fetchUserPlan = async () => {
+      try {
+        const res = await fetch(`/api/user/token-usage?userId=${user.uid}`);
+        if (res.ok) {
+          const data = await res.json();
+          const fetchedPlan = String(data.plan || 'free').toLowerCase();
+          if (fetchedPlan.includes('admin') || user.email === 'mahmoud.m.moussa5310@gmail.com') {
+            setActivePlan('admin');
+          } else if (fetchedPlan.includes('max') || fetchedPlan.includes('ultra')) {
+            setActivePlan('max');
+          } else if (fetchedPlan.includes('pro') || fetchedPlan.includes('plus')) {
+            setActivePlan('pro');
+          } else {
+            setActivePlan('free');
+          }
+        }
+      } catch (e) {
+        console.error('Failed to fetch user plan on PricingPage:', e);
+      }
+    };
+    fetchUserPlan();
+  }, [user?.uid, user?.email]);
+
   const handlePromoCodeChange = (value: string) => {
     const upperValue = value.toUpperCase().trim();
     setPromoCode(upperValue);
@@ -111,7 +155,7 @@ export default function PricingPage() {
       setPromoError('');
     } else if (isSoldOut) {
       setPromoApplied(false);
-      setPromoError('✗ عذراً، نفدت جميع مقاعد العرض الخاص');
+      setPromoError('✗ عذراً، نفدت جميع مقاعد كود الخصم');
     } else if (VALID_PROMO_CODES[upperValue] && promoStatus?.is_available) {
       setPromoApplied(true);
       setPromoError('');
@@ -121,7 +165,15 @@ export default function PricingPage() {
     }
   };
 
-  const currentPrice = promoApplied && (promoStatus?.remaining_seats > 0) ? PROMO_PRICE : ORIGINAL_PRICE;
+  const getPlanPrice = (planId: 'free' | 'pro' | 'max') => {
+    if (planId === 'free') return 0;
+    if (planId === 'max') {
+      return promoApplied && (promoStatus?.remaining_seats > 0) ? MAX_PROMO_PRICE : MAX_ORIGINAL_PRICE;
+    }
+    return promoApplied && (promoStatus?.remaining_seats > 0) ? PRO_PROMO_PRICE : PRO_ORIGINAL_PRICE;
+  };
+
+  const currentPrice = getPlanPrice(selectedPlanId);
   
   const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -129,13 +181,78 @@ export default function PricingPage() {
     setTimeout(() => setCopiedText(null), 2000);
   };
 
-  const handleCheckout = () => {
+  const getCtaInfo = (planId: 'free' | 'pro' | 'max') => {
     if (!user) {
-      alert('يرجى تسجيل الدخول أولاً للمتابعة');
+      if (planId === 'free') return { text: 'ابدأ مجاناً', disabled: false, isCurrent: false };
+      if (planId === 'pro') return { text: 'ابدأ مع Pro', disabled: false, isCurrent: false };
+      return { text: 'ابدأ مع MAX', disabled: false, isCurrent: false };
+    }
+
+    if (activePlan === 'admin') {
+      if (planId === 'max') return { text: '✓ مشمولة (حساب الإدارة 👑)', disabled: true, isCurrent: true };
+      return { text: '✓ مشمولة في حسابك', disabled: true, isCurrent: false };
+    }
+
+    if (activePlan === 'max') {
+      if (planId === 'max') return { text: '✓ خطتك الحالية النشطة 👑', disabled: true, isCurrent: true };
+      return { text: 'مشمولة في باقة MAX', disabled: true, isCurrent: false };
+    }
+
+    if (activePlan === 'pro') {
+      if (planId === 'pro') return { text: '✓ خطتك الحالية النشطة ⭐', disabled: true, isCurrent: true };
+      if (planId === 'free') return { text: 'الخطة السابقة', disabled: true, isCurrent: false };
+      return { text: 'ترقية إلى MAX (2.5M)', disabled: false, isCurrent: false };
+    }
+
+    // Default free user
+    if (planId === 'free') return { text: '✓ خطتك الحالية', disabled: true, isCurrent: true };
+    if (planId === 'pro') return { text: 'ترقية إلى Pro (500K)', disabled: false, isCurrent: false };
+    return { text: 'ترقية إلى MAX (2.5M)', disabled: false, isCurrent: false };
+  };
+
+  const handleCheckout = (planId: 'free' | 'pro' | 'max') => {
+    if (!user) {
+      window.location.href = '/auth';
       return;
     }
+    const cta = getCtaInfo(planId);
+    if (cta.isCurrent || cta.disabled) {
+      window.location.href = '/tools';
+      return;
+    }
+    setSelectedPlanId(planId);
+    setPaymentMode('xpay');
     setPaymentStep(1);
     setIsManualPaymentModalOpen(true);
+  };
+
+  const handleXPayCheckout = async () => {
+    if (!user) {
+      window.location.href = '/auth';
+      return;
+    }
+    setIsXPayLoading(true);
+    try {
+      const res = await fetch('/api/payment/xpay/create-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan: selectedPlanId,
+          promoCode: promoApplied ? promoCode : '',
+          userId: user.uid,
+          userEmail: user.email || '',
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || 'فشل إنشاء جلسة الدفع عبر XPay');
+      }
+      // Redirect directly to XPay Checkout
+      window.location.href = data.url;
+    } catch (e: any) {
+      alert(e.message || 'حدث خطأ أثناء الاتصال ببوابة XPay');
+      setIsXPayLoading(false);
+    }
   };
 
   const compressImage = (file: File): Promise<File> => {
@@ -195,7 +312,9 @@ export default function PricingPage() {
     }
   };
 
-  const handleSendViaWhatsApp = async () => {
+  const [submittedReceiptUrl, setSubmittedReceiptUrl] = useState<string | null>(null);
+
+  const handleSubmitReceipt = async () => {
     if (!firstName || !lastName || !phoneNumber || !receiptFile) {
       alert('يرجى استكمال جميع البيانات وإرفاق صورة الإيصال');
       return;
@@ -210,67 +329,41 @@ export default function PricingPage() {
 
       const fileName = `receipts/${Date.now()}-${receiptFile.name}`;
       
-      try {
-        const { error: uploadError } = await supabase.storage.from('payments').upload(fileName, receiptFile);
-        if (uploadError) throw uploadError;
+      const { error: uploadError } = await supabase.storage.from('payments').upload(fileName, receiptFile);
+      if (uploadError) throw uploadError;
 
-        const { data } = supabase.storage.from('payments').getPublicUrl(fileName);
+      const { data } = supabase.storage.from('payments').getPublicUrl(fileName);
+      const publicUrl = data.publicUrl;
 
-        if (promoApplied && promoStatus?.is_available) {
-          try {
-            const { data: currentPromo } = await supabase
-              .from('promotions')
-              .select('mofathy_promo_count')
-              .eq('id', 1)
-              .single();
+      // Submit payment request to backend API (saves in DB and notifies Admin via email)
+      const res = await fetch('/api/payment/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user?.uid,
+          userEmail: user?.email,
+          firstName,
+          lastName,
+          phoneNumber,
+          plan: selectedPlanId,
+          amount: currentPrice,
+          promoCode: promoApplied ? promoCode : null,
+          receiptUrl: publicUrl
+        })
+      });
 
-            const currentCount = currentPromo?.mofathy_promo_count || 0;
-            if (currentCount < 10) {
-              await supabase
-                .from('promotions')
-                .update({ mofathy_promo_count: currentCount + 1 })
-                .eq('id', 1);
-              
-              const res = await fetch('/api/promo/status');
-              const newStatus = await res.json();
-              setPromoStatus(newStatus);
-            }
-          } catch (updateError) {
-            console.error('⚠️ Promo counter update failed:', updateError);
-          }
-        }
-
-        if (user?.uid) {
-          try {
-            await supabase
-              .from('user_limits')
-              .upsert({
-                user_id: user.uid,
-                plan: 'pro',
-                email: user?.email || '',
-                updated_at: new Date().toISOString()
-              }, { onConflict: 'user_id' });
-          } catch (subscriptionError) {
-            console.error('⚠️ DB activation error:', subscriptionError);
-          }
-        }
-
-        const message = `🎉 طلب اشتراك جديد (Tolzy Pro)\n\n👤 الاسم: ${firstName} ${lastName}\n📧 البريد: ${user?.email}\n📱 الجوال: ${phoneNumber}\n💰 المبلغ: ${currentPrice} ج.م\n${promoApplied ? `🎁 كود الخصم: ${promoCode}` : ''}\n\nرابط الإيصال: ${data.publicUrl}`;
-
-        const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-        window.open(whatsappURL, '_blank');
-
-        setIsManualPaymentModalOpen(false);
-        setFirstName('');
-        setLastName('');
-        setPhoneNumber('');
-        setReceiptFile(null);
-      } catch (storageError: any) {
-        alert('❌ واجهتنا مشكلة أثناء رفع الإيصال. الرجاء المحاولة مجدداً.');
-        console.error(storageError);
+      if (!res.ok) {
+        throw new Error('فشل إرسال طلب الاشتراك');
       }
-    } catch (error) {
-      alert('حدث خطأ غير متوقع. يرجى المحاولة لاحقاً.');
+
+      setSubmittedReceiptUrl(publicUrl);
+      
+      // Advance to in-app confirmation (NO WhatsApp redirect, strictly waiting for admin)
+      setPaymentStep(4);
+
+    } catch (error: any) {
+      console.error('Payment submit error:', error);
+      alert('❌ حدث خطأ أثناء إرسال البيانات، يرجى المحاولة مرة أخرى.');
     } finally {
       setIsUploading(false);
     }
@@ -278,443 +371,726 @@ export default function PricingPage() {
 
   const plans: Plan[] = [
     {
-      title: 'الباقة الأساسية',
-      price: 0,
-      icon: Brain,
-      description: 'انطلاقة مثالية لتجربة أدوات الذكاء الاصطناعي مجاناً وبلا التزامات، تتيح لك اكتشاف قدرات المنصة.',
+      id: 'free',
+      title: 'الخطة المجانية — Free Plan',
+      subtitle: 'البداية المثالية لتجربة قوة الذكاء الاصطناعي واستكشاف المنظومة.',
+      priceEgp: 0,
+      priceUsd: 0,
+      tokenCount: '10,000 توكن ترحيبي',
       features: [
-        '5 طلبات ذكية يومياً في Copilot',
-        'وصول لأكثر من 1000 أداة أساسية',
-        '🤖 مساعد Tolzy الأساسي',
-        '⚡ أداء مستقر للسيرفرات'
+        '10,000 توكن ترحيبي للاستخدام الفوري.',
+        'تجربة تلخيص وتحليل الفيديوهات في OmniLearn (حتى 3 فيديوهات).',
+        'تخطيط أولي لمشروع برمجي واحد عبر TOLZY Build.',
+        'استكشاف مكتبة الأوامر ودليل الأدوات الذكية في Directory & Prompts.',
+        'وصول للنماذج الأساسية بسرعة استجابة قياسية.',
       ],
-      cta: 'ابدأ مجاناً الآن',
-      isPro: false,
+      cta: 'أنت في الخطة المجانية حالياً',
+      isPopular: false,
     },
     {
-      title: 'باقة المحترفين (Pro)',
-      price: ORIGINAL_PRICE,
-      icon: Rocket,
-      description: 'أطلق العنان لإنتاجيتك مع صلاحيات كاملة وأدوات مصممة خصيصاً للمحترفين وصناع المحتوى.',
+      id: 'pro',
+      title: 'الخطة الاحترافية — Pro Plan',
+      badge: 'الأكثر شيوعاً / Most Popular',
+      subtitle: 'للمطورين، الطلاب، وصناع المحتوى الذين يبحثون عن أقصى إنتاجية يومية.',
+      priceEgp: PRO_ORIGINAL_PRICE,
+      priceUsd: 19,
+      tokenCount: '500,000 توكن شهرياً',
       features: [
-        '♾️ مساعد Copilot غير محدود بأقوى النماذج',
-        '🚀 ميزة البناء بالذكاء الاصطناعي (Build with AI)',
-        '🧠 ميزة TOLZY OmniLearn للتعلم الذكي',
-        '💡 التلخيص الذكي للمنشورات والتعليقات',
-        '⚡ سرعة وأولوية فائقة على السيرفرات',
-        '🎟️ وصول كامل للأدوات والخدمات بلا حدود',
+        '500,000 توكن شهرياً مدعومة بنموذج Kimi 2.5 Pro فائق الذكاء.',
+        'استخدام غير محدود لتحليل المحاضرات والكويزات في OmniLearn.',
+        'توليد معماريات برمجية كاملة (Schemas, Prompts, PRD) عبر TOLZY Build.',
+        'تصدير العروض التقديمية والمستندات الذكية عبر TOLZY Flow.',
+        'زمن استجابة سريع ودعم فني مباشر عبر المنصة.',
       ],
-      cta: 'اشترك الآن عبر فودافون كاش',
-      serviceKey: 'pro',
-      isPro: true,
+      cta: 'ترقية إلى Pro',
+      isPopular: true,
+    },
+    {
+      id: 'max',
+      title: 'خطة الاستوديو والفرق — Max / Studio Plan',
+      subtitle: 'للمحترفين، المستقلين الكثيفي الاستخدام، والفرق التقنية الناشئة.',
+      priceEgp: MAX_ORIGINAL_PRICE,
+      priceUsd: 49,
+      tokenCount: '2,500,000 توكن شهرياً',
+      features: [
+        '2,500,000 توكن شهرياً لأداء مكثف وسياق برمجي غير محدود.',
+        'أولوية معالجة قصوى (Priority Execution) لجميع الأدوات والمحركات.',
+        'استخراج وتصدير مشاريع Build و Flow بصيغ متعددة متكاملة للفرق.',
+        'معالجة ملفات ومستندات ضخمة بأعلى سعة سياق مع Kimi Pro.',
+        'شارة العضوية المتقدمة ودعم فني مخصص على مدار الساعة.',
+      ],
+      cta: 'ترقية إلى MAX',
+      isPopular: false,
     },
   ];
 
   const comparisonFeatures = [
-    { name: 'الطلبات اليومية في Copilot', free: '5 طلبات يومياً', pro: 'عدد غير محدود' },
-    { name: 'ميزة البناء Build with AI', free: 'غير متوفرة', pro: 'وصول كامل وحصري' },
-    { name: 'ميزة TOLZY OmniLearn', free: 'غير متوفرة', pro: 'وصول كامل وحصري' },
-    { name: 'التلخيص الذكي للتعليقات', free: 'غير متوفرة', pro: 'وصول كامل وحصري' },
-    { name: 'الوصول للأدوات والخدمات', free: 'أكثر من 1000 أداة', pro: 'كافة الأدوات والخدمات بلا حدود' },
-    { name: 'سرعة السيرفرات والأولوية', free: 'مستقرة', pro: 'أولوية سريعة فائقة' },
+    { name: 'حصة التوكن الذكي (Token Allowance)', free: '10,000 توكن ترحيبي', pro: '500,000 توكن شهرياً', max: '2,500,000 توكن شهرياً' },
+    { name: 'محرك النماذج والذكاء الاصطناعي', free: 'النماذج القياسية', pro: 'Kimi 2.5 Pro فائق الذكاء', max: 'Kimi Pro بأعلى سعة سياق' },
+    { name: 'منصة التعلم الذكي OmniLearn', free: 'حتى 3 فيديوهات', pro: 'استخدام غير محدود وتحليل كامل', max: 'استخدام غير محدود + أولوية معالجة' },
+    { name: 'هندسة المشاريع TOLZY Build', free: 'مشروع واحد (تخطيط أولي)', pro: 'معماريات كاملة (SQL, PRD, Prompts)', max: 'تصدير مشاريع متكاملة للفرق بصيغ متعددة' },
+    { name: 'العروض والمستندات الذكية TOLZY Flow', free: 'غير متوفر', pro: 'تصدير كامل', max: 'تصدير كامل ومتقدم للفرق' },
+    { name: 'معدل الطلبات وأولوية الاستجابة', free: 'سرعة قياسية (5 RPM)', pro: 'استجابة سريعة (30 RPM)', max: 'أولوية معالجة قصوى (80 RPM) ⚡' },
+    { name: 'الدعم الفني والخدمة', free: 'دعم المجتمع', pro: 'دعم فني مباشر عبر المنصة', max: 'دعم فني مخصص وشارة العضوية 24/7' },
   ];
 
   return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: styles }} />
-      <div dir="rtl" className="min-h-screen bg-[#fbf9f6] dark:bg-[#050507] text-[#1b1c1a] dark:text-slate-200 transition-colors duration-300 font-body antialiased">
-        
-        {/* TopNavBar */}
-        <header className="fixed top-0 w-full z-50 bg-[#fbf9f6]/80 dark:bg-[#050507]/80 backdrop-blur-md border-b border-[#d5c3b9] dark:border-slate-800/60 h-16">
-          <div className="max-w-[1200px] mx-auto px-6 flex justify-between items-center h-full">
-            <div className="flex items-center gap-12">
-              <Link href="/" className="font-display text-2xl font-black tracking-tight text-[#1b1c1a] dark:text-white uppercase">Tolzy</Link>
-              <nav className="hidden md:flex gap-8 items-center">
-                <Link href="/learn" className="text-[#464742] dark:text-slate-400 font-semibold hover:text-black dark:hover:text-white transition-colors">تعلّم</Link>
-                <Link href="/tools" className="text-[#464742] dark:text-slate-400 font-semibold hover:text-black dark:hover:text-white transition-colors">الأدوات</Link>
-                <Link href="/pricing" className="text-black dark:text-white font-bold border-b-2 border-black dark:border-white pb-1">الباقات</Link>
-                <Link href="/docs" className="text-[#464742] dark:text-slate-400 font-semibold hover:text-black dark:hover:text-white transition-colors">الوثائق</Link>
-              </nav>
-            </div>
-            <div className="flex items-center gap-6">
-              {!user ? (
-                <>
-                  <Link href="/auth" className="hidden md:inline-block font-bold text-sm hover:opacity-70 transition-opacity">تسجيل الدخول</Link>
-                  <Link href="/auth" className="bg-black dark:bg-white text-white dark:text-black px-6 py-2 rounded-lg font-bold text-sm hover:-translate-y-0.5 hover:shadow-lg transition-all">ابدأ مجاناً</Link>
-                </>
-              ) : (
-                <Link href="/profile" className="flex items-center gap-2 font-bold text-sm bg-white dark:bg-slate-900 border border-[#d5c3b9] dark:border-slate-800 px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                  <div className="w-6 h-6 rounded-full bg-[#7e5538] text-white flex items-center justify-center text-[10px] font-sans">
-                    {user.email?.charAt(0).toUpperCase()}
-                  </div>
-                  <span className="hidden sm:inline">حسابي</span>
-                </Link>
-              )}
-            </div>
+    <div dir="rtl" className="min-h-screen bg-white dark:bg-black text-black dark:text-white font-sans antialiased selection:bg-blue-600 selection:text-white">
+      
+      {/* Top Minimal Navigation */}
+      <header className="sticky top-0 z-40 w-full bg-white/90 dark:bg-black/90 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-800">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <Link href="/" className="font-black text-xl tracking-tight text-black dark:text-white uppercase hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              TOLZY
+            </Link>
+            <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-neutral-600 dark:text-neutral-400">
+              <Link href="/learn" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">تعلّم</Link>
+              <Link href="/tools" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">الأدوات</Link>
+              <Link href="/pricing" className="text-blue-600 dark:text-blue-400 font-bold">الباقات</Link>
+              <Link href="/docs" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">الوثائق</Link>
+            </nav>
           </div>
-        </header>
-
-        <main className="pt-32 pb-24">
-          
-          {/* Hero Section */}
-          <section className="max-w-[1200px] mx-auto px-6 text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-5 py-1.5 rounded-full bg-[#e3e3de] dark:bg-slate-900 border border-[#d5c3b9] dark:border-slate-800 text-[#464742] dark:text-slate-400 text-xs font-bold uppercase tracking-wide mb-8 shadow-sm">
-              <Sparkles className="w-4 h-4 text-[#7e5538]" />
-              <span>خطط أسعار جديدة كلياً</span>
-            </div>
-            <h1 className="font-display text-5xl md:text-7xl font-bold mb-8 text-[#1b1c1a] dark:text-white leading-tight">
-              استثمر في <span className="text-[#7e5538] dark:text-[#f0bc97]">ذكائك</span>
-            </h1>
-            <p className="text-xl text-[#464742] dark:text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium mb-12">
-              اختر الباقة التي تناسب طموحاتك. أدوات ذكاء اصطناعي قوية صُممت خصيصاً لتلبي احتياجات المبدعين والمطورين والمحترفين.
-            </p>
-
-            {/* Promo Banner Integrated */}
-            {!promoLoading && promoStatus?.is_available && promoStatus?.remaining_seats > 0 && (
-              <div className="inline-flex flex-col sm:flex-row items-center gap-4 bg-[#ffdcc5] dark:bg-[#301400] p-4 rounded-2xl border border-[#d4a27f] dark:border-[#633e23] shadow-md mb-12 transform hover:scale-[1.02] transition-transform">
-                <p className="font-bold text-sm text-[#633e23] dark:text-[#f0bc97] flex items-center gap-2">
-                  <span>🔥 عرض حصري: استخدم كود</span>
-                  <span className="bg-[#f0bc97] dark:bg-[#633e23] px-2.5 py-1 rounded-md font-black font-sans tracking-widest text-black dark:text-white">MOFATHY10</span>
-                  <span>لتحصل على الاشتراك بسعر <span className="font-black text-lg">209 ج.م</span></span>
-                </p>
-                <div className="flex items-center gap-2 bg-white/60 dark:bg-black/40 px-4 py-1.5 rounded-full backdrop-blur-sm">
-                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                  <span className="text-[12px] font-bold text-[#633e23] dark:text-[#f0bc97]">متبقي {promoStatus.remaining_seats} مقاعد فقط</span>
-                </div>
-              </div>
+          <div className="flex items-center gap-4">
+            {!user ? (
+              <>
+                <Link href="/auth" className="hidden sm:inline-block text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors">
+                  تسجيل الدخول
+                </Link>
+                <Link href="/auth" className="bg-black dark:bg-white text-white dark:text-black text-xs font-bold px-4 py-2 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors">
+                  ابدأ مجاناً
+                </Link>
+              </>
+            ) : (
+              <UserProfile />
             )}
-          </section>
+          </div>
+        </div>
+      </header>
 
-          {/* Pricing Grid */}
-          <section className="max-w-[1000px] mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-8 mb-24">
-            {plans.map((plan) => (
+      <main className="max-w-6xl mx-auto px-6 pt-16 pb-24">
+        
+        {/* Simple & Quiet Header */}
+        <section className="text-center max-w-3xl mx-auto mb-16">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-600 dark:text-neutral-400 font-medium mb-6">
+            <span>خطط واضحة • بدون رسوم خفية</span>
+          </div>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight mb-4 text-black dark:text-white">
+            اختر الخطة المناسبة لعملك
+          </h1>
+          <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed font-normal">
+            باقات مدروسة بعناية لتغطية احتياجاتك في النصوص، وهندسة البرمجيات، والتعلم الذكي بأعلى كفاءة.
+          </p>
+
+          {/* Minimal Promo Notification */}
+          {!promoLoading && promoStatus?.is_available && (
+            <div className="mt-6 inline-flex items-center gap-3 px-4 py-2 rounded-xl border border-blue-200 dark:border-blue-800/60 bg-blue-50/50 dark:bg-blue-950/20 text-xs">
+              <span className="text-neutral-700 dark:text-neutral-300">
+                استخدم كود الخصم <span className="font-bold text-blue-600 dark:text-blue-400 font-mono">TOLZY2030</span> للحصول على خصم 50% فوري
+              </span>
+            </div>
+          )}
+        </section>
+
+        {/* Pricing Cards (Clean Monochrome + Blue Accent) */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch mb-24">
+          {plans.map((plan) => {
+            const isPaid = plan.id !== 'free';
+            const originalPrice = plan.priceEgp;
+            const finalPrice = getPlanPrice(plan.id);
+            const ctaInfo = getCtaInfo(plan.id);
+
+            return (
               <div
-                key={plan.title}
-                className={`bg-white dark:bg-slate-900/50 border ${plan.isPro ? 'border-[#7e5538] ring-2 ring-[#7e5538]/20 relative' : 'border-[#d5c3b9] dark:border-slate-800 mt-0 md:mt-6'} p-8 md:p-10 rounded-[2rem] flex flex-col transition-all duration-500 hover:shadow-xl ${plan.isPro ? 'shadow-2xl shadow-[#7e5538]/10' : 'shadow-sm'}`}
+                key={plan.id}
+                className={`relative flex flex-col justify-between p-7 sm:p-8 rounded-2xl bg-white dark:bg-black border transition-all duration-200 ${
+                  ctaInfo.isCurrent
+                    ? 'border-emerald-500 ring-2 ring-emerald-500/20 shadow-md'
+                    : plan.isPopular
+                    ? 'border-blue-600 dark:border-blue-500 ring-1 ring-blue-600/30 dark:ring-blue-500/30'
+                    : 'border-neutral-200 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600'
+                }`}
               >
-                {plan.isPro && (
-                  <div className="absolute -top-4 right-8 bg-[#7e5538] text-white text-xs font-bold px-4 py-1 rounded-full shadow-lg">
-                    الأكثر طلباً
+                {/* Active Plan or Popular Badge */}
+                {ctaInfo.isCurrent ? (
+                  <div className="absolute -top-3 right-6 bg-emerald-600 text-white text-[11px] font-bold px-3 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>خطتك الحالية</span>
                   </div>
-                )}
-                <div className="mb-8">
-                  <div className={`w-12 h-12 rounded-xl ${plan.isPro ? 'bg-[#7e5538] text-white shadow-lg shadow-[#7e5538]/30' : 'bg-[#e3e3de] dark:bg-slate-800 text-[#1b1c1a] dark:text-white'} flex items-center justify-center mb-6`}>
-                    <plan.icon className="w-6 h-6" />
+                ) : plan.badge ? (
+                  <div className="absolute -top-3 right-6 bg-blue-600 text-white text-[11px] font-bold px-3 py-0.5 rounded-full">
+                    {plan.badge}
                   </div>
-                  <h2 className="font-display text-3xl font-bold mb-3 text-[#1b1c1a] dark:text-white">{plan.title}</h2>
-                  <p className="text-[#464742] dark:text-slate-400 text-sm leading-relaxed font-medium min-h-[60px]">
-                    {plan.description}
-                  </p>
-                </div>
+                ) : null}
 
-                <div className="mb-8">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-5xl font-black text-[#1b1c1a] dark:text-white tracking-tight font-sans">
-                      {promoApplied && plan.isPro ? currentPrice : plan.price}
-                    </span>
-                    <span className="text-[#83746c] font-bold text-lg">ج.م <span className="text-sm font-medium opacity-70">/ شهرياً</span></span>
+                <div>
+                  {/* Title & Subtitle */}
+                  <div className="mb-6">
+                    <h2 className="text-xl font-bold mb-2 text-black dark:text-white">{plan.title}</h2>
+                    <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed min-h-[38px]">
+                      {plan.subtitle}
+                    </p>
                   </div>
-                  {promoApplied && plan.isPro && (
-                    <div className="mt-4 flex items-center gap-3">
-                      <span className="text-[#83746c] line-through text-xl font-sans opacity-60">{plan.price} ج.م</span>
-                      <span className="bg-[#f4f4ee] dark:bg-[#1b1c19] text-[#7e5538] dark:text-[#f0bc97] text-xs font-bold px-3 py-1 rounded-full border border-[#d5c3b9] dark:border-slate-800">لقد وفرت {ORIGINAL_PRICE - PROMO_PRICE} ج.م!</span>
+
+                  {/* Price Block */}
+                  <div className="mb-6 pb-6 border-b border-neutral-100 dark:border-neutral-800">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl font-black text-black dark:text-white font-mono">
+                        {finalPrice}
+                      </span>
+                      <span className="text-sm font-bold text-neutral-600 dark:text-neutral-400">
+                        ج.م <span className="text-xs font-normal text-neutral-500">/ شهرياً</span>
+                      </span>
+                    </div>
+
+                    <div className="mt-1.5 flex items-center gap-2 text-xs text-neutral-500 font-mono">
+                      <span>أو ${plan.priceUsd} / month</span>
+                      {promoApplied && isPaid && (
+                        <span className="line-through text-neutral-400">{originalPrice} ج.م</span>
+                      )}
+                    </div>
+
+                    <div className="mt-3">
+                      <span className="inline-block text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1 rounded-md border border-blue-200/40 dark:border-blue-800/40">
+                        {plan.tokenCount}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Promo Input for Paid plans */}
+                  {isPaid && (
+                    <div className="mb-6">
+                      <input
+                        type="text"
+                        placeholder="كود الخصم (TOLZY2030)"
+                        value={promoCode}
+                        onChange={(e) => handlePromoCodeChange(e.target.value)}
+                        className={`w-full px-3.5 py-2.5 rounded-lg text-xs font-medium bg-neutral-50 dark:bg-neutral-900 border transition-all outline-none ${
+                          promoApplied
+                            ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                            : 'border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 text-black dark:text-white'
+                        }`}
+                      />
+                      {promoError && <p className="text-red-500 text-[11px] mt-1.5">{promoError}</p>}
                     </div>
                   )}
-                </div>
 
-                {plan.isPro && (
-                  <div className="mb-8 space-y-4">
-                     <div className="p-4 rounded-xl bg-[#fff8e6] dark:bg-[#301400]/40 border border-[#f59e0b]/30 flex gap-3">
-                        <AlertCircle className="w-5 h-5 text-[#f59e0b] shrink-0 mt-0.5" />
-                        <div className="text-sm">
-                          <p className="font-bold text-[#1b1c1a] dark:text-white mb-1">تنبيه بخصوص الدفع</p>
-                          <p className="text-[#464742] dark:text-slate-300 leading-relaxed">
-                            يرجى اختيار <strong>فودافون كاش</strong> للدفع اليدوي لضمان تفعيل حسابك فوراً.
-                          </p>
-                        </div>
+                  {/* Dynamic CTA Button */}
+                  <button
+                    onClick={() => handleCheckout(plan.id)}
+                    disabled={ctaInfo.disabled}
+                    className={`w-full py-3 rounded-xl font-bold text-xs transition-all duration-150 mb-8 flex items-center justify-center gap-1.5 ${
+                      ctaInfo.isCurrent
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 cursor-default'
+                        : plan.isPopular
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm'
+                        : isPaid
+                        ? 'bg-black dark:bg-white text-white dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-200'
+                        : 'bg-neutral-100 dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-800'
+                    }`}
+                  >
+                    {ctaInfo.isCurrent && <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
+                    <span>{ctaInfo.text}</span>
+                  </button>
+
+                  {/* Features List */}
+                  <div className="space-y-3">
+                    <p className="text-[11px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
+                      الميزات المشمولة:
+                    </p>
+                    {plan.features.map((feature, fidx) => (
+                      <div key={fidx} className="flex items-start gap-2.5">
+                        <Check className="w-4 h-4 shrink-0 text-blue-600 dark:text-blue-400 mt-0.5" />
+                        <span className="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed font-normal">
+                          {feature}
+                        </span>
                       </div>
-                      
-                      <div className="relative">
-                        <input
-                          type="text"
-                          placeholder="هل تمتلك كود خصم؟ (اختياري)"
-                          value={promoCode}
-                          onChange={(e) => handlePromoCodeChange(e.target.value)}
-                          className={`w-full px-5 py-3.5 rounded-xl text-sm font-bold bg-[#fbf9f6] dark:bg-black border-2 transition-all outline-none
-                            ${promoApplied 
-                              ? 'border-emerald-500/50 text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-900/10' 
-                              : 'border-[#d5c3b9] dark:border-slate-800 focus:border-[#7e5538] dark:focus:border-[#7e5538] placeholder:text-[#83746c]'
-                            }`}
-                        />
-                        {promoApplied && <CheckCircle2 className="absolute left-4 top-3.5 w-5 h-5 text-emerald-500" />}
-                        {promoError && <p className="text-red-500 text-xs mt-2 font-bold">{promoError}</p>}
-                      </div>
-                  </div>
-                )}
-
-                <button
-                  onClick={() => handleCheckout()}
-                  className={`w-full py-4 rounded-xl font-bold text-base transition-all duration-300 transform active:scale-[0.98] mb-10 shadow-sm ${
-                    plan.isPro 
-                      ? 'bg-black dark:bg-white text-white dark:text-black hover:opacity-90 hover:shadow-lg' 
-                      : 'bg-white dark:bg-slate-800 text-black dark:text-white border-2 border-[#d5c3b9] dark:border-slate-700 hover:bg-[#f4f4ee] dark:hover:bg-slate-700'
-                  }`}
-                >
-                  {plan.cta}
-                </button>
-
-                <div className="space-y-4 flex-grow border-t border-[#d5c3b9]/40 dark:border-slate-800/40 pt-8">
-                  <p className="text-xs font-bold text-[#83746c] mb-6">أهم المميزات المشمولة:</p>
-                  {plan.features.map((feature, fidx) => (
-                    <div key={fidx} className="flex items-start gap-3 group/item">
-                      <div className={`mt-0.5 transition-transform group-hover/item:scale-110 ${plan.isPro ? 'text-[#7e5538]' : 'text-[#83746c]'}`}>
-                        <CheckCircle2 className="w-5 h-5" />
-                      </div>
-                      <span className="text-[#1b1c1a] dark:text-slate-200 text-sm font-semibold leading-relaxed">{feature}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </section>
-
-          {/* Feature Comparison */}
-          <section className="max-w-[1000px] mx-auto px-6 pt-24 border-t border-[#d5c3b9] dark:border-slate-800">
-            <div className="text-center mb-16">
-              <div className="w-16 h-16 bg-[#e3e3de] dark:bg-slate-800 text-[#7e5538] rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <HelpCircle className="w-8 h-8" />
-              </div>
-              <h2 className="font-display text-4xl font-bold text-[#1b1c1a] dark:text-white">مقارنة شاملة بين الباقات</h2>
-            </div>
-            
-            <div className="overflow-x-auto bg-white dark:bg-slate-900/40 rounded-3xl border border-[#d5c3b9] dark:border-slate-800 shadow-sm p-4 md:p-8">
-              <table className="w-full text-right font-body">
-                <thead>
-                  <tr className="border-b-2 border-[#1b1c1a] dark:border-white">
-                    <th className="py-6 px-4 text-sm font-bold text-[#83746c]">الخاصية</th>
-                    <th className="py-6 px-4 text-center text-sm font-bold text-[#83746c]">الباقة الأساسية</th>
-                    <th className="py-6 px-4 text-center text-sm font-bold text-[#83746c]">باقة المحترفين (Pro)</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#d5c3b9]/40 dark:divide-slate-800/40">
-                  {comparisonFeatures.map((item, idx) => (
-                    <tr key={idx} className="hover:bg-[#fbf9f6] dark:hover:bg-slate-800/30 transition-colors">
-                      <td className="py-5 px-4 text-[#1b1c1a] dark:text-white font-bold">{item.name}</td>
-                      <td className="py-5 px-4 text-center text-[#464742] dark:text-slate-400 font-medium">{item.free}</td>
-                      <td className="py-5 px-4 text-center text-[#7e5538] dark:text-[#f0bc97] font-black">{item.pro}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          {/* FAQ Section */}
-          <section className="max-w-3xl mx-auto px-6 pt-32">
-            <h2 className="font-display text-4xl font-bold text-center mb-16 text-[#1b1c1a] dark:text-white">الأسئلة الشائعة</h2>
-            <div className="space-y-4">
-              {[
-                { q: 'كم يستغرق تفعيل الحساب بعد الدفع؟', a: 'يستغرق التفعيل عادةً من 15 دقيقة إلى ساعتين كحد أقصى بعد رفع صورة الإيصال بنجاح وتأكيد الطلب.' },
-                { q: 'ما هي طرق الدفع المتاحة حالياً؟', a: 'ندعم حالياً الدفع عبر محافظ فودافون كاش، وتطبيق إنستاباي (InstaPay) للتحويلات البنكية داخل مصر.' },
-                { q: 'هل يمكنني إلغاء أو تغيير باقتي لاحقاً؟', a: 'نعم بالتأكيد، يمكنك إدارة اشتراكك وتغيير الباقة في أي وقت من خلال إعدادات حسابك الشخصي.' },
-                { q: 'هل توجد فترة تجريبية مجانية؟', a: 'الباقة الأساسية لدينا مجانية تماماً وبدون أي التزامات، وتمنحك 10 طلبات يومية لتجربة واكتشاف قوة أدواتنا.' },
-              ].map((faq, i) => (
-                <details key={i} className="group bg-white dark:bg-slate-900/40 border border-[#d5c3b9] dark:border-slate-800 rounded-2xl overflow-hidden transition-all duration-300">
-                  <summary className="flex items-center justify-between p-6 md:p-8 cursor-pointer font-bold text-lg text-[#1b1c1a] dark:text-white list-none">
-                    <span>{faq.q}</span>
-                    <span className="transition-transform duration-300 group-open:rotate-180 text-[#83746c] bg-[#fbf9f6] dark:bg-slate-800 p-2 rounded-full border border-[#d5c3b9] dark:border-slate-700">
-                      <ChevronDown className="w-5 h-5" />
-                    </span>
-                  </summary>
-                  <div className="px-6 md:px-8 pb-6 md:pb-8 text-[#464742] dark:text-slate-400 text-base leading-relaxed border-t border-[#f4f4ee] dark:border-slate-800 pt-6 mt-2 font-medium">
-                    {faq.a}
-                  </div>
-                </details>
-              ))}
-            </div>
-          </section>
-        </main>
-
-        {/* Footer */}
-        <footer className="bg-[#1c1c1a] text-[#858382] py-20 mt-10">
-          <div className="max-w-[1200px] mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
-            <div className="col-span-1">
-              <span className="font-display text-3xl font-black text-[#e5e2e0] mb-6 block uppercase tracking-tighter">Tolzy</span>
-              <p className="text-sm font-medium mb-8 leading-relaxed">نبني مستقبل أدوات الذكاء الاصطناعي باللغة العربية لدعم المبدعين والمحترفين.</p>
-              <div className="flex gap-4">
-                <Link href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-[#7e5538] hover:text-white transition-all"><Rocket className="w-5 h-5" /></Link>
-                <Link href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-[#7e5538] hover:text-white transition-all"><Zap className="w-5 h-5" /></Link>
-                <Link href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-[#7e5538] hover:text-white transition-all"><Brain className="w-5 h-5" /></Link>
-              </div>
-            </div>
-            <div className="flex flex-col gap-4">
-              <h4 className="text-[#e5e2e0] font-bold text-sm mb-4 border-b border-white/10 pb-2 inline-block">المنتجات</h4>
-              <Link href="/tools" className="hover:text-white transition-colors text-sm">أدوات الذكاء الاصطناعي</Link>
-              <Link href="/learn" className="hover:text-white transition-colors text-sm">الدورات التعليمية</Link>
-              <Link href="/pricing" className="hover:text-white transition-colors text-sm">خطط الأسعار</Link>
-            </div>
-            <div className="flex flex-col gap-4">
-              <h4 className="text-[#e5e2e0] font-bold text-sm mb-4 border-b border-white/10 pb-2 inline-block">المصادر</h4>
-              <Link href="/docs" className="hover:text-white transition-colors text-sm">الوثائق البرمجية</Link>
-              <Link href="/faq" className="hover:text-white transition-colors text-sm">الأسئلة الشائعة</Link>
-              <Link href="/community" className="hover:text-white transition-colors text-sm">المجتمع</Link>
-            </div>
-            <div className="flex flex-col gap-4">
-              <h4 className="text-[#e5e2e0] font-bold text-sm mb-4 border-b border-white/10 pb-2 inline-block">الشركة</h4>
-              <Link href="/about" className="hover:text-white transition-colors text-sm">من نحن</Link>
-              <Link href="/privacy" className="hover:text-white transition-colors text-sm">سياسة الخصوصية</Link>
-              <Link href="/terms" className="hover:text-white transition-colors text-sm">شروط الاستخدام</Link>
-            </div>
-          </div>
-          <div className="max-w-[1200px] mx-auto px-6 mt-16 pt-8 border-t border-white/10 text-xs text-center font-medium opacity-60">
-            جميع الحقوق محفوظة © {new Date().getFullYear()} شركة Tolzy AI.
-          </div>
-        </footer>
-
-        {/* Payment Modal */}
-        {isManualPaymentModalOpen && (
-          <div className="fixed inset-0 z-[100] bg-[#1b1c1a]/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
-            <div className="w-full max-w-lg max-h-[95vh] overflow-y-auto custom-scrollbar rounded-3xl bg-[#fbf9f6] dark:bg-[#0f172a] border border-[#d5c3b9] dark:border-slate-800 shadow-2xl relative">
-              <div className="p-8 md:p-10">
-                
-                <button
-                  type="button"
-                  onClick={() => setIsManualPaymentModalOpen(false)}
-                  className="absolute top-6 left-6 p-2 rounded-full bg-[#e3e3dd] dark:bg-slate-800 hover:bg-[#dadad5] dark:hover:bg-slate-700 transition-colors text-[#50443d] dark:text-white"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-
-                <div className="text-center mb-8 pt-2">
-                  <div className="w-16 h-16 bg-[#e3e3de] dark:bg-[#7e5538]/20 rounded-2xl flex items-center justify-center mx-auto mb-5 text-[#7e5538]">
-                    <Wallet className="w-8 h-8" />
-                  </div>
-                  <h3 className="font-display text-2xl font-bold text-[#1b1c1a] dark:text-white">تأكيد الاشتراك</h3>
-                  
-                  {/* Progress Steps */}
-                  <div className="flex items-center justify-center gap-2 mt-6" dir="ltr">
-                    {[1, 2, 3].map((s) => (
-                      <div key={s} className={`h-1.5 rounded-full transition-all duration-500 ${paymentStep === s ? 'w-12 bg-[#7e5538]' : 'w-4 bg-[#d5c3b9] dark:bg-slate-800'}`} />
                     ))}
                   </div>
                 </div>
+              </div>
+            );
+          })}
+        </section>
 
-                <div className="space-y-6">
-                  {/* Step 1: User Info */}
-                  {paymentStep === 1 && (
-                    <div className="space-y-5 animate-in slide-in-from-right-4">
-                      <div className="flex items-center gap-2 text-[#7e5538] font-bold text-sm mb-4">
-                        <span className="w-6 h-6 rounded-full bg-[#7e5538]/10 flex items-center justify-center text-xs">1</span>
-                        البيانات الشخصية
-                      </div>
+        {/* Feature Comparison Table */}
+        <section className="pt-16 border-t border-neutral-200 dark:border-neutral-800">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-black dark:text-white mb-2">
+              جدول المقارنة الشامل
+            </h2>
+            <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">
+              تفصيل الفروقات التقنية وحصص الاستخدام بين كل خطة
+            </p>
+          </div>
+
+          <div className="overflow-x-auto border border-neutral-200 dark:border-neutral-800 rounded-2xl">
+            <table className="w-full text-right text-xs sm:text-sm">
+              <thead className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800">
+                <tr>
+                  <th className="py-4 px-4 font-bold text-neutral-600 dark:text-neutral-400">الخاصية</th>
+                  <th className="py-4 px-4 text-center font-bold text-neutral-600 dark:text-neutral-400">الخطة المجانية</th>
+                  <th className="py-4 px-4 text-center font-bold text-blue-600 dark:text-blue-400">الخطة الاحترافية (Pro)</th>
+                  <th className="py-4 px-4 text-center font-bold text-black dark:text-white">خطة الاستوديو (MAX)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800/60">
+                {comparisonFeatures.map((item, idx) => (
+                  <tr key={idx} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-900/30 transition-colors">
+                    <td className="py-3.5 px-4 font-semibold text-black dark:text-white">{item.name}</td>
+                    <td className="py-3.5 px-4 text-center text-neutral-600 dark:text-neutral-400">{item.free}</td>
+                    <td className="py-3.5 px-4 text-center font-bold text-blue-600 dark:text-blue-400">{item.pro}</td>
+                    <td className="py-3.5 px-4 text-center font-bold text-black dark:text-white">{item.max}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section className="max-w-3xl mx-auto pt-24">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-12 text-black dark:text-white">
+            الأسئلة المتكررة
+          </h2>
+          <div className="space-y-4">
+            {[
+              {
+                q: 'ما هو التوكن (Token) وكيف يتم استهلاكه؟',
+                a: 'التوكن هو وحدة قياس معالجة وتوليد النصوص في نماذج الذكاء الاصطناعي (كل 1000 توكن تعادل تقريباً 750 كلمة). يتم حساب الاستهلاك الفعلي بدقة بناءً على حجم السؤال وإجابة النموذج.'
+              },
+              {
+                q: 'هل يتجدد رصيد التوكنات شهرياً؟',
+                a: 'نعم، في خطتي Pro و Max يتم تجديد كامل حصة التوكن (500K أو 2.5M) تلقائياً في بداية كل شهر اشتراك.'
+              },
+              {
+                q: 'ما هي طرق الدفع المتاحة لتفعيل الاشتراك؟',
+                a: 'نوفر الدفع الفوري والمباشر داخل مصر عبر فودافون كاش وتطبيق إنستاباي (InstaPay)، بالإضافة للتحويلات البنكية للمشتركين دولياً.'
+              },
+              {
+                q: 'كم يستغرق تفعيل الحساب بعد إرسال الإيصال؟',
+                a: 'يتم تفعيل الحساب فوراً ومباشرة بمجرد مراجعة وتأكيد صورة الإيصال عبر الواتساب (عادة خلال 15 دقيقة إلى ساعتين كحد أقصى).'
+              }
+            ].map((faq, idx) => (
+              <div key={idx} className="p-5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/30">
+                <h3 className="font-bold text-sm text-black dark:text-white mb-2">{faq.q}</h3>
+                <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">{faq.a}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
+
+      {/* Clean Minimal Footer */}
+      <footer className="border-t border-neutral-200 dark:border-neutral-800 py-12 text-xs text-neutral-500 text-center">
+        <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p>© {new Date().getFullYear()} TOLZY AI. جميع الحقوق محفوظة.</p>
+          <div className="flex items-center gap-6">
+            <Link href="/privacy" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">الخصوصية</Link>
+            <Link href="/terms" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">الشروط</Link>
+            <Link href="/docs" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">المساعدة</Link>
+          </div>
+        </div>
+      </footer>
+
+      {/* Payment Modal */}
+      {isManualPaymentModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6 sm:p-8 relative max-h-[90vh] overflow-y-auto">
+            
+            <button
+              onClick={() => setIsManualPaymentModalOpen(false)}
+              className="absolute top-5 left-5 p-1.5 rounded-lg text-neutral-400 hover:text-black dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="text-center mb-6">
+              <h3 className="text-xl font-bold text-black dark:text-white">
+                تأكيد الاشتراك في {selectedPlanId === 'max' ? 'خطة الاستوديو (MAX)' : 'الخطة الاحترافية (Pro)'}
+              </h3>
+              <p className="text-xs text-neutral-500 mt-1">
+                المبلغ المطلوب: <span className="font-bold text-blue-600 font-mono">{currentPrice} ج.م</span>
+                {promoApplied && <span className="text-emerald-600 dark:text-emerald-400 font-bold mr-1.5">(خصم 50% مطبق)</span>}
+              </p>
+            </div>
+
+            {/* Payment Mode Selector Tabs (XPay only available for whitelisted testers during trial) */}
+            {['m85260877@gmail.com', 'mahmoud.m.moussa5310@gmail.com'].includes(user?.email?.toLowerCase().trim() || '') && (
+              <div className="flex rounded-xl bg-neutral-100 dark:bg-neutral-900 p-1 mb-6 border border-neutral-200 dark:border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMode('xpay')}
+                  className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                    paymentMode === 'xpay'
+                      ? 'bg-white dark:bg-neutral-800 text-blue-600 dark:text-blue-400 shadow-xs'
+                      : 'text-neutral-500 hover:text-black dark:hover:text-white'
+                  }`}
+                >
+                  <Zap className="w-3.5 h-3.5" />
+                  <span>دفع إلكتروني فوري (XPay) [تجريبي] ⚡</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMode('manual')}
+                  className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                    paymentMode === 'manual'
+                      ? 'bg-white dark:bg-neutral-800 text-blue-600 dark:text-blue-400 shadow-xs'
+                      : 'text-neutral-500 hover:text-black dark:hover:text-white'
+                  }`}
+                >
+                  <Wallet className="w-3.5 h-3.5" />
+                  <span>تحويل يدوي (فودافون / إنستا)</span>
+                </button>
+              </div>
+            )}
+
+            {/* TAB 1: XPay Direct Checkout (Whitelisted Testers Only) */}
+            {paymentMode === 'xpay' && ['m85260877@gmail.com', 'mahmoud.m.moussa5310@gmail.com'].includes(user?.email?.toLowerCase().trim() || '') && (
+              <div className="space-y-5 animate-in fade-in zoom-in-95 duration-200">
+                <div className="p-4 rounded-xl border border-blue-200 dark:border-blue-900/40 bg-blue-50/50 dark:bg-blue-950/20 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-blue-900 dark:text-blue-300">بوابة الدفع الإلكترونية XPay</span>
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
+                      وضع تجريبي (Test Mode)
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap text-[11px] font-semibold text-neutral-600 dark:text-neutral-300">
+                    <span className="px-2 py-1 bg-white dark:bg-neutral-900 rounded-md border border-neutral-200 dark:border-neutral-800">💳 بطاقات فيزا ومستر كارد وميزة</span>
+                    <span className="px-2 py-1 bg-white dark:bg-neutral-900 rounded-md border border-neutral-200 dark:border-neutral-800">🏪 فوري (Fawry Pay)</span>
+                    <span className="px-2 py-1 bg-white dark:bg-neutral-900 rounded-md border border-neutral-200 dark:border-neutral-800">🛍️ فاليو (ValU للتقسيط)</span>
+                    <span className="px-2 py-1 bg-white dark:bg-neutral-900 rounded-md border border-neutral-200 dark:border-neutral-800">📱 المحافظ الإلكترونية</span>
+                  </div>
+
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                    ⚡ يتم تفعيل باقتك تلقائياً وبشكل فوري فور إتمام الدفع بنجاح دون الحاجة لرفع إيصال أو انتظار المراجعة.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-neutral-600 dark:text-neutral-400 mb-1">البريد الإلكتروني للحساب</label>
+                    <input
+                      type="email"
+                      value={user?.email || ''}
+                      disabled
+                      dir="ltr"
+                      className="w-full px-4 py-2.5 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs font-mono text-neutral-500 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div className="p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/30 text-xs space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-neutral-500">الخطة:</span>
+                      <span className="font-bold text-black dark:text-white">
+                        {selectedPlanId === 'max' ? 'خطة الاستوديو والفرق (2.5M Tokens)' : 'الخطة الاحترافية (500K Tokens)'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-500">المبلغ الإجمالي:</span>
+                      <span className="font-bold font-mono text-black dark:text-white">{currentPrice} ج.م</span>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleXPayCheckout}
+                  disabled={isXPayLoading}
+                  className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs disabled:opacity-60 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
+                >
+                  {isXPayLoading ? (
+                    <>
+                      <Loader className="w-4 h-4 animate-spin" />
+                      <span>جاري الاتصال ببوابة XPay...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-4 h-4" />
+                      <span>المتابعة إلى بوابة الدفع الآمنة XPay ({currentPrice} ج.م)</span>
+                      <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {/* TAB 2: Manual Payment Flow */}
+            {paymentMode === 'manual' && (
+              <>
+                {paymentStep === 1 && (
+                  <div className="space-y-4 animate-in fade-in zoom-in-95 duration-200">
+                    <div>
+                      <label className="block text-xs font-semibold text-neutral-600 dark:text-neutral-400 mb-1">البريد الإلكتروني</label>
                       <input
                         type="email"
                         value={user?.email || ''}
                         disabled
                         dir="ltr"
-                        className="w-full px-5 py-4 rounded-xl bg-[#f4f4ee] dark:bg-slate-900 border border-[#d5c3b9] dark:border-slate-800 text-[#83746c] cursor-not-allowed outline-none font-sans font-bold text-left"
+                        className="w-full px-4 py-2.5 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs font-mono text-neutral-500 cursor-not-allowed"
                       />
-                      <div className="grid grid-cols-2 gap-4">
-                        <input type="text" placeholder="الاسم الأول" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full px-5 py-4 rounded-xl bg-white dark:bg-black border border-[#d5c3b9] dark:border-slate-800 focus:border-[#7e5538] outline-none transition-all font-bold placeholder:text-[#83746c]" />
-                        <input type="text" placeholder="الاسم الأخير" value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full px-5 py-4 rounded-xl bg-white dark:bg-black border border-[#d5c3b9] dark:border-slate-800 focus:border-[#7e5538] outline-none transition-all font-bold placeholder:text-[#83746c]" />
-                      </div>
-                      <input type="tel" dir="ltr" placeholder="رقم الهاتف (للتواصل عبر واتساب)" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="w-full px-5 py-4 rounded-xl bg-white dark:bg-black border border-[#d5c3b9] dark:border-slate-800 focus:border-[#7e5538] outline-none transition-all font-bold font-sans placeholder:text-[#83746c] text-left" />
-                      <button onClick={() => { if (!firstName || !lastName || !phoneNumber) return alert('يرجى إكمال جميع البيانات أولاً'); setPaymentStep(2); }} className="w-full py-4 rounded-xl font-bold text-white bg-black dark:bg-[#7e5538] hover:opacity-90 transition-all shadow-md mt-6">التالي: تفاصيل الدفع</button>
                     </div>
-                  )}
-
-                  {/* Step 2: Payment Methods */}
-                  {paymentStep === 2 && (
-                    <div className="space-y-5 animate-in slide-in-from-right-4">
-                      <div className="flex items-center gap-2 text-[#7e5538] font-bold text-sm mb-4">
-                        <span className="w-6 h-6 rounded-full bg-[#7e5538]/10 flex items-center justify-center text-xs">2</span>
-                        طرق وأرقام التحويل
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-neutral-600 dark:text-neutral-400 mb-1">الاسم الأول</label>
+                        <input
+                          type="text"
+                          placeholder="محمد"
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          className="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 text-xs focus:border-blue-600 outline-none"
+                        />
                       </div>
-                      
-                      <div className="grid gap-4">
-                        {/* Vodafone Cash */}
-                        <div onClick={() => copyToClipboard(vodafoneCash, 'vodafone')} className={`cursor-pointer p-5 rounded-2xl border transition-all ${copiedText === 'vodafone' ? 'bg-[#ffdcc5] border-[#d4a27f]' : 'bg-white dark:bg-black border-[#d5c3b9] dark:border-slate-800 hover:border-[#7e5538] shadow-sm'}`}>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-600"><Phone className="w-6 h-6" /></div>
-                              <div>
-                                <p className="text-xs text-[#83746c] font-bold mb-1">فودافون كاش</p>
-                                <p className="text-lg font-black font-sans text-[#1b1c1a] dark:text-white" dir="ltr">{vodafoneCash}</p>
-                              </div>
-                            </div>
-                            {copiedText === 'vodafone' ? <Check className="w-6 h-6 text-emerald-500" /> : <Copy className="w-6 h-6 text-[#d5c3b9] hover:text-[#7e5538]" />}
+                      <div>
+                        <label className="block text-xs font-semibold text-neutral-600 dark:text-neutral-400 mb-1">الاسم الأخير</label>
+                        <input
+                          type="text"
+                          placeholder="فتحي"
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                          className="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 text-xs focus:border-blue-600 outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-neutral-600 dark:text-neutral-400 mb-1">رقم الهاتف للتواصل عبر واتساب</label>
+                      <input
+                        type="tel"
+                        dir="ltr"
+                        placeholder="010XXXXXXXX"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 text-xs font-mono focus:border-blue-600 outline-none text-left"
+                      />
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (!firstName || !lastName || !phoneNumber) {
+                          alert('يرجى استكمال البيانات للمتابعة');
+                          return;
+                        }
+                        setPaymentStep(2);
+                      }}
+                      className="w-full py-3 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold text-xs hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors mt-4"
+                    >
+                      التالي: بيانات التحويل
+                    </button>
+                  </div>
+                )}
+
+                {paymentStep === 2 && (
+                  <div className="space-y-4 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="space-y-3">
+                      <div
+                        onClick={() => copyToClipboard(vodafoneCash, 'vodafone')}
+                        className="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 cursor-pointer hover:border-neutral-400 transition-colors flex items-center justify-between"
+                      >
+                        <div>
+                          <p className="text-xs text-neutral-500 font-semibold mb-0.5">فودافون كاش</p>
+                          <p className="text-sm font-bold font-mono" dir="ltr">{vodafoneCash}</p>
+                        </div>
+                        {copiedText === 'vodafone' ? <Check className="w-4 h-4 text-blue-600" /> : <Copy className="w-4 h-4 text-neutral-400" />}
+                      </div>
+
+                      <div
+                        onClick={() => copyToClipboard(instapay, 'instapay')}
+                        className="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 cursor-pointer hover:border-neutral-400 transition-colors flex items-center justify-between"
+                      >
+                        <div>
+                          <p className="text-xs text-neutral-500 font-semibold mb-0.5">إنستاباي (InstaPay)</p>
+                          <p className="text-sm font-bold font-mono" dir="ltr">{instapay}</p>
+                        </div>
+                        {copiedText === 'instapay' ? <Check className="w-4 h-4 text-blue-600" /> : <Copy className="w-4 h-4 text-neutral-400" />}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-4">
+                      <button
+                        onClick={() => setPaymentStep(1)}
+                        className="flex-1 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 text-xs font-semibold hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                      >
+                        رجوع
+                      </button>
+                      <button
+                        onClick={() => setPaymentStep(3)}
+                        className="flex-[2] py-2.5 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold text-xs hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors"
+                      >
+                        التالي: إرفاق الإيصال
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {paymentStep === 3 && (
+                  <div className="space-y-4 animate-in fade-in zoom-in-95 duration-200">
+                    <label className="block cursor-pointer">
+                      <div className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${receiptFile ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-950/20' : 'border-neutral-300 dark:border-neutral-700 hover:border-neutral-400'}`}>
+                        {receiptFile ? (
+                          <div className="space-y-1">
+                            <CheckCircle2 className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                            <p className="text-xs font-bold text-black dark:text-white">تم إرفاق الإيصال بنجاح</p>
+                            <p className="text-[11px] text-neutral-500 font-mono">{receiptFile.name}</p>
                           </div>
-                        </div>
-
-                        {/* Instapay */}
-                        <div onClick={() => copyToClipboard(instapay, 'instapay')} className={`cursor-pointer p-5 rounded-2xl border transition-all ${copiedText === 'instapay' ? 'bg-[#ffdcc5] border-[#d4a27f]' : 'bg-white dark:bg-black border-[#d5c3b9] dark:border-slate-800 hover:border-[#7e5538] shadow-sm'}`}>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600"><Sparkles className="w-6 h-6" /></div>
-                              <div>
-                                <p className="text-xs text-[#83746c] font-bold mb-1">إنستاباي (InstaPay)</p>
-                                <p className="text-sm font-black font-sans text-[#1b1c1a] dark:text-white" dir="ltr">{instapay}</p>
-                              </div>
-                            </div>
-                            {copiedText === 'instapay' ? <Check className="w-6 h-6 text-emerald-500" /> : <Copy className="w-6 h-6 text-[#d5c3b9] hover:text-[#7e5538]" />}
+                        ) : (
+                          <div className="space-y-2">
+                            {compressing ? <Loader className="w-8 h-8 animate-spin mx-auto text-blue-600" /> : <Upload className="w-8 h-8 mx-auto text-neutral-400" />}
+                            <p className="text-xs font-bold text-black dark:text-white">اضغط هنا لرفع صورة إيصال التحويل</p>
+                            <p className="text-[11px] text-neutral-500 font-mono">JPG, PNG (بحد أقصى 5MB)</p>
                           </div>
-                        </div>
+                        )}
+                        <input type="file" accept="image/*" onChange={handleFileUpload} disabled={compressing} className="hidden" />
                       </div>
+                    </label>
 
-                      <div className="flex gap-3 mt-8 pt-2">
-                        <button onClick={() => setPaymentStep(1)} className="flex-1 py-4 rounded-xl font-bold bg-[#e3e3dd] hover:bg-[#dadad5] dark:bg-slate-800 dark:hover:bg-slate-700 text-[#1b1c1a] dark:text-white transition-all">رجوع</button>
-                        <button onClick={() => setPaymentStep(3)} className="flex-[2] py-4 rounded-xl font-bold text-white bg-black dark:bg-[#7e5538] hover:opacity-90 transition-all shadow-md">التالي: إرفاق الإيصال</button>
+                    <div className="flex flex-col gap-2 pt-2">
+                      <button
+                        onClick={handleSubmitReceipt}
+                        disabled={isUploading || compressing || !receiptFile}
+                        className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs disabled:opacity-50 transition-colors flex items-center justify-center gap-2 shadow-sm"
+                      >
+                        {isUploading ? (
+                          <>
+                            <Loader className="w-4 h-4 animate-spin" />
+                            <span>جاري رفع الإيصال وإشعار المسؤول...</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="w-4 h-4" />
+                            <span>تأكيد إرسال طلب الاشتراك للإدارة</span>
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setPaymentStep(2)}
+                        disabled={isUploading}
+                        className="text-xs text-neutral-500 hover:text-black dark:hover:text-white py-1 transition-colors text-center"
+                      >
+                        تعديل طريقة الدفع
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {paymentStep === 4 && (
+                  <div className="text-center py-4 space-y-6 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 flex items-center justify-center mx-auto text-blue-600 dark:text-blue-400">
+                      <Clock className="w-8 h-8 animate-pulse" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <h4 className="text-lg font-bold text-black dark:text-white">
+                        جاري معالجة وتأكيد الحساب من قِبل الإدارة...
+                      </h4>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-sm mx-auto">
+                        تم استلام صورة الإيصال وبيانات طلبك بنجاح! تم إشعار إدارة المنصة لمراجعة التحويل وتفعيل باقتك فور التحقق.
+                      </p>
+                    </div>
+
+                    <div className="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/30 text-right space-y-2 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-neutral-500">الباقة المطلوبة:</span>
+                        <span className="font-bold text-black dark:text-white">
+                          {selectedPlanId === 'max' ? 'خطة الاستوديو والفرق (MAX 2.5M) 👑' : 'الخطة الاحترافية (Pro 500K) ⭐'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-neutral-500">المبلغ المدفوع:</span>
+                        <span className="font-bold font-mono text-black dark:text-white">{currentPrice} ج.م</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-neutral-500">حالة الطلب:</span>
+                        <span className="font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-ping inline-block"></span>
+                          قيد المراجعة والتدقيق من قِبل المسؤول
+                        </span>
                       </div>
                     </div>
-                  )}
 
-                  {/* Step 3: Upload Receipt */}
-                  {paymentStep === 3 && (
-                    <div className="space-y-5 animate-in slide-in-from-right-4">
-                      <div className="flex items-center gap-2 text-[#7e5538] font-bold text-sm mb-4">
-                        <span className="w-6 h-6 rounded-full bg-[#7e5538]/10 flex items-center justify-center text-xs">3</span>
-                        المراجعة النهائية
-                      </div>
-                      
-                      <div className="p-5 rounded-2xl bg-[#ffdcc5]/60 dark:bg-[#301400]/60 border border-[#d4a27f]/50 text-center shadow-sm">
-                        <p className="text-sm text-[#633e23] dark:text-[#f0bc97] font-bold mb-1">إجمالي المبلغ المطلوب تحويله</p>
-                        <p className="font-black text-2xl text-[#633e23] dark:text-[#f0bc97] font-sans">{currentPrice} ج.م</p>
-                      </div>
-
-                      <label className="block cursor-pointer mt-4">
-                        <div className={`border-2 border-dashed rounded-3xl p-8 text-center transition-all ${receiptFile ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/10' : 'border-[#d5c3b9] dark:border-slate-700 bg-white dark:bg-black hover:border-[#7e5538] hover:bg-[#fbf9f6] dark:hover:bg-slate-900/50'}`}>
-                          {receiptFile ? (
-                            <div className="flex flex-col items-center gap-3 text-emerald-600 dark:text-emerald-400 font-bold">
-                              <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mb-1"><CheckCircle2 className="w-8 h-8" /></div>
-                              <span>تم إرفاق الإيصال بنجاح</span>
-                              <span className="text-xs font-sans opacity-70">{receiptFile.name}</span>
-                            </div>
-                          ) : (
-                            <div className="space-y-4">
-                              {compressing ? <Loader className="w-12 h-12 animate-spin mx-auto text-[#7e5538]" /> : <Upload className="w-12 h-12 mx-auto text-[#83746c]" />}
-                              <p className="font-bold text-[#1b1c1a] dark:text-white text-lg">اضغط هنا لرفع صورة الإيصال</p>
-                              <p className="text-xs text-[#83746c] font-medium font-sans">JPG, PNG (بحد أقصى 5 ميجابايت)</p>
-                            </div>
-                          )}
-                          <input type="file" accept="image/*" onChange={handleFileUpload} disabled={compressing} className="hidden" />
-                        </div>
-                      </label>
-
-                      <div className="flex flex-col gap-3 mt-8 pt-2">
-                        <button onClick={handleSendViaWhatsApp} disabled={isUploading || compressing || !receiptFile} className="w-full py-5 rounded-2xl font-bold text-lg text-white bg-[#25D366] hover:bg-[#128C7E] shadow-[0_10px_20px_-10px_rgba(37,211,102,0.5)] disabled:opacity-50 transition-all flex items-center justify-center gap-3">
-                          {isUploading ? <Loader className="w-6 h-6 animate-spin" /> : <Send className="w-6 h-6 rotate-180" />}
-                          <span>تأكيد الطلب وإرسال عبر واتساب</span>
-                        </button>
-                        <button onClick={() => setPaymentStep(2)} className="w-full py-2 text-sm font-bold text-[#83746c] hover:text-[#1b1c1a] dark:hover:text-white transition-colors">تعديل بيانات الدفع</button>
-                      </div>
+                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                      {submittedReceiptUrl && (
+                        <a
+                          href={submittedReceiptUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 py-3 px-4 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600 text-xs font-semibold text-neutral-700 dark:text-neutral-300 flex items-center justify-center gap-2 transition-colors"
+                        >
+                          <Download className="w-4 h-4" />
+                          <span>معاينة وتحميل الإيصال</span>
+                        </a>
+                      )}
+                      <button
+                        onClick={() => {
+                          setIsManualPaymentModalOpen(false);
+                          setPaymentStep(1);
+                          setReceiptFile(null);
+                          setFirstName('');
+                          setLastName('');
+                          setPhoneNumber('');
+                        }}
+                        className="flex-1 py-3 px-4 rounded-xl bg-black dark:bg-white text-white dark:text-black text-xs font-bold hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors"
+                      >
+                        متابعة التصفح
+                      </button>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* XPay Success Celebration Modal */}
+      {xpaySuccessModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-neutral-950 border border-emerald-200 dark:border-emerald-800/40 shadow-2xl p-6 sm:p-8 text-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 left-0 h-2 bg-gradient-to-r from-emerald-500 via-blue-500 to-indigo-500" />
+            
+            <div className="w-20 h-20 mx-auto mb-5 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-3xl flex items-center justify-center text-white shadow-xl shadow-emerald-500/20 text-3xl">
+              ✨
+            </div>
+
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">
+              تهانينا! تم تفعيل اشتراكك بنجاح 🎉
+            </h3>
+            
+            <p className="text-xs text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
+              تم التحقق من عملية الدفع عبر بوابة <span className="font-bold text-blue-600">XPay</span> وتم ترقية حسابك وإضافة كامل حصتك من التوكن الذكي!
+            </p>
+
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-right space-y-2 mb-6 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-500">الخطة النشطة:</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                  {xpaySuccessPlan === 'max' ? 'خطة الاستوديو والفرق (MAX) 👑' : 'الخطة الاحترافية (Pro) ⭐'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">حصة التوكن المتاحة:</span>
+                <span className="font-bold font-mono text-black dark:text-white">
+                  {xpaySuccessTokens.toLocaleString('ar-EG')} توكن شهرياً
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">بوابة الدفع:</span>
+                <span className="font-bold text-blue-600">XPay Gateway ⚡</span>
               </div>
             </div>
+
+            <div className="flex gap-3">
+              <Link
+                href="/tools"
+                onClick={() => setXpaySuccessModalOpen(false)}
+                className="flex-1 py-3.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold text-xs hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2"
+              >
+                <span>ابدأ استخدام الأدوات 🚀</span>
+                <ArrowRight className="w-4 h-4 rtl:rotate-180" />
+              </Link>
+            </div>
           </div>
-        )}
-      </div>
-    </>
+        </div>
+      )}
+    </div>
   );
 }
+

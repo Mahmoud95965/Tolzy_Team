@@ -494,30 +494,8 @@ const CommunityPage: React.FC = () => {
   };
 
   const handleSummarize = async (postId: string, content: string) => {
-    const normalizedPlan = String(userProfile?.plan || 'free').toLowerCase();
-    const isPro = normalizedPlan.includes('pro') || normalizedPlan.includes('ultra');
-
-    if (!isPro) {
-      toast.error(
-        (t) => (
-          <div className="flex flex-col gap-1 text-right">
-            <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 justify-end">
-              <span>💎 ميزة التلخيص الذكي حصرية</span>
-            </span>
-            <span className="text-[11px] text-slate-500 dark:text-slate-400">
-              تلخيص المنشورات والتعليقات بالذكاء الاصطناعي متاح فقط لمشتركي باقة PRO.
-            </span>
-            <a
-              href="/pricing"
-              onClick={() => toast.dismiss(t.id)}
-              className="mt-2 text-center text-xs font-black text-white bg-violet-600 hover:bg-violet-500 py-1.5 px-3 rounded-lg transition-all shadow-sm"
-            >
-              ترقية الحساب الآن ✨
-            </a>
-          </div>
-        ),
-        { duration: 5000, id: 'pro-summary-lock' }
-      );
+    if (!user) {
+      toast.error('يرجى تسجيل الدخول لاستخدام ميزة التلخيص الذكي');
       return;
     }
 

@@ -1,41 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/src/config/firebase-admin';
 import { formatApiError } from '@/src/utils/authErrorHandler';
+import { sendAuthEmail } from '@/src/utils/sendAuthEmail';
 
 export async function POST(req: NextRequest) {
     try {
         const { email, firstName, lastName, password } = await req.json();
 
-        if (!email || !password) {
-            return NextResponse.json({ error: 'البريد الإلكتروني وكلمة المرور مطلوبة' }, { status: 400 });
+        if (!email) {
+            return NextResponse.json({ error: 'البريد الإلكتروني مطلوب' }, { status: 400 });
         }
+
+        const normalizedEmail = email.trim().toLowerCase();
 
         // Validate email format
-        if (!email.includes('@')) {
+        if (!normalizedEmail.includes('@') || !normalizedEmail.includes('.')) {
             return NextResponse.json({ error: 'البريد الإلكتروني غير صحيح' }, { status: 400 });
-        }
-
-        // Validate password strength
-        if (password.length < 6) {
-            return NextResponse.json({ error: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' }, { status: 400 });
         }
 
         if (!adminDb) {
             return NextResponse.json({ error: 'مشكلة في إعدادات الخادم (Admin SDK)' }, { status: 500 });
         }
 
-        // Check if email already exists
+        // Check existing pending verification doc if password was omitted during resend
+        let effectivePassword = password;
+        const existingDocRef = adminDb.collection('email_verifications').doc(normalizedEmail);
+        const existingDoc = await existingDocRef.get();
+
+        if (!effectivePassword && existingDoc.exists) {
+            effectivePassword = existingDoc.data()?.password;
+        }
+
+        if (!effectivePassword) {
+            return NextResponse.json({ error: 'كلمة المرور مطلوبة' }, { status: 400 });
+        }
+
+        // Validate password strength
+        if (effectivePassword.length < 6) {
+            return NextResponse.json({ error: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' }, { status: 400 });
+        }
+
+        // Check if email already exists in Firebase Auth
         try {
             const { adminAuth } = await import('@/src/config/firebase-admin');
             if (adminAuth) {
-                await adminAuth.getUserByEmail(email);
-                // If we reach here, user exists
-                return NextResponse.json({ error: 'البريد الإلكتروني مسجل بالفعل' }, { status: 400 });
+                await adminAuth.getUserByEmail(normalizedEmail);
+                // If found, email already exists
+                return NextResponse.json({ error: 'البريد الإلكتروني مسجل بالفعل. يرجى تسجيل الدخول' }, { status: 400 });
             }
         } catch (error: any) {
             // User not found is expected
             if (error.code !== 'auth/user-not-found') {
-                throw error;
+                console.warn('Firebase Auth user lookup notice:', error.message);
             }
         }
 
@@ -43,29 +59,23 @@ export async function POST(req: NextRequest) {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes expiry
 
-        // Save signup data and OTP to Firestore `email_verifications` collection using email as Doc ID
-        await adminDb.collection('email_verifications').doc(email).set({
-            email,
-            firstName: firstName || '',
-            lastName: lastName || '',
-            password, // Will be deleted after verification
+        // Save signup data and OTP to Firestore `email_verifications` collection
+        await existingDocRef.set({
+            email: normalizedEmail,
+            firstName: firstName || existingDoc.data()?.firstName || '',
+            lastName: lastName || existingDoc.data()?.lastName || '',
+            password: effectivePassword,
             otp,
             expiresAt: expiresAt.toISOString(),
             createdAt: new Date().toISOString(),
-            verified: false
+            verified: false,
         });
 
-        // Send Email via Brevo
-        const brevoApiKey = process.env.BREVO_API_KEY;
-        if (!brevoApiKey) {
-            return NextResponse.json({ error: 'مفتاح BREVO_API_KEY غير متوفر في الخادم' }, { status: 500 });
-        }
-
-        const senderEmail = process.env.EMAIL_USER || 'newstolzy.ai@gmail.com';
-        const emailData = {
-            sender: { email: senderEmail, name: 'Tolzy Support' },
-            to: [{ email: email }],
+        // Send Verification Email
+        const emailResult = await sendAuthEmail({
+            to: normalizedEmail,
             subject: 'رمز التحقق من البريد الإلكتروني - Tolzy',
+            otp,
             htmlContent: `
                 <div dir="rtl" style="font-family: Arial, sans-serif; text-align: right; background-color: #f9f9f9; padding: 20px;">
                     <div style="max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 15px; border: 1px solid #e2e8f0;">
@@ -80,28 +90,14 @@ export async function POST(req: NextRequest) {
                         </div>
                     </div>
                 </div>
-            `
-        };
-
-        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'api-key': brevoApiKey
-            },
-            body: JSON.stringify(emailData)
+            `,
         });
-
-        if (!response.ok) {
-            const errorDetails = await response.text();
-            console.error('Brevo Error:', errorDetails);
-            return NextResponse.json({ error: 'حدثت مشكلة أثناء إرسال البريد' }, { status: 500 });
-        }
 
         return NextResponse.json({ 
             success: true, 
             message: 'تم إرسال رمز التحقق إلى بريدك الإلكتروني',
-            email: email 
+            email: normalizedEmail,
+            delivery: emailResult.method,
         });
 
     } catch (error: any) {

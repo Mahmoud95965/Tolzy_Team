@@ -433,12 +433,12 @@ const Navbar: React.FC = () => {
                 
                 {isMobileProductsOpen && (
                   <div className="pr-4 space-y-2 animate-fade-in-down flex flex-col gap-2">
-                    <Link href={isPro ? "/build" : "/pricing"} onClick={() => setIsOpen(false)} className="flex items-center justify-between p-3 rounded-xl bg-violet-50 dark:bg-violet-900/20 hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-colors">
+                    <Link href="/build" onClick={() => setIsOpen(false)} className="flex items-center justify-between p-3 rounded-xl bg-violet-50 dark:bg-violet-900/20 hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-colors">
                       <div className="flex items-center gap-3">
                         <Wand2 className="w-4 h-4 text-violet-500" />
                         <span className="text-sm font-bold text-violet-700 dark:text-violet-300">TOLZY Build</span>
                       </div>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">PRO</span>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-black bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400">AI</span>
                     </Link>
                     <Link href="/axiom" onClick={() => setIsOpen(false)} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
                       <BrainCircuit className="w-4 h-4 text-indigo-500" />

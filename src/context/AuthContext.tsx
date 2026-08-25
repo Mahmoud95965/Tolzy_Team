@@ -85,8 +85,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Lazy loaded instances
   const [authInstance, setAuthInstance] = useState<Auth | null>(null);
 
-  const normalizePlan = (rawPlan: unknown): 'free' | 'pro' | 'ultra' => {
+  const normalizePlan = (rawPlan: unknown): 'free' | 'pro' | 'max' | 'ultra' => {
     const value = String(rawPlan || 'free').toLowerCase();
+    if (value.includes('max')) return 'max';
     if (value.includes('ultra')) return 'ultra';
     if (value.includes('pro')) return 'pro';
     return 'free';

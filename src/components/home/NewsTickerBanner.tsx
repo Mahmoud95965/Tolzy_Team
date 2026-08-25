@@ -24,8 +24,8 @@ const NEWS_ITEMS: NewsTick[] = [
     id: '2',
     badge: '✨ تحديث',
     badgeColor: 'bg-indigo-500',
-    text: 'Tolzy Copilot V2.5 متاح الآن — تفكير أعمق، نماذج أسرع، وتجربة أفضل!',
-    link: '/copilot',
+    text: 'TOLZY AXIOM 2.5 متاح الآن — تفكير أعمق، نماذج أسرع، وتجربة أفضل!',
+    link: '/axiom',
   },
   {
     id: '3',

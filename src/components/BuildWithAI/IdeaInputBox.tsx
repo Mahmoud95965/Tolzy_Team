@@ -26,11 +26,18 @@ export default function IdeaInputBox({ onSubmit, isLoading }: IdeaInputBoxProps)
     const [idea, setIdea] = useState('');
     const [level, setLevel] = useState('beginner');
 
-    const { isListening, transcript, toggleListening, hasSupport } = useSpeechRecognition();
+    const { isListening, transcript, toggleListening } = useSpeechRecognition();
+    const baseIdeaInputRef = React.useRef('');
+
+    React.useEffect(() => {
+        if (isListening) {
+            baseIdeaInputRef.current = idea ? (idea.endsWith(' ') ? idea : idea + ' ') : '';
+        }
+    }, [isListening]);
 
     React.useEffect(() => {
         if (isListening && transcript) {
-            setIdea(transcript);
+            setIdea(baseIdeaInputRef.current + transcript);
         }
     }, [transcript, isListening]);
 
@@ -68,22 +75,20 @@ export default function IdeaInputBox({ onSubmit, isLoading }: IdeaInputBoxProps)
                         className="relative w-full bg-white dark:bg-[#111] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-2xl py-5 px-6 pb-12 outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-base placeholder:text-slate-400 font-medium resize-none scrollbar-hide"
                         dir="rtl"
                     />
-                    {hasSupport && (
-                        <div className="absolute bottom-3 left-3 z-10">
-                            <button
-                                type="button"
-                                onClick={toggleListening}
-                                title={isListening ? "إيقاف التسجيل" : "تحدث"}
-                                className={`p-2.5 rounded-xl transition-all flex items-center justify-center ${
-                                    isListening 
-                                    ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/30' 
-                                    : 'bg-slate-100 dark:bg-white/5 text-slate-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/20 hover:text-indigo-600 dark:hover:text-indigo-400'
-                                }`}
-                            >
-                                <Mic className="w-5 h-5" />
-                            </button>
-                        </div>
-                    )}
+                    <div className="absolute bottom-3 left-3 z-10">
+                        <button
+                            type="button"
+                            onClick={toggleListening}
+                            title={isListening ? "إيقاف التسجيل" : "تسجيل صوتي"}
+                            className={`p-2.5 rounded-xl transition-all flex items-center justify-center ${
+                                isListening 
+                                ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/30' 
+                                : 'bg-slate-100 dark:bg-white/5 text-slate-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/20 hover:text-indigo-600 dark:hover:text-indigo-400'
+                            }`}
+                        >
+                            <Mic className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Level Selector */}

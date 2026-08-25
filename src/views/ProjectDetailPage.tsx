@@ -65,10 +65,29 @@ export default function ProjectDetailPage() {
             </div>
 
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
-                {/* Back link */}
-                <Link href="/build/projects" className="inline-flex items-center gap-2 text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 mb-8 transition-colors">
-                    <ArrowRight className="w-4 h-4 rotate-180 rtl:rotate-0" /> العودة لمشاريعي
-                </Link>
+                {/* Top Action Bar */}
+                <div className="flex items-center justify-between gap-4 mb-8 flex-wrap">
+                    <Link href="/build/projects" className="inline-flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                        <ArrowRight className="w-4 h-4 rotate-180 rtl:rotate-0" /> العودة لمشاريعي
+                    </Link>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={async () => {
+                                await navigator.clipboard.writeText(window.location.href);
+                                alert('تم نسخ رابط المشروع المباشر بنجاح! 🔗');
+                            }}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 text-xs font-black hover:bg-slate-100 dark:hover:bg-white/10 transition-all shadow-xs"
+                        >
+                            <span>نسخ رابط المشروع 🔗</span>
+                        </button>
+                        <Link
+                            href="/build"
+                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-black hover:bg-indigo-700 transition-all shadow-md shadow-indigo-500/20"
+                        >
+                            <span>مشروع جديد ⚡</span>
+                        </Link>
+                    </div>
+                </div>
 
                 <BuildPlanViewer
                     result={project.result_json}
@@ -76,6 +95,7 @@ export default function ProjectDetailPage() {
                     onRemix={() => {}}
                     isLoading={false}
                     idea={project.idea}
+                    projectId={projectId}
                 />
             </div>
         </div>

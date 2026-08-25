@@ -7,7 +7,7 @@ import {
     Bot, Sparkles, Zap, GraduationCap, Users, BookOpen,
     ArrowUpRight, TerminalSquare, Wand2, ShieldCheck, Flame,
     Bookmark, TrendingUp, Compass, ChevronLeft, Search, Layers,
-    Video, Award, Star
+    Video, Award, Star, Crown
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useTools } from "../../hooks/useTools";
@@ -25,13 +25,32 @@ export default function LoggedInHome() {
     const { tools, popularTools } = useTools();
     const { isDarkMode } = useTheme();
     const [searchVal, setSearchVal] = useState("");
+    const [tokenUsage, setTokenUsage] = useState<any>(null);
 
-    const isPro = String(userProfile?.plan || "").toLowerCase().includes("pro") ||
-        String(userProfile?.plan || "").toLowerCase().includes("ultra") ||
-        String(userProfile?.plan || "").toLowerCase().includes("premium");
+    useEffect(() => {
+        if (!user?.uid) return;
+        fetch(`/api/user/token-usage?userId=${user.uid}`)
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (data) setTokenUsage(data);
+            })
+            .catch(console.error);
+    }, [user?.uid]);
 
-    const rawCount = (userProfile as any)?.aiRequestCount ?? (userProfile as any)?.copilotRequestCount ?? 0;
-    const remainingQuota = isPro ? "غير محدود (∞)" : `${Math.max(0, 5 - rawCount)} من 5`;
+    const rawPlan = tokenUsage?.plan || String(userProfile?.plan || "").toLowerCase();
+    const isMax = rawPlan.includes("max") || rawPlan.includes("ultra");
+    const isPro = !isMax && (rawPlan.includes("pro") || rawPlan.includes("plus"));
+    const isAdmin = rawPlan === "admin" || user?.email === "mahmoud.m.moussa5310@gmail.com";
+    const isPaid = isMax || isPro || isAdmin;
+
+    const remainingTokens = tokenUsage?.tokensRemaining !== undefined 
+        ? tokenUsage.tokensRemaining 
+        : (isMax ? 2_500_000 : isPro ? 500_000 : 10_000);
+    const allowanceTokens = tokenUsage?.tokenAllowance !== undefined
+        ? tokenUsage.tokenAllowance
+        : (isMax ? 2_500_000 : isPro ? 500_000 : 10_000);
+
+    const remainingQuota = isAdmin ? "غير محدود (Admin)" : `${remainingTokens.toLocaleString()} توكن`;
     const savedCount = ((userProfile as any)?.bookmarks?.length || (userProfile as any)?.savedTools?.length || 0);
 
     const greeting = () => {
@@ -46,7 +65,7 @@ export default function LoggedInHome() {
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         if (searchVal.trim()) {
-            router.push(`/copilot?q=${encodeURIComponent(searchVal.trim())}`);
+            router.push(`/axiom?q=${encodeURIComponent(searchVal.trim())}`);
         }
     };
 
@@ -104,14 +123,24 @@ export default function LoggedInHome() {
                                 <h1 className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${heading}`}>
                                     {firstName} 👋
                                 </h1>
-                                {isPro ? (
+                                {isAdmin ? (
+                                    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${isDarkMode ? 'text-purple-300 bg-purple-500/10 border border-purple-500/30' : 'text-purple-800 bg-purple-100 border border-purple-300'}`}>
+                                        <Crown className="w-3.5 h-3.5 text-purple-500" />
+                                        <span>حساب الإدارة 👑</span>
+                                    </span>
+                                ) : isMax ? (
+                                    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${isDarkMode ? 'text-purple-300 bg-purple-500/10 border border-purple-500/30' : 'text-purple-800 bg-purple-100 border border-purple-300'}`}>
+                                        <Crown className="w-3.5 h-3.5 text-purple-500" />
+                                        <span>عضوية MAX Studio 👑</span>
+                                    </span>
+                                ) : isPro ? (
                                     <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${isDarkMode ? 'text-amber-300 bg-amber-500/10 border border-amber-500/30' : 'text-amber-800 bg-amber-100 border border-amber-300'}`}>
                                         <Award className="w-3.5 h-3.5 text-amber-500" />
                                         <span>عضوية Pro VIP ⭐</span>
                                     </span>
                                 ) : (
                                     <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold ${isDarkMode ? 'text-slate-400 bg-slate-800/80 border border-slate-700/60' : 'text-slate-600 bg-slate-100 border border-slate-200'}`}>
-                                        عضوية مجانية
+                                        عضوية مجانية (10K)
                                     </span>
                                 )}
                             </div>
@@ -121,14 +150,14 @@ export default function LoggedInHome() {
                         </div>
                     </div>
 
-                    {!isPro && (
+                    {!isMax && !isAdmin && (
                         <div className="relative z-10 shrink-0">
                             <Link
                                 href="/pricing"
                                 className="px-5 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-sm shadow-lg shadow-indigo-500/25 transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2"
                             >
                                 <Flame className="w-4 h-4 text-amber-300" />
-                                <span>ترقية إلى Pro (طلبات غير محدودة)</span>
+                                <span>{isPro ? 'ترقية إلى MAX (2.5M توكن)' : 'ترقية الباقة وزيادة التوكن'}</span>
                             </Link>
                         </div>
                     )}
@@ -139,14 +168,16 @@ export default function LoggedInHome() {
                     {/* رصيد الذكاء الاصطناعي */}
                     <div className={`p-5 rounded-2xl transition-all group ${card} hover:border-indigo-500/40`}>
                         <div className="flex items-center justify-between">
-                            <span className={`text-xs font-semibold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>رصيد الذكاء الاصطناعي اليومي</span>
+                            <span className={`text-xs font-semibold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>رصيد التوكن الحقيقي</span>
                             <div className={`p-2.5 rounded-xl ${isDarkMode ? 'bg-indigo-500/10 text-indigo-400' : 'bg-indigo-50 text-indigo-600'} group-hover:scale-110 transition-transform`}>
                                 <Zap className="w-5 h-5" />
                             </div>
                         </div>
                         <div className="mt-4">
-                            <div className={`text-2xl sm:text-3xl font-extrabold ${heading}`}>{remainingQuota}</div>
-                            <p className={`text-xs mt-1 ${subtext}`}>مشترك وموحد لجميع أدوات المنصة</p>
+                            <div className={`text-xl sm:text-2xl font-extrabold ${heading}`}>{remainingQuota}</div>
+                            <p className={`text-xs mt-1 ${subtext}`}>
+                                {isAdmin ? 'وصول مفتوح للحساب الإداري' : `من إجمالي ${allowanceTokens.toLocaleString()} توكن`}
+                            </p>
                         </div>
                     </div>
 

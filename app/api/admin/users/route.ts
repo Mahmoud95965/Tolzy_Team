@@ -82,7 +82,11 @@ export async function GET(request: NextRequest) {
                 } else {
                     for (const row of plansRows || []) {
                         const normalized = String(row.plan || 'free').toLowerCase();
-                        plansByUserId.set(row.user_id, normalized.includes('pro') ? 'pro' : normalized.includes('plus') ? 'pro' : 'free');
+                        plansByUserId.set(
+                            row.user_id, 
+                            normalized.includes('max') || normalized.includes('ultra') ? 'max' :
+                            normalized.includes('pro') || normalized.includes('plus') ? 'pro' : 'free'
+                        );
                     }
                     console.log(`✅ Fetched plans for ${plansRows?.length || 0} users from Supabase`);
                 }
@@ -98,13 +102,13 @@ export async function GET(request: NextRequest) {
                 const usersSnap = await adminDb.collection('users').get();
                 usersSnap.docs.forEach(doc => {
                     const data = doc.data();
-                    const firestorePlan = String(data.plan || 'free').toLowerCase();
+                    const firestorePlan = String(data.plan || data.subscriptionPlan || 'free').toLowerCase();
                     const existingPlan = plansByUserId.get(doc.id) || 'free';
                     
-                    // Priority: ultra > pro > free
+                    // Priority: max/ultra > pro > free
                     let finalPlan = existingPlan;
-                    if (firestorePlan.includes('ultra') || existingPlan.includes('ultra')) finalPlan = 'ultra';
-                    else if (firestorePlan.includes('pro') || existingPlan.includes('pro') || firestorePlan.includes('plus')) finalPlan = 'pro';
+                    if (firestorePlan.includes('max') || firestorePlan.includes('ultra') || existingPlan === 'max') finalPlan = 'max';
+                    else if (firestorePlan.includes('pro') || existingPlan === 'pro' || firestorePlan.includes('plus')) finalPlan = 'pro';
                     
                     plansByUserId.set(doc.id, finalPlan);
                 });
@@ -145,7 +149,14 @@ export async function PATCH(request: NextRequest) {
         const body = await request.json();
         const uid = String(body?.uid || '').trim();
         const rawPlan = String(body?.plan || '').toLowerCase().trim();
-        const plan = rawPlan === 'pro' ? 'pro' : 'free';
+        let plan: 'free' | 'pro' | 'max' = 'free';
+        if (rawPlan.includes('max') || rawPlan.includes('ultra') || rawPlan.includes('studio')) {
+            plan = 'max';
+        } else if (rawPlan.includes('pro') || rawPlan.includes('plus')) {
+            plan = 'pro';
+        } else {
+            plan = 'free';
+        }
 
         if (!uid) {
             console.warn('⚠️ Missing uid in request body');
@@ -211,14 +222,20 @@ export async function PATCH(request: NextRequest) {
         // Always update Firestore as primary/fallback storage
         if (adminDb) {
             try {
+                const normalizedPlan = String(plan).toLowerCase();
+                const targetAllowance = normalizedPlan.includes('max') ? 2_500_000 : normalizedPlan.includes('pro') ? 500_000 : 10_000;
                 await adminDb.collection('users').doc(uid).set(
                     {
                         plan,
+                        subscriptionPlan: plan,
+                        tokenAllowance: targetAllowance,
+                        tokensUsed: 0,
+                        aiTokensUsed: 0,
                         updatedAt: new Date().toISOString(),
                     },
                     { merge: true }
                 );
-                console.log(`✅ Firestore user document updated for ${uid}`);
+                console.log(`✅ Firestore user document updated for ${uid} with allowance ${targetAllowance}`);
                 
                 // If Supabase failed but Firestore succeeded, still return success
                 return NextResponse.json({ 

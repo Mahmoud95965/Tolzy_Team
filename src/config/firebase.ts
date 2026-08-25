@@ -19,14 +19,15 @@ if (typeof window !== 'undefined') {
 }
 */
 
-import { initializeApp, FirebaseApp } from 'firebase/app';
+import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { 
   Firestore, 
   getFirestore, 
   initializeFirestore, 
   persistentLocalCache, 
   persistentMultipleTabManager, 
-  connectFirestoreEmulator 
+  connectFirestoreEmulator,
+  setLogLevel
 } from 'firebase/firestore';
 import { getAuth, GoogleAuthProvider, Auth, OAuthProvider, GithubAuthProvider, connectAuthEmulator } from 'firebase/auth';
 
@@ -81,32 +82,32 @@ let googleProvider: GoogleAuthProvider;
 let microsoftProvider: OAuthProvider;
 
 try {
+  // Suppress internal multi-tab lease competition logs (e.g. Backfill Indexes)
+  setLogLevel('error');
+
   // Check if required config values exist in production runtime
   if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY || !process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
     console.warn('[Firebase] Missing Firebase API Key or Project ID in build environment. Using placeholders for build-time evaluation.');
   }
 
-  console.log('[Firebase] Initializing with config:', {
-    apiKey: firebaseConfig.apiKey?.substring(0, 10) + '...',
-    authDomain: firebaseConfig.authDomain,
-    projectId: firebaseConfig.projectId,
-    appId: firebaseConfig.appId?.substring(0, 10) + '...'
-  });
-
-  app = initializeApp(firebaseConfig);
+  // Singleton app check for Next.js Fast Refresh & Turbopack
+  app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
   // Initialize Firestore with robust local persistent cache (IndexedDB)
   // This enables offline caching, loads data locally first, and saves Firestore reads / quotas.
-  try {
-    db = initializeFirestore(app, {
-      localCache: persistentLocalCache({
-        tabManager: persistentMultipleTabManager()
-      })
-    });
-    console.log('📦 [Firebase Client] Offline persistence enabled successfully');
-  } catch (e: any) {
+  if (typeof window !== 'undefined') {
+    try {
+      db = initializeFirestore(app, {
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager()
+        })
+      });
+      console.log('📦 [Firebase Client] Offline persistence enabled successfully');
+    } catch (e: any) {
+      db = getFirestore(app);
+    }
+  } else {
     db = getFirestore(app);
-    console.warn('⚠️ [Firebase Client] Reusing existing Firestore instance:', e.message);
   }
   
   auth = getAuth(app);

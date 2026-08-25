@@ -326,18 +326,20 @@ ${context || 'لا توجد أدوات أو كورسات محددة مسترجع
 
         const stream = new ReadableStream({
             async start(controller) {
+                let streamedChars = 0;
                 try {
                     const completionStream = await openai.chat.completions.create({
                         model: AZURE_AI_MODEL,
                         messages: chatMessages,
                         temperature,
-                        max_tokens: 2048,
+                        max_tokens: quota.maxTokensForRequest || 2048,
                         stream: true,
                     });
 
                     for await (const chunk of completionStream) {
                         const delta = chunk.choices[0]?.delta?.content || '';
                         if (delta) {
+                            streamedChars += delta.length;
                             send(controller, delta);
                         }
                     }
@@ -345,6 +347,9 @@ ${context || 'لا توجد أدوات أو كورسات محددة مسترجع
                     console.error('❌ [Azure AI Stream Error]:', e);
                     send(controller, '⚠️ عذراً، حدث خطأ أثناء الاتصال بمحرك الذكاء الاصطناعي.');
                 } finally {
+                    const { recordActualTokenUsage } = await import('@/src/lib/ai-quota');
+                    const estimatedActual = Math.max(50, Math.ceil(streamedChars / 3.5) + 150);
+                    recordActualTokenUsage(userId, estimatedActual, 300).catch(console.error);
                     controller.close();
                 }
             }

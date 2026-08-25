@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { hasSupabaseAdminConfig, supabaseAdmin } from '@/src/config/supabase-admin';
 import { adminDb } from '@/lib/firebase-admin';
 
+const ADMIN_EMAIL = 'mahmoud.m.moussa5310@gmail.com';
+
 export async function GET(req: NextRequest) {
   try {
     const uid = req.nextUrl.searchParams.get('uid');
@@ -10,21 +12,26 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Missing uid', plan: 'free' }, { status: 400 });
     }
 
-    console.log(`🔍 Fetching plan for user: ${uid}`);
+    console.log(`🔍 Fetching real plan for user: ${uid}`);
 
     let firestorePlan = 'free';
+    let firestoreEmail = '';
     let supabasePlan = 'free';
 
-    // Fetch from both sources concurrently for speed
+    // Fetch from both sources concurrently for speed and 100% accuracy
     const [firestoreTask, supabaseTask] = await Promise.allSettled([
       // Firestore task
       (async () => {
-        if (!adminDb) return 'free';
+        if (!adminDb) return { plan: 'free', email: '' };
         const userDoc = await adminDb.collection('users').doc(uid).get();
         if (userDoc.exists) {
-          return String(userDoc.data()?.plan || 'free').toLowerCase();
+          const data = userDoc.data();
+          return {
+            plan: String(data?.plan || data?.subscriptionPlan || 'free').toLowerCase(),
+            email: String(data?.email || '').toLowerCase()
+          };
         }
-        return 'free';
+        return { plan: 'free', email: '' };
       })(),
 
       // Supabase task
@@ -42,11 +49,21 @@ export async function GET(req: NextRequest) {
       })()
     ]);
 
-    if (firestoreTask.status === 'fulfilled') firestorePlan = firestoreTask.value;
-    if (supabaseTask.status === 'fulfilled') supabasePlan = supabaseTask.value;
+    if (firestoreTask.status === 'fulfilled') {
+      firestorePlan = firestoreTask.value.plan;
+      firestoreEmail = firestoreTask.value.email;
+    }
+    if (supabaseTask.status === 'fulfilled') {
+      supabasePlan = supabaseTask.value;
+    }
+
+    // Admin override
+    if (firestoreEmail === ADMIN_EMAIL) {
+      return NextResponse.json({ plan: 'admin', source: 'admin_role' }, { status: 200 });
+    }
 
     const normalize = (rawPlan: string) => {
-      if (rawPlan.includes('ultra')) return 'ultra';
+      if (rawPlan.includes('max') || rawPlan.includes('ultra') || rawPlan.includes('studio')) return 'max';
       if (rawPlan.includes('pro') || rawPlan.includes('plus')) return 'pro';
       return 'free';
     };
@@ -54,13 +71,13 @@ export async function GET(req: NextRequest) {
     const normalizedFirestore = normalize(firestorePlan);
     const normalizedSupabase = normalize(supabasePlan);
 
-    // Determine highest plan
+    // Determine highest plan: max > pro > free
     let finalPlan = 'free';
     let source = 'none';
 
-    if (normalizedFirestore === 'ultra' || normalizedSupabase === 'ultra') {
-      finalPlan = 'ultra';
-      source = normalizedFirestore === 'ultra' ? 'firebase' : 'supabase';
+    if (normalizedFirestore === 'max' || normalizedSupabase === 'max') {
+      finalPlan = 'max';
+      source = normalizedFirestore === 'max' ? 'firebase' : 'supabase';
     } else if (normalizedFirestore === 'pro' || normalizedSupabase === 'pro') {
       finalPlan = 'pro';
       source = normalizedFirestore === 'pro' ? 'firebase' : 'supabase';
@@ -69,7 +86,7 @@ export async function GET(req: NextRequest) {
              : (supabaseTask.status === 'fulfilled' && supabasePlan !== 'free') ? 'supabase' : 'firebase';
     }
 
-    console.log(`✅ Final plan for ${uid}: "${finalPlan}" (via ${source})`);
+    console.log(`✅ Real plan for ${uid}: "${finalPlan}" (via ${source})`);
     return NextResponse.json({ plan: finalPlan, source }, { status: 200 });
 
   } catch (error: any) {

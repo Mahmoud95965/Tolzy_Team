@@ -7,7 +7,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { generateCopilotSEO } from '@/src/utils/seoHelpers';
 
-const FeaturesCopilotPage = () => {
+const FeaturesAxiomPage = () => {
     const router = useRouter();
     const [openFaq, setOpenFaq] = useState<number | null>(null);
 
@@ -19,13 +19,13 @@ const FeaturesCopilotPage = () => {
         },
         {
             icon: MessageSquare,
-            title: 'محادثة طبيعية',
-            description: 'تحدث مع Copilot كأنك تتحدث مع خبير. يفهم السياق، اللهجات، والأسئلة المعقدة.'
+            title: 'محادثة طبيعية وتفكير متقدم',
+            description: 'تحدث مع AXIOM كأنك تتحدث مع خبير وشريك تقني. يفهم السياق البرمجي، اللهجات، والمسائل المعقدة.'
         },
         {
             icon: Globe,
             title: 'دعم متعدد اللغات',
-            description: 'سواء كنت تسأل بالعربية أو الإنجليزية، ستحصل على إجابات دقيقة بنفس اللغة.'
+            description: 'سواء كنت تسأل بالعربية أو الإنجليزية، ستحصل على إجابات دقيقة ومفصلة بنفس اللغة.'
         },
         {
             icon: Shield,
@@ -40,26 +40,26 @@ const FeaturesCopilotPage = () => {
         {
             icon: Command,
             title: 'بناء مسارات العمل (Workflows)',
-            description: 'لا تسأل عن أداة واحدة فقط. اطلب خطة لمشروعك، وسيقوم Copilot ببناء مسار عمل كامل مقسّم للخطوات والأدوات.'
+            description: 'لا تسأل عن أداة واحدة فقط. اطلب خطة لمشروعك، وسيقوم AXIOM ببناء مسار عمل كامل مقسّم للخطوات والأدوات.'
         }
     ];
 
     const faqs = [
         {
             question: 'هل الخدمة مجانية؟',
-            answer: 'نعم، Tolzy Copilot متاح مجاناً بالكامل حالياً لجميع المستخدمين.'
+            answer: 'نعم، معالج TOLZY AXIOM متاح مجاناً بحصة ترحيبية فورية، مع باقات Pro و MAX للاستخدام المتقدم غير المحدود.'
         },
         {
             question: 'كيف يمكنني البدء؟',
-            answer: 'فقط اضغط على زر "جرب Copilot" وابدأ المحادثة مباشرة. لا حاجة لضبط إعدادات معقدة.'
+            answer: 'فقط اضغط على زر "جرب AXIOM" وابدأ المحادثة مباشرة. لا حاجة لضبط إعدادات معقدة.'
         },
         {
             question: 'هل يمكنني استخدامه على الهاتف؟',
-            answer: 'بالتأكيد. تم تصميم الواجهة لتعمل بسلاسة على جميع الأجهزة والهواتف الذكية.'
+            answer: 'بالتأكيد. تم تصميم الواجهة لتعمل بسلاسة فائقة وسرعة استجابة على جميع الأجهزة والهواتف الذكية.'
         },
         {
             question: 'ما مدى دقة المعلومات؟',
-            answer: 'يعتمد Copilot على قاعدة بيانات ضخمة ومحدثة، بالإضافة إلى نماذج ذكاء اصطناعي متطورة لضمان دقة الاقتراحات.'
+            answer: 'يعتمد AXIOM على محركات ذكاء اصطناعي رائدة وسياق برمجي متقدم لضمان دقة التحليل والاقتراحات.'
         }
     ];
 
@@ -71,11 +71,9 @@ const FeaturesCopilotPage = () => {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(seoData.structuredData) }}
             />
-            {/* Navbar Placeholder (Optional if layout handles it) */}
 
             {/* Hero Section */}
             <section className="relative pt-32 pb-20 px-6 overflow-hidden">
-                {/* Subtle Background Glow - One Color */}
                 <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] -z-10" />
                 <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-violet-500/10 rounded-full blur-[120px] -z-10" />
 
@@ -89,20 +87,20 @@ const FeaturesCopilotPage = () => {
                     </div>
 
                     <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-8 text-slate-900 dark:text-white">
-                        مستقبـل البحـث عـن <br />
+                        مستقبـل التفكير والتطوير مع <br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-br from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400">
-                            أدوات الذكاء الاصطناعي
+                            TOLZY AXIOM
                         </span>
                     </h1>
 
                     <p className="text-xl text-slate-600 dark:text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
-                        لا داعي للبحث لساعات. أخبر Tolzy Copilot بما تريد تحقيقه، وسيقوم هو بالباقي.
+                        لا داعي للبحث لساعات. أخبر TOLZY AXIOM بما تريد تحقيقه، وسيقوم هو بالباقي.
                         أذكى، أسرع، وأكثر دقة.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <button
-                            onClick={() => router.push('/copilot')}
+                            onClick={() => router.push('/axiom')}
                             className="w-full sm:w-auto px-8 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-semibold hover:shadow-lg hover:shadow-indigo-500/20 hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2"
                         >
                             <Sparkles className="w-5 h-5" />
@@ -129,7 +127,7 @@ const FeaturesCopilotPage = () => {
                             </div>
                             <div className="bg-slate-100 dark:bg-slate-800 px-4 py-1 rounded-full text-xs text-slate-500 flex items-center gap-2 mx-auto">
                                 <Shield className="w-3 h-3" />
-                                Tolzy Copilot Secure Chat
+                                TOLZY AXIOM Secure Chat
                             </div>
                         </div>
 
@@ -138,7 +136,7 @@ const FeaturesCopilotPage = () => {
                             <div className="relative w-full h-full">
                                 <img
                                     src="/image/copilot-chat.png"
-                                    alt="Tolzy Copilot Interface"
+                                    alt="TOLZY AXIOM Interface"
                                     className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.02]"
                                     onError={(e) => {
                                         const target = e.currentTarget;
@@ -152,7 +150,6 @@ const FeaturesCopilotPage = () => {
                                         }
                                     }}
                                 />
-                                {/* Overlay Gradient for seamless blend */}
                                 <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-[#0B0C15] via-transparent to-transparent opacity-10 pointer-events-none" />
                             </div>
                         </div>
@@ -160,13 +157,13 @@ const FeaturesCopilotPage = () => {
                 </div>
             </section>
 
-            {/* Features Grid - Clean & Minimal */}
+            {/* Features Grid */}
             <section id="features" className="py-24 px-6 bg-slate-50 dark:bg-[#0F1019]">
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">كل ما تحتاجه في مكان واحد</h2>
                         <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
-                            تم تصميم Tolzy Copilot ليكون مساعدك الشخصي الذكي، مع التركيز على السرعة والدقة.
+                            تم تصميم TOLZY AXIOM ليكون معالجك الشخصي الذكي، مع التركيز على السرعة والدقة.
                         </p>
                     </div>
 
@@ -222,19 +219,18 @@ const FeaturesCopilotPage = () => {
             {/* Clean CTA */}
             <section className="py-20 px-6">
                 <div className="max-w-5xl mx-auto bg-slate-900 dark:bg-indigo-600 rounded-[2rem] p-12 md:p-16 text-center relative overflow-hidden">
-                    {/* Background Pattern */}
                     <div className="absolute top-0 left-0 w-full h-full opacity-10">
                         <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2" />
                         <div className="absolute bottom-0 right-0 w-96 h-96 bg-black rounded-full blur-[100px] translate-x-1/2 translate-y-1/2" />
                     </div>
 
                     <div className="relative z-10">
-                        <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">جاهز لتجربة البحث الذكي؟</h2>
+                        <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">جاهز لتجربة AXIOM الذكي؟</h2>
                         <p className="text-slate-300 text-lg mb-10 max-w-2xl mx-auto">
-                            انضم للمستقبل واستكشف عالم الذكاء الاصطناعي بطريقة لم تعهدها من قبل. مجاناً وبدون تعقيدات.
+                            انضم للمستقبل واستكشف معالج الذكاء الاصطناعي بطريقة لم تعهدها من قبل. مجاناً وبدون تعقيدات.
                         </p>
                         <button
-                            onClick={() => router.push('/copilot')}
+                            onClick={() => router.push('/axiom')}
                             className="bg-white text-slate-900 dark:text-indigo-600 px-10 py-4 rounded-xl font-bold text-lg hover:bg-slate-50 transition-colors shadow-2xl"
                         >
                             ابدأ الآن
@@ -245,17 +241,10 @@ const FeaturesCopilotPage = () => {
 
             {/* Footer Simple */}
             <footer className="py-10 text-center text-slate-500 text-sm border-t border-slate-100 dark:border-slate-900">
-                <p>© 2025 Tolzy Team. جميع الحقوق محفوظة.</p>
+                <p>© {new Date().getFullYear()} TOLZY AI. جميع الحقوق محفوظة.</p>
             </footer>
-
-            <style jsx>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-            `}</style>
         </div>
     );
 };
 
-export default FeaturesCopilotPage;
+export default FeaturesAxiomPage;

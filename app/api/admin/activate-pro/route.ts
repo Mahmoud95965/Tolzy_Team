@@ -4,7 +4,9 @@ import { hasSupabaseAdminConfig, supabaseAdmin } from '@/src/config/supabase-adm
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { userId, email, adminKey } = body;
+    const { userId, email, adminKey, plan = 'pro' } = body;
+    const targetPlan = String(plan).toLowerCase().includes('max') ? 'max' : 'pro';
+    const targetAllowance = targetPlan === 'max' ? 2_500_000 : 500_000;
 
     // Security check - simple admin key validation
     const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || 'admin-key-1234';
@@ -29,15 +31,32 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 1. Activate Pro for the user
+    // 1. Activate Plan for the user in Supabase
     const { error: updateError } = await supabaseAdmin
       .from('user_limits')
       .upsert({
         user_id: userId || '',
         email: email || '',
-        plan: 'pro',
+        plan: targetPlan,
         updated_at: new Date().toISOString()
       }, { onConflict: 'user_id' });
+
+    // Sync with Firestore if possible
+    try {
+      const { adminDb } = await import('@/src/config/firebase-admin');
+      if (adminDb && userId) {
+        await adminDb.collection('users').doc(userId).set({
+          plan: targetPlan,
+          subscriptionPlan: targetPlan,
+          tokensUsed: 0,
+          aiTokensUsed: 0,
+          tokenAllowance: targetAllowance,
+          updatedAt: new Date()
+        }, { merge: true });
+      }
+    } catch (fsErr) {
+      console.warn('Firestore plan sync notice:', fsErr);
+    }
 
     if (updateError) {
       console.error('❌ Failed to activate pro:', updateError);
@@ -76,10 +95,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: '✅ Pro account activated!',
+      message: `✅ ${targetPlan.toUpperCase()} account activated successfully!`,
       userId: userId || 'N/A',
       email: email || 'N/A',
-      plan: 'pro',
+      plan: targetPlan,
+      tokenAllowance: targetAllowance,
       timestamp: new Date().toISOString()
     }, { status: 200 });
 

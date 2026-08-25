@@ -7,45 +7,38 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function GET(req: NextRequest) {
   try {
-    // Fetch from Supabase promotions table
     const { data, error } = await supabase
       .from('promotions')
-      .select('mofathy_promo_count')
+      .select('tolzy2030_promo_count')
       .eq('id', 1)
       .single();
 
-    if (error || !data) {
-      // Return default if table doesn't exist yet
-      console.log('Promotions table not found, returning default:', error?.message);
-      return NextResponse.json({
-        mofathy_promo_count: 0,
-        is_available: true,
-        remaining_seats: 10,
-        promo_code: 'MOFATHY10'
-      });
-    }
-
-    const count = data.mofathy_promo_count || 0;
-    const isAvailable = count < 10;
-    const remainingSeats = Math.max(0, 10 - count);
+    const count = data?.tolzy2030_promo_count || 0;
+    const remainingSeats = Math.max(0, 100 - count);
 
     return NextResponse.json({
-      mofathy_promo_count: count,
-      is_available: isAvailable,
-      remaining_seats: remainingSeats,
-      promo_code: 'MOFATHY10',
-      original_price: 299,
-      promo_price: 209,
-      discount_percentage: 30
+      promo_count: count,
+      is_available: true,
+      remaining_seats: remainingSeats > 0 ? remainingSeats : 50,
+      promo_code: 'TOLZY2030',
+      discount_percentage: 50,
+      pro_original_price: 650,
+      pro_promo_price: 325,
+      max_original_price: 1950,
+      max_promo_price: 975
     });
   } catch (error: any) {
     console.error('Error fetching promo status:', error);
-    // Return safe default
     return NextResponse.json({
-      mofathy_promo_count: 0,
+      promo_count: 0,
       is_available: true,
-      remaining_seats: 10,
-      promo_code: 'MOFATHY10'
+      remaining_seats: 50,
+      promo_code: 'TOLZY2030',
+      discount_percentage: 50,
+      pro_original_price: 650,
+      pro_promo_price: 325,
+      max_original_price: 1950,
+      max_promo_price: 975
     });
   }
 }

@@ -17,13 +17,13 @@ const CallToAction: React.FC = () => {
   // Hardcoded curated list as per user request with specific images
   const filteredFeaturedTools: any[] = [
     {
-      id: 'tolzy-copilot',
-      name: 'Tolzy Copilot',
-      description: 'مساعدك الذكي الشامل لإنجاز المشاريع والتعلم.',
+      id: 'tolzy-axiom',
+      name: 'TOLZY AXIOM',
+      description: 'معالجك الذكي الشامل لإنجاز المشاريع والبرمجة والتفكير.',
       category: 'Automation',
       subcategory: 'Productivity',
       pricing: 'Freemium',
-      tags: ['AI', 'Copilot', 'Assistant'],
+      tags: ['AI', 'AXIOM', 'Assistant'],
       rating: 5,
       savedBy: Array(120).fill('user'),
       isNew: true

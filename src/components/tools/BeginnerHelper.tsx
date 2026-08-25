@@ -157,9 +157,9 @@ export default function BeginnerHelper() {
                   3
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-900 dark:text-white mb-1">استخدم Copilot</h4>
+                  <h4 className="font-bold text-slate-900 dark:text-white mb-1">استخدم AXIOM</h4>
                   <p className="text-slate-600 dark:text-slate-400 text-sm">
-                    إذا كنت محتار، اسأل Tolzy Copilot! هو يعرف كل الأدوات وينصحك بالمناسبة لمشروعك.
+                    إذا كنت محتار، اسأل TOLZY AXIOM! هو يعرف كل الأدوات وينصحك بالمناسبة لمشروعك.
                   </p>
                 </div>
               </div>
@@ -185,11 +185,11 @@ export default function BeginnerHelper() {
                 فهمت
               </button>
               <Link
-                href="/copilot"
+                href="/axiom"
                 onClick={() => setShowGuide(false)}
                 className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium text-center hover:shadow-lg transition-all flex items-center justify-center gap-2"
               >
-                جرب Copilot الآن
+                جرب AXIOM الآن
                 <ArrowLeft className="w-4 h-4" />
               </Link>
             </div>

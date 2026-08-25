@@ -39,9 +39,9 @@ const tourSteps: TourStep[] = [
     icon: <BookOpen className="w-8 h-8" />
   },
   {
-    title: 'مساعدك الذكي Tolzy Copilot',
-    description: 'اسأل أي سؤال عن الأدوات، احصل على توصيات مخصصة، واختبر قدراتك مع مساعد AI متخصص',
-    target: '/copilot',
+    title: 'معالجك الذكي TOLZY AXIOM',
+    description: 'اسأل أي سؤال عن الأدوات، احصل على توصيات مخصصة، واختبر قدراتك مع معالج AXIOM الفائق',
+    target: '/axiom',
     icon: <Bot className="w-8 h-8" />
   }
 ];
@@ -109,19 +109,19 @@ export default function EnhancedHero() {
   
   const isLoggedIn = !!user;
 
-  const goToCopilot = () => {
+  const goToAxiom = () => {
     const trimmed = prompt.trim();
     if (trimmed) {
-      window.location.href = `/copilot?q=${encodeURIComponent(trimmed)}`;
+      window.location.href = `/axiom?q=${encodeURIComponent(trimmed)}`;
     } else {
-      window.location.href = '/copilot';
+      window.location.href = '/axiom';
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      goToCopilot();
+      goToAxiom();
     }
   };
 
@@ -244,7 +244,7 @@ export default function EnhancedHero() {
           className={`text-base md:text-xl max-w-3xl mx-auto leading-relaxed mb-10 text-center transition-colors duration-300 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}
         >
           بوابة Tolzy الذكية تربطك بـ 1000+ أداة AI احترافية، كورسات برمجة مجانية عالية الجودة،
-          ومساعد Copilot التوليدي للإجابة وتوجيه أفكارك بالكامل باللغة العربية.
+          ومعالج AXIOM الفائق للإجابة وتوجيه أفكارك بالكامل باللغة العربية.
         </motion.p>
 
         {/* Premium Glassmorphic Search Bar */}
@@ -276,7 +276,7 @@ export default function EnhancedHero() {
 
               <button
                 id="search-action-btn"
-                onClick={goToCopilot}
+                onClick={goToAxiom}
                 className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white px-6 md:px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg hover:shadow-indigo-500/25 active:scale-95"
               >
                 <span className="text-sm md:text-base">ابحث ذكياً</span>
@@ -308,11 +308,11 @@ export default function EnhancedHero() {
           </button>
           
           <Link 
-            href={isLoggedIn ? '/copilot' : '/auth'} 
+            href={isLoggedIn ? '/axiom' : '/auth'} 
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/15 hover:shadow-indigo-500/25 hover:-translate-y-0.5 transition-all"
           >
             <Bot className="w-4 h-4 text-purple-200" />
-            مساعدك التوليدي Copilot
+            معالج AXIOM الذكي
           </Link>
         </motion.div>
       </motion.div>

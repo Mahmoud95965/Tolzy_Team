@@ -1,29 +1,213 @@
 import { adminDb } from '@/src/config/firebase-admin';
 import * as admin from 'firebase-admin';
 
+export type PlanType = 'free' | 'pro' | 'max' | 'ultra' | 'admin';
+
+export interface PlanConfig {
+    name: string;
+    tokenAllowance: number;
+    isLifetime: boolean;
+    maxTokensPerRequest: number;
+    rpmLimit: number; // Requests Per Minute
+    features: {
+        copilot: boolean;
+        axiom: boolean;
+        omnilearn: boolean;
+        buildWithAi: boolean;
+        deepReasoning: boolean;
+        prioritySpeed: boolean;
+    };
+}
+
+export const PLAN_CONFIGS: Record<PlanType, PlanConfig> = {
+    free: {
+        name: 'الباقة الأساسية (Free)',
+        tokenAllowance: 10_000, // 10,000 توكن مدى الحياة لجميع الميزات
+        isLifetime: true,
+        maxTokensPerRequest: 4_000,
+        rpmLimit: 15,
+        features: {
+            copilot: true,
+            axiom: true,
+            omnilearn: true,
+            buildWithAi: true,
+            deepReasoning: true,
+            prioritySpeed: true,
+        }
+    },
+    pro: {
+        name: 'باقة المحترفين (Pro)',
+        tokenAllowance: 500_000, // 500,000 توكن
+        isLifetime: false,
+        maxTokensPerRequest: 6_000,
+        rpmLimit: 40,
+        features: {
+            copilot: true,
+            axiom: true,
+            omnilearn: true,
+            buildWithAi: true,
+            deepReasoning: true,
+            prioritySpeed: true,
+        }
+    },
+    max: {
+        name: 'باقة ماكس الفائقة (MAX)',
+        tokenAllowance: 2_500_000, // 2.5 مليون توكن
+        isLifetime: false,
+        maxTokensPerRequest: 8_000,
+        rpmLimit: 80,
+        features: {
+            copilot: true,
+            axiom: true,
+            omnilearn: true,
+            buildWithAi: true,
+            deepReasoning: true,
+            prioritySpeed: true,
+        }
+    },
+    ultra: {
+        name: 'باقة ماكس الفائقة (MAX)',
+        tokenAllowance: 2_500_000,
+        isLifetime: false,
+        maxTokensPerRequest: 8_000,
+        rpmLimit: 80,
+        features: {
+            copilot: true,
+            axiom: true,
+            omnilearn: true,
+            buildWithAi: true,
+            deepReasoning: true,
+            prioritySpeed: true,
+        }
+    },
+    admin: {
+        name: 'حساب الإدارة (Admin)',
+        tokenAllowance: 999_999_999,
+        isLifetime: true,
+        maxTokensPerRequest: 16_000,
+        rpmLimit: 200,
+        features: {
+            copilot: true,
+            axiom: true,
+            omnilearn: true,
+            buildWithAi: true,
+            deepReasoning: true,
+            prioritySpeed: true,
+        }
+    }
+};
+
 export interface QuotaCheckResult {
     allowed: boolean;
+    plan: PlanType;
     isPro: boolean;
+    isMax: boolean;
+    tokensUsed: number;
+    tokenAllowance: number;
+    tokensRemaining: number;
     remaining: number;
+    maxTokensForRequest: number;
     error?: string;
 }
 
+// In-Memory Rate Limiting Tracker (Sliding Window per Minute) to protect against DDoS/Script abuse
+interface RateLimitEntry {
+    timestamps: number[];
+}
+const rateLimitMap = new Map<string, RateLimitEntry>();
+
+// Clean up old rate limit entries every 5 minutes
+if (typeof setInterval !== 'undefined') {
+    setInterval(() => {
+        const now = Date.now();
+        for (const [key, entry] of rateLimitMap.entries()) {
+            entry.timestamps = entry.timestamps.filter(ts => now - ts < 60_000);
+            if (entry.timestamps.length === 0) {
+                rateLimitMap.delete(key);
+            }
+        }
+    }, 5 * 60 * 1000);
+}
+
+export function parsePlan(rawPlan: unknown): PlanType {
+    const p = String(rawPlan || 'free').toLowerCase().trim();
+    if (p.includes('admin')) return 'admin';
+    if (p.includes('max') || p.includes('ultra')) return 'max';
+    if (p.includes('pro')) return 'pro';
+    return 'free';
+}
+
 /**
- * فحص واستهلاك حصة الذكاء الاصطناعي الموحدة لجميع الأدوات (5 طلبات يومياً للمستخدم المجاني)
+ * 🔒 فحص واستهلاك حصة التوكن والأمان الموحد لكافة أدوات الذكاء الاصطناعي
  */
-export async function checkAndConsumeAiQuota(userId: string | undefined | null, clientPlan?: string): Promise<QuotaCheckResult> {
+export async function checkAndConsumeAiQuota(
+    userId: string | undefined | null, 
+    clientPlan?: string,
+    estimatedTokens: number = 300
+): Promise<QuotaCheckResult> {
     if (!userId) {
         return {
             allowed: false,
+            plan: 'free',
             isPro: false,
+            isMax: false,
+            tokensUsed: 0,
+            tokenAllowance: 10_000,
+            tokensRemaining: 0,
             remaining: 0,
-            error: 'يرجى تسجيل الدخول أولاً للاستفادة من أدوات الذكاء الاصطناعي.'
+            maxTokensForRequest: 1_000,
+            error: 'يرجى تسجيل الدخول أولاً للاستفادة من أدوات ونماذج الذكاء الاصطناعي.'
         };
     }
 
+    const initialPlan = parsePlan(clientPlan);
+    const planConfig = PLAN_CONFIGS[initialPlan] || PLAN_CONFIGS.free;
+
+    // --- 🛡️ 1. Rate Limiting & Anti-Spam (RPM Protection) ---
+    const now = Date.now();
+    const rateLimitKey = `user_${userId}`;
+    let rateEntry = rateLimitMap.get(rateLimitKey);
+    if (!rateEntry) {
+        rateEntry = { timestamps: [] };
+        rateLimitMap.set(rateLimitKey, rateEntry);
+    }
+    // Filter timestamps within last 60 seconds
+    rateEntry.timestamps = rateEntry.timestamps.filter(ts => now - ts < 60_000);
+
+    if (rateEntry.timestamps.length >= planConfig.rpmLimit) {
+        const oldest = rateEntry.timestamps[0];
+        const waitSec = Math.max(1, Math.ceil((60_000 - (now - oldest)) / 1000));
+        return {
+            allowed: false,
+            plan: initialPlan,
+            isPro: initialPlan === 'pro' || initialPlan === 'max' || initialPlan === 'admin',
+            isMax: initialPlan === 'max' || initialPlan === 'admin',
+            tokensUsed: 0,
+            tokenAllowance: planConfig.tokenAllowance,
+            tokensRemaining: 0,
+            remaining: 0,
+            maxTokensForRequest: planConfig.maxTokensPerRequest,
+            error: `تم تجاوز الحد المسموح من الطلبات السريعة (${planConfig.rpmLimit} طلب/دقيقة). يرجى الانتظار ${waitSec} ثانية لحماية أمان البنية التحتية.`
+        };
+    }
+
+    // Add current request to rate limit window
+    rateEntry.timestamps.push(now);
+
     if (!adminDb) {
-        const isClientPro = String(clientPlan || '').toLowerCase().includes('pro') || String(clientPlan || '').toLowerCase().includes('ultra');
-        return { allowed: true, isPro: isClientPro, remaining: isClientPro ? 9999 : 5 };
+        const isPro = initialPlan === 'pro' || initialPlan === 'max' || initialPlan === 'admin';
+        const isMax = initialPlan === 'max' || initialPlan === 'admin';
+        return {
+            allowed: true,
+            plan: initialPlan,
+            isPro,
+            isMax,
+            tokensUsed: 0,
+            tokenAllowance: planConfig.tokenAllowance,
+            tokensRemaining: planConfig.tokenAllowance,
+            remaining: planConfig.tokenAllowance,
+            maxTokensForRequest: planConfig.maxTokensPerRequest
+        };
     }
 
     try {
@@ -31,53 +215,125 @@ export async function checkAndConsumeAiQuota(userId: string | undefined | null, 
         
         const firestorePromise = userRef.get();
         const timeoutPromise = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('Firestore Timeout')), 2000)
+            setTimeout(() => reject(new Error('Firestore Timeout')), 2500)
         );
         const userSnap: any = await Promise.race([firestorePromise, timeoutPromise]);
-        const userData = userSnap.data();
+        const userData = userSnap?.data() || {};
 
-        const plan = String(userData?.plan || clientPlan || 'free').toLowerCase();
-        const isPro = plan.includes('pro') || plan.includes('ultra');
+        // Determine verified plan from database
+        const dbPlanRaw = userData?.plan || userData?.subscriptionPlan || clientPlan || 'free';
+        const activePlan = parsePlan(dbPlanRaw);
+        const activeConfig = PLAN_CONFIGS[activePlan] || PLAN_CONFIGS.free;
 
-        if (isPro) {
-            return { allowed: true, isPro: true, remaining: 999999 };
-        }
+        const isPro = activePlan === 'pro' || activePlan === 'max' || activePlan === 'admin';
+        const isMax = activePlan === 'max' || activePlan === 'admin';
 
-        // Daily Free Quota check (5 requests max for free users across all tools)
-        const count = userData?.aiRequestCount ?? userData?.copilotRequestCount ?? 0;
-        const lastDate = userData?.lastAiRequestDate?.toDate?.() || userData?.lastCopilotRequestDate?.toDate?.() || new Date(0);
-        const ONE_DAY = 24 * 60 * 60 * 1000;
-        const elapsed = Date.now() - lastDate.getTime();
-        
-        const currentCount = elapsed > ONE_DAY ? 0 : count;
-
-        if (currentCount >= 5) {
-            const hoursLeft = Math.ceil((ONE_DAY - elapsed) / 3600000);
+        if (activePlan === 'admin') {
             return {
-                allowed: false,
-                isPro: false,
-                remaining: 0,
-                error: `لقد استهلكت جميع طلباتك المجانية المتاحة (5 طلبات). ستتجدد بعد ${hoursLeft > 0 ? hoursLeft : 1} ساعة، أو قم بالترقية إلى باقة Pro لفتح وصول غير محدود لجميع أدوات الذكاء الاصطناعي!`
+                allowed: true,
+                plan: 'admin',
+                isPro: true,
+                isMax: true,
+                tokensUsed: userData?.tokensUsed || 0,
+                tokenAllowance: 999_999_999,
+                tokensRemaining: 999_999_999,
+                remaining: 999_999_999,
+                maxTokensForRequest: 16_000
             };
         }
 
-        // Increment quota count
+        // --- 📊 2. Token Usage & Allowance Verification ---
+        const totalAllowance = activeConfig.tokenAllowance;
+        const currentTokensUsed = Number(userData?.tokensUsed || userData?.aiTokensUsed || 0);
+        const remainingTokens = Math.max(0, totalAllowance - currentTokensUsed);
+
+        // Check if user has sufficient tokens remaining for estimated call
+        if (remainingTokens <= 0 || currentTokensUsed >= totalAllowance || remainingTokens < Math.min(estimatedTokens, 50)) {
+            let errorMsg = '';
+            if (activePlan === 'free') {
+                errorMsg = `⚠️ رصيدك من التوكن غير كافٍ لتنفيذ هذه العملية (${remainingTokens.toLocaleString('ar-EG')} توكن متبقٍ). لقد استهلكت حصتك الترحيبية. يجب شحن حسابك وترقية الباقة الآن إلى Pro (500K توكن) أو MAX (2.5M توكن) لمتابعة الاستخدام فوراً!`;
+            } else if (activePlan === 'pro') {
+                errorMsg = `⚠️ رصيدك الحالي من التوكن غير كافٍ (${remainingTokens.toLocaleString('ar-EG')} توكن متبقٍ). لقد استهلكت رصيد باقة Pro. يجب شحن الرصيد أو الترقية إلى باقة MAX (2.5 مليون توكن) للاستمرار بدون انقطاع!`;
+            } else {
+                errorMsg = `⚠️ لقد استهلكت كامل رصيد باقة MAX. يرجى شحن الرصيد أو التواصل مع الإدارة لتجديد أو زيادة حصتك.`;
+            }
+
+            return {
+                allowed: false,
+                plan: activePlan,
+                isPro,
+                isMax,
+                tokensUsed: currentTokensUsed,
+                tokenAllowance: totalAllowance,
+                tokensRemaining: remainingTokens,
+                remaining: remainingTokens,
+                maxTokensForRequest: activeConfig.maxTokensPerRequest,
+                error: errorMsg
+            };
+        }
+
+        // --- 🔒 3. Reserve Pre-flight Estimated Tokens ---
+        const incrementAmount = Math.min(estimatedTokens, remainingTokens);
         userRef.set({
-            aiRequestCount: currentCount + 1,
-            copilotRequestCount: currentCount + 1,
+            tokensUsed: currentTokensUsed + incrementAmount,
+            aiTokensUsed: currentTokensUsed + incrementAmount,
             lastAiRequestDate: admin.firestore.FieldValue.serverTimestamp(),
-            lastCopilotRequestDate: admin.firestore.FieldValue.serverTimestamp(),
+            lastPlan: activePlan,
+            tokenAllowance: totalAllowance,
         }, { merge: true }).catch(console.error);
 
         return {
             allowed: true,
-            isPro: false,
-            remaining: 4 - currentCount
+            plan: activePlan,
+            isPro,
+            isMax,
+            tokensUsed: currentTokensUsed + incrementAmount,
+            tokenAllowance: totalAllowance,
+            tokensRemaining: Math.max(0, remainingTokens - incrementAmount),
+            remaining: Math.max(0, remainingTokens - incrementAmount),
+            maxTokensForRequest: activeConfig.maxTokensPerRequest
         };
 
     } catch (err: any) {
-        console.error('Error verifying unified AI quota with Firestore:', err);
-        const isClientPro = String(clientPlan || '').toLowerCase().includes('pro') || String(clientPlan || '').toLowerCase().includes('ultra');
-        return { allowed: true, isPro: isClientPro, remaining: 1 };
+        console.error('Error in checkAndConsumeAiQuota:', err);
+        const fallbackIsPro = initialPlan === 'pro' || initialPlan === 'max' || initialPlan === 'admin';
+        const fallbackIsMax = initialPlan === 'max' || initialPlan === 'admin';
+        return {
+            allowed: true,
+            plan: initialPlan,
+            isPro: fallbackIsPro,
+            isMax: fallbackIsMax,
+            tokensUsed: 0,
+            tokenAllowance: planConfig.tokenAllowance,
+            tokensRemaining: planConfig.tokenAllowance,
+            remaining: planConfig.tokenAllowance,
+            maxTokensForRequest: planConfig.maxTokensPerRequest
+        };
+    }
+}
+
+/**
+ * 📝 تسجيل الاستهلاك الفعلي الدقيق للتوكن بعد إتمام استجابة الذكاء الاصطناعي
+ */
+export async function recordActualTokenUsage(
+    userId: string | undefined | null,
+    actualTokensUsed: number,
+    estimatedTokensReserved: number = 300
+): Promise<void> {
+    if (!userId || !adminDb || actualTokensUsed <= 0) return;
+
+    try {
+        const userRef = adminDb.collection('users').doc(userId);
+        const difference = actualTokensUsed - estimatedTokensReserved;
+
+        if (difference !== 0) {
+            await userRef.set({
+                tokensUsed: admin.firestore.FieldValue.increment(difference),
+                aiTokensUsed: admin.firestore.FieldValue.increment(difference),
+                lastTokenUpdate: admin.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        }
+    } catch (e) {
+        console.error('Failed to record actual token usage:', e);
     }
 }

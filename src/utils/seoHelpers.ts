@@ -683,7 +683,7 @@ export const generateCopilotMetadata = (): Metadata => {
       images: ['https://tolzy.me/image/copilot-chat.png'],
       site: SITE_CONFIG.social.twitter,
     },
-    alternates: { canonical: getCanonicalUrl('/copilot') },
+    alternates: { canonical: getCanonicalUrl('/axiom') },
     robots: { index: true, follow: true },
   };
 };

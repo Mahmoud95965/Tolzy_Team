@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import toast from 'react-hot-toast';
 
-// Extend the window object to include the speech recognition APIs
 declare global {
   interface Window {
     SpeechRecognition: any;
@@ -8,95 +8,185 @@ declare global {
   }
 }
 
-export function useSpeechRecognition() {
+export function useSpeechRecognition(options?: { lang?: string }) {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [recognition, setRecognition] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [hasSupport, setHasSupport] = useState(false);
+
+  const recognitionRef = useRef<any>(null);
+  const finalTranscriptRef = useRef<string>('');
+  const shouldListenRef = useRef<boolean>(false);
+  const lang = options?.lang || 'ar-SA';
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        const recognitionInstance = new SpeechRecognition();
-        recognitionInstance.continuous = true;
-        recognitionInstance.interimResults = true;
-        recognitionInstance.lang = 'ar-SA';
-
-        recognitionInstance.onresult = (event: any) => {
-          let currentTranscript = '';
-          for (let i = 0; i < event.results.length; i++) {
-            currentTranscript += event.results[i][0].transcript;
-          }
-          setTranscript(currentTranscript);
-        };
-
-        recognitionInstance.onerror = (event: any) => {
-          let message = 'حدث خطأ غير متوقع.';
-          switch (event.error) {
-            case 'not-allowed':
-              message = 'تم رفض الإذن للوصول إلى الميكروفون.';
-              break;
-            case 'no-speech':
-              message = 'لم يتم اكتشاف أي صوت.';
-              break;
-            case 'network':
-              message = 'مشكلة في الشبكة.';
-              break;
-            default:
-              message = `خطأ: ${event.error}`;
-          }
-          setError(message);
-          setIsListening(false);
-        };
-
-        recognitionInstance.onend = () => {
-          setIsListening(false);
-        };
-
-        setRecognition(recognitionInstance);
-      } else {
-        setError('متصفحك لا يدعم ميزة التسجيل الصوتي.');
-      }
+      setHasSupport(!!SpeechRecognition);
     }
   }, []);
 
-  const toggleListening = useCallback(async () => {
-    if (!recognition) return;
-
-    if (isListening) {
-      recognition.stop();
-      setIsListening(false);
-      setTranscript('');
-    } else {
+  const cleanup = useCallback(() => {
+    if (recognitionRef.current) {
       try {
-        // Request mic permission explicitly — triggers browser prompt
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        stream.getTracks().forEach(t => t.stop()); // release immediately
-        setError(null);
-        setTranscript('');
-        recognition.start();
-        setIsListening(true);
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.onend = null;
+        recognitionRef.current.onstart = null;
+        recognitionRef.current.stop();
       } catch {
-        setError('يرجى السماح للمتصفح باستخدام الميكروفون من إعدادات الموقع.');
-        setIsListening(false);
+        // ignore errors during cleanup
+      }
+      recognitionRef.current = null;
+    }
+  }, []);
+
+  const startListening = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      const msg = 'متصفحك لا يدعم ميزة التسجيل الصوتي المباشر. يرجى تجربة Google Chrome أو Edge.';
+      setError(msg);
+      toast.error(msg, { id: 'speech-unsupported' });
+      return;
+    }
+
+    // Explicitly request microphone permissions to avoid browser block
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach(track => track.stop());
+      } catch (permErr: any) {
+        console.warn('Microphone permission denied:', permErr);
+        const msg = 'يرجى تفعيل صلاحيات الميكروفون من إعدادات المتصفح للتحدث.';
+        setError(msg);
+        toast.error(msg, { id: 'speech-perm-error' });
+        return;
       }
     }
-  }, [isListening, recognition]);
+
+    cleanup();
+    setError(null);
+    setTranscript('');
+    finalTranscriptRef.current = '';
+    shouldListenRef.current = true;
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = lang;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        setIsListening(true);
+        toast('جاري الاستماع... تحدث الآن 🎙️', { id: 'speech-listening', icon: '🎙️', duration: 3500 });
+      };
+
+      recognition.onresult = (event: any) => {
+        let interimTranscript = '';
+        let currentFinal = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const trans = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            currentFinal += trans + ' ';
+          } else {
+            interimTranscript += trans;
+          }
+        }
+
+        if (currentFinal) {
+          finalTranscriptRef.current += currentFinal;
+        }
+
+        const fullTranscript = (finalTranscriptRef.current + interimTranscript).trim();
+        setTranscript(fullTranscript);
+      };
+
+      recognition.onerror = (event: any) => {
+        console.warn('Speech recognition error:', event.error);
+        let message = '';
+
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          message = 'تم رفض الإذن بالوصول للميكروفون. يرجى السماح باستخدامه من إعدادات المتصفح.';
+          shouldListenRef.current = false;
+          setIsListening(false);
+        } else if (event.error === 'no-speech') {
+          // Transient no-speech, don't interrupt immediately
+          return;
+        } else if (event.error === 'network') {
+          message = 'تعذر الاتصال بخدمة التعرف على الصوت. تحقق من اتصال الإنترنت.';
+          shouldListenRef.current = false;
+          setIsListening(false);
+        } else if (event.error === 'aborted') {
+          setIsListening(false);
+          return;
+        } else {
+          message = `خطأ في التسجيل: ${event.error}`;
+          setIsListening(false);
+        }
+
+        if (message) {
+          setError(message);
+          toast.error(message, { id: 'speech-error' });
+        }
+      };
+
+      recognition.onend = () => {
+        if (shouldListenRef.current) {
+          try {
+            recognition.start();
+            return;
+          } catch {
+            // failed to auto-restart
+          }
+        }
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+      setIsListening(true);
+    } catch (err: any) {
+      console.error('Failed to start speech recognition:', err);
+      const msg = 'تعذر تشغيل الميكروفون. يرجى التحقق من أذونات المتصفح.';
+      setError(msg);
+      toast.error(msg, { id: 'speech-failed' });
+      setIsListening(false);
+      shouldListenRef.current = false;
+    }
+  }, [cleanup, lang]);
 
   const stopListening = useCallback(() => {
-    if (recognition) {
-      recognition.stop();
-      setIsListening(false);
+    shouldListenRef.current = false;
+    cleanup();
+    setIsListening(false);
+    toast.dismiss('speech-listening');
+  }, [cleanup]);
+
+  const toggleListening = useCallback(() => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
     }
-  }, [recognition]);
+  }, [isListening, startListening, stopListening]);
+
+  useEffect(() => {
+    return () => {
+      cleanup();
+    };
+  }, [cleanup]);
 
   return {
     isListening,
     transcript,
     error,
     toggleListening,
+    startListening,
     stopListening,
-    hasSupport: !!recognition
+    hasSupport
   };
 }
