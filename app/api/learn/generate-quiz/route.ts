@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
             contextText = `عنوان المحتوى: ${title}\n\nالوصف والملخص:\n${description || ''}`;
         }
 
-        const prompt = `أنت "Tolzy OmniTutor 🎓" — خبير التقييم التعليمي وصياغة الاختبارات الذكية التفاعلية.
+        const prompt = `أنت "Tolzy OmniLearn 🎓" — خبير التقييم التعليمي وصياغة الاختبارات الذكية التفاعلية.
 قم بصياغة اختبار استيعابي تفاعلي احترافي مكون من 5 أسئلة اختيار من متعدد (Multiple Choice Questions) يقيس الفهم العميق والمفاهيمي للمادة التعليمية أدناه.
 
 ---

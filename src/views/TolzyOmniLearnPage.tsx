@@ -1127,7 +1127,7 @@ export default function TolzyOmniLearnPage() {
                                                 <span className="text-[10px] text-slate-500 font-bold">AXIOM Reasoning Active</span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-xs font-black text-white">TOLZY OmniTutor</span>
+                                                <span className="text-xs font-black text-white">TOLZY OmniLearn</span>
                                                 <Sparkles className="w-4 h-4 text-purple-400" />
                                             </div>
                                         </div>

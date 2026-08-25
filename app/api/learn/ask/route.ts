@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
         }
 
         // 3. System Prompt for strict JSON response format
-        const systemPrompt = `أنت **"Tolzy OmniTutor 🎓"** — المعلم الذكي التفاعلي المتقدم داخل منصة **Tolzy OmniLearn**.
+        const systemPrompt = `أنت **"Tolzy OmniLearn 🎓"** — المعلم الذكي التفاعلي المتقدم داخل منصة **Tolzy OmniLearn**.
 مهمتك هي مساعدة الطالب في استيعاب المادة التعليمية للفيديو بأعلى كفاءة وتقديم تجربة تعليمية شيقة وشخصية.
 
 ---
