@@ -457,10 +457,10 @@ const MessageItem = React.memo(({ msg, user, onResend }: {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className={`flex gap-3 sm:gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''} group relative mb-6 sm:mb-8`}
+            className={`flex gap-2 sm:gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''} group relative mb-4 sm:mb-7`}
         >
             {/* ── Avatar ── */}
-            <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden border mt-0.5
+            <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden border mt-0.5
                 ${msg.role === 'user'
                     ? 'bg-slate-100/60 dark:bg-white/[0.06] border-slate-200/60 dark:border-white/[0.08]'
                     : 'bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border-indigo-200/40 dark:border-indigo-500/20'
@@ -468,9 +468,9 @@ const MessageItem = React.memo(({ msg, user, onResend }: {
             `}>
                 {msg.role === 'user' ? (
                     user?.photoURL ? (
-                        <Image src={user.photoURL} alt="User" width={36} height={36} className="object-cover" sizes="36px" />
+                        <Image src={user.photoURL} alt="User" width={32} height={32} className="object-cover" sizes="32px" />
                     ) : (
-                        <span className="material-symbols-outlined text-[16px] text-slate-500 dark:text-slate-400 font-bold">person</span>
+                        <span className="material-symbols-outlined text-[14px] text-slate-500 dark:text-slate-400 font-bold">person</span>
                     )
                 ) : (
                     <img src="/image/tools/11zon_cropped (1).webp" alt="AXIOM" className="w-full h-full object-cover select-none" />
@@ -478,11 +478,11 @@ const MessageItem = React.memo(({ msg, user, onResend }: {
             </div>
 
             {/* ── Bubble ── */}
-            <div className={`flex flex-col flex-1 max-w-[calc(100%-44px)] sm:max-w-[85%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+            <div className={`flex flex-col flex-1 max-w-[calc(100%-36px)] sm:max-w-[85%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                 {msg.role === 'user' ? (
                     /* ── User bubble ── */
-                    <div className="relative px-5 py-3.5 rounded-2xl rounded-tr-sm bg-slate-100/70 dark:bg-white/[0.05] border border-slate-200/60 dark:border-white/[0.07] shadow-sm backdrop-blur-sm">
-                        <p className="text-[15px] sm:text-[16px] font-semibold text-slate-800 dark:text-slate-100 leading-relaxed text-right">
+                    <div className="relative px-3.5 py-2.5 sm:px-5 sm:py-3.5 rounded-2xl rounded-tr-sm bg-slate-100/70 dark:bg-white/[0.05] border border-slate-200/60 dark:border-white/[0.07] shadow-xs backdrop-blur-sm">
+                        <p className="text-[14px] sm:text-[15px] font-semibold text-slate-800 dark:text-slate-100 leading-relaxed text-right">
                             {msg.content}
                         </p>
                     </div>
@@ -1274,19 +1274,19 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                     }}
                 />
 
-                {/* Claude-Style Floating Composer Card */}
-                <div className="flex flex-col bg-white dark:bg-[#18181b] rounded-[22px] border border-neutral-200/90 dark:border-neutral-800 shadow-[0_0.25rem_1.25rem_rgba(0,0,0,0.035),0_0_0_1px_rgba(0,0,0,0.04)] hover:shadow-[0_0.25rem_1.25rem_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.08)] focus-within:shadow-[0_0.25rem_1.5rem_rgba(0,0,0,0.08),0_0_0_1.5px_rgba(217,119,87,0.5)] dark:shadow-[0_0.25rem_1.25rem_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.06)] dark:focus-within:border-neutral-700 transition-all duration-200 p-3.5 gap-2.5">
+                {/* Floating Composer Card */}
+                <div className="flex flex-col bg-white dark:bg-[#18181b] rounded-[18px] sm:rounded-[22px] border border-neutral-200/90 dark:border-neutral-800 shadow-[0_0.25rem_1.25rem_rgba(0,0,0,0.035),0_0_0_1px_rgba(0,0,0,0.04)] hover:shadow-[0_0.25rem_1.25rem_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.08)] focus-within:shadow-[0_0.25rem_1.5rem_rgba(0,0,0,0.08),0_0_0_1.5px_rgba(59,130,246,0.5)] dark:shadow-[0_0.25rem_1.25rem_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.06)] dark:focus-within:border-neutral-700 transition-all duration-200 p-2.5 sm:p-3.5 gap-2 sm:gap-2.5">
                     
                     {/* Attached Files Chips Bar */}
                     {selectedFiles.length > 0 && (
-                        <div className="flex items-center gap-2 pb-1 overflow-x-auto border-b border-neutral-100 dark:border-neutral-800/80">
+                        <div className="flex items-center gap-1.5 pb-1 overflow-x-auto border-b border-neutral-100 dark:border-neutral-800/80 scrollbar-hide">
                             {selectedFiles.map((file, idx) => (
-                                <div key={idx} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700 text-xs">
-                                    <span className="text-[11px] font-medium text-neutral-700 dark:text-neutral-300 truncate max-w-[130px]">{file.name}</span>
+                                <div key={idx} className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700 text-xs shrink-0">
+                                    <span className="text-[10px] sm:text-[11px] font-medium text-neutral-700 dark:text-neutral-300 truncate max-w-[95px] sm:max-w-[130px]">{file.name}</span>
                                     <button
                                         type="button"
                                         onClick={() => setSelectedFiles(prev => prev.filter((_, i) => i !== idx))}
-                                        className="text-neutral-400 hover:text-red-500 transition-colors ml-0.5 text-sm font-bold"
+                                        className="text-neutral-400 hover:text-red-500 transition-colors ml-0.5 text-xs font-bold"
                                     >
                                         ×
                                     </button>
@@ -1308,7 +1308,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                             placeholder="How can I help you today?"
                             rows={1}
                             disabled={isLoading}
-                            className="w-full bg-transparent border-none focus:ring-0 resize-none px-1.5 py-1 text-[15px] sm:text-[16px] font-medium text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 max-h-72 min-h-[48px] outline-none leading-relaxed"
+                            className="w-full bg-transparent border-none focus:ring-0 resize-none px-1 py-0.5 text-[14px] sm:text-[16px] font-medium text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 max-h-72 min-h-[40px] sm:min-h-[48px] outline-none leading-relaxed"
                             dir="auto"
                         />
 
@@ -1320,7 +1320,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: 6 }}
                                     transition={{ duration: 0.12 }}
-                                    className="absolute bottom-full right-0 mb-2.5 w-64 bg-white dark:bg-[#18181b] border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-2xl p-1.5 z-50 overflow-hidden"
+                                    className="absolute bottom-full right-0 mb-2.5 w-60 sm:w-64 bg-white dark:bg-[#18181b] border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-2xl p-1.5 z-50 overflow-hidden"
                                 >
                                     <div className="px-3 py-2 border-b border-neutral-100 dark:border-neutral-800">
                                         <span className="text-[10px] font-bold text-neutral-400 block text-right uppercase">الأوامر السريعة</span>
@@ -1332,21 +1332,21 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                                 <button
                                                     key={cmd.id}
                                                     onClick={() => !cmd.comingSoon && handleAtSelect(cmd.id)}
-                                                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-right transition-colors duration-150 ${
+                                                    className={`w-full flex items-center gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-right transition-colors duration-150 ${
                                                         cmd.comingSoon ? 'opacity-40 cursor-not-allowed' : 'hover:bg-neutral-50 dark:hover:bg-neutral-800 cursor-pointer'
                                                     }`}
                                                 >
-                                                    <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-neutral-100 dark:bg-neutral-800 text-neutral-500">
+                                                    <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-neutral-100 dark:bg-neutral-800 text-neutral-500">
                                                         {cmd.icon}
                                                     </span>
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center gap-1.5">
-                                                            <span className="text-[12px] font-semibold text-neutral-800 dark:text-neutral-200">@{cmd.label}</span>
+                                                            <span className="text-[11px] sm:text-[12px] font-semibold text-neutral-800 dark:text-neutral-200">@{cmd.label}</span>
                                                             {cmd.comingSoon && (
-                                                                <span className="text-[9px] font-medium bg-neutral-200 dark:bg-neutral-800 text-neutral-500 px-1.5 py-0.5 rounded">قريباً</span>
+                                                                <span className="text-[8px] sm:text-[9px] font-medium bg-neutral-200 dark:bg-neutral-800 text-neutral-500 px-1.5 py-0.5 rounded">قريباً</span>
                                                             )}
                                                         </div>
-                                                        <p className="text-[10px] text-neutral-400 truncate">{cmd.description}</p>
+                                                        <p className="text-[9px] sm:text-[10px] text-neutral-400 truncate">{cmd.description}</p>
                                                     </div>
                                                 </button>
                                             ))
@@ -1358,47 +1358,47 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                     </div>
 
                     {/* Bottom Toolbar: Attach + Segmented Control + Spacer + Model + Mic + Send */}
-                    <div className="relative flex items-center justify-between w-full gap-2 pt-1 border-t border-neutral-100/80 dark:border-neutral-800/80">
+                    <div className="relative flex items-center justify-between w-full gap-1 sm:gap-2 pt-1 border-t border-neutral-100/80 dark:border-neutral-800/80">
                         
                         {/* Left Side: Attachment + Segmented Control */}
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                             {/* Attachment Button */}
                             <button
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
                                 title="إرفاق ملفات أو مستندات أو صور"
-                                className="p-1.5 rounded-lg text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors flex items-center justify-center cursor-pointer"
+                                className="p-1 sm:p-1.5 rounded-lg text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors flex items-center justify-center cursor-pointer"
                             >
-                                <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <svg className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
                                 </svg>
                             </button>
 
                             {/* Segmented Control Pill: Chat / Code */}
-                            <div className="inline-flex rounded-lg p-0.5 bg-neutral-100 dark:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-800 text-[11px] font-semibold">
+                            <div className="inline-flex rounded-lg p-0.5 bg-neutral-100 dark:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-800 text-[10px] sm:text-[11px] font-semibold">
                                 <button
                                     type="button"
                                     onClick={() => setMode('general')}
-                                    className={`px-3 py-1 rounded-md transition-all ${mode === 'general' ? 'bg-white dark:bg-neutral-750 text-neutral-900 dark:text-white shadow-xs font-bold' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}`}
+                                    className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-md transition-all ${mode === 'general' ? 'bg-white dark:bg-neutral-750 text-neutral-900 dark:text-white shadow-xs font-bold' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}`}
                                 >
-                                    دردشة (Chat)
+                                    دردشة
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setMode('code')}
-                                    className={`px-3 py-1 rounded-md transition-all ${mode === 'code' ? 'bg-white dark:bg-neutral-750 text-neutral-900 dark:text-white shadow-xs font-bold' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}`}
+                                    className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-md transition-all ${mode === 'code' ? 'bg-white dark:bg-neutral-750 text-neutral-900 dark:text-white shadow-xs font-bold' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}`}
                                 >
-                                    برمجة (Code)
+                                    برمجة
                                 </button>
                             </div>
                         </div>
 
                         {/* Right Side: AXIOM Model Badge + Mic Audio Wave + Send */}
-                        <div className="flex items-center gap-1 sm:gap-1.5">
+                        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                             {/* Pure AXIOM Model Badge */}
-                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold text-neutral-800 dark:text-neutral-200 bg-neutral-100/70 dark:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-800 select-none">
+                            <div className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold text-neutral-800 dark:text-neutral-200 bg-neutral-100/70 dark:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-800 select-none">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                <span className="text-[11px] sm:text-xs">AXIOM</span>
+                                <span>AXIOM</span>
                             </div>
 
                             {/* Voice Audio Wave Button */}
@@ -1406,9 +1406,9 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                 type="button"
                                 onClick={toggleListening}
                                 title={isListening ? "إيقاف الاستماع" : "التحدث الصوتي"}
-                                className={`p-1.5 rounded-lg transition-all flex items-center justify-center cursor-pointer ${isListening ? 'bg-red-500/10 text-red-500 border border-red-500/30 animate-pulse' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800'}`}
+                                className={`p-1 sm:p-1.5 rounded-lg transition-all flex items-center justify-center cursor-pointer ${isListening ? 'bg-red-500/10 text-red-500 border border-red-500/30 animate-pulse' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800'}`}
                             >
-                                <svg width="18" height="18" viewBox="0 0 21.2 21.2" fill="none" xmlns="http://www.w3.org/2000/svg" className="inline-block overflow-visible">
+                                <svg width="15" height="15" viewBox="0 0 21.2 21.2" fill="none" xmlns="http://www.w3.org/2000/svg" className="inline-block overflow-visible sm:w-[18px] sm:h-[18px]">
                                     <g>
                                         <rect x="0" y="7.6" width="1.2" height="6" rx="0.6" fill="currentColor" />
                                         <rect x="4" y="5.6" width="1.2" height="10" rx="0.6" fill="currentColor" />
@@ -1426,13 +1426,13 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                 onClick={() => (input.trim() || selectedFiles.length > 0) && handleSendMessage()}
                                 disabled={isLoading || (!input.trim() && selectedFiles.length === 0)}
                                 title="إرسال"
-                                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-all ${
                                     input.trim() || selectedFiles.length > 0
                                         ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs active:scale-95 cursor-pointer'
                                         : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-600 cursor-not-allowed'
                                 }`}
                             >
-                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                     <line x1="12" y1="19" x2="12" y2="5" />
                                     <polyline points="5 12 12 5 19 12" />
                                 </svg>
