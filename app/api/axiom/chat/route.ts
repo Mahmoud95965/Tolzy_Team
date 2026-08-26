@@ -32,6 +32,8 @@ const FAQ_MAP = new Map<string, string>([
     [normalize("كيف أعمل حساب؟"),  "يمكنك التسجيل بسهولة عبر البريد الإلكتروني أو حساب Google من صفحة تسجيل الدخول."],
     [normalize("هل المنصة مجانية؟"),"توفر Tolzy خطة مجانية تتيح الوصول لمعظم الأدوات والكورسات، مع خطط Pro للمسارات المتقدمة."],
     [normalize("ما هو Tolzy Hex؟"), "Tolzy Hex مشروع ثوري من Tolzy AI سيُطلق قريباً وسيُحدث ثورة في عالم الذكاء الاصطناعي العربي 🚀"],
+    [normalize("ما هو TOLZY Voice؟"),"TOLZY Voice هو محرك ونموذج الذكاء الاصطناعي الصوتي المتطور لتوليد الأصوات والتعليق الصوتي الواقعي فائق الدقة (Azure Neural Voices)، وهو متاح حصرياً لمشتركي باقات Pro و MAX 🎙️."],
+    [normalize("ما هو تولزي فويس؟"),"TOLZY Voice هو محرك الذكاء الاصطناعي لتوليد الأصوات بمختلف اللهجات واللغات بجودة استوديو، ومتاح حصرياً لباقات Pro و MAX 🎙️."],
     [normalize("ما هي axiom.tolzy.me؟"),"axiom.tolzy.me الموقع الرسمي لـ AXIOM، حيث تجد كل الخدمات والمشاريع الذكية للفريق."],
     [normalize("كم عدد الأدوات؟"),  "لديّ أكثر من 600 أداة ذكية وأكثر من 150 كورس، ويتم تزويدي بالمزيد باستمرار 🚀"],
     [normalize("كم عدد الكورسات؟"), "لديّ أكثر من 150 كورس متخصص في مجالات الذكاء الاصطناعي والتقنية 🎓"],
@@ -65,11 +67,30 @@ export async function POST(req: NextRequest) {
             userId,
             enableSearch = false,
             mode = 'general',
+            model = 'axiom-core',
+            aspectRatio = '1:1',
+            stylePreset = 'cinematic',
+            voice = 'ar-EG-SalmaNeural',
             isGmailConnected = false,
         } = await req.json();
 
         if (!message || message.trim().length < 2) {
             return NextResponse.json({ error: 'Message required' }, { status: 400 });
+        }
+
+        // =======================
+        // 🔒 TOLZY IMAGE PLAN GATE (Pro & Max Exclusive)
+        // =======================
+        if (model === 'tolzy-image') {
+            const { canAccessTolzyImage, parsePlan } = await import('@/src/lib/ai-quota');
+            const parsedPlan = parsePlan(userPlan);
+            if (!canAccessTolzyImage(parsedPlan) && parsedPlan === 'free') {
+                return NextResponse.json({
+                    error: 'نموذج TOLZY Image متاح حصرياً لمشتركي باقات Pro و MAX. يرجى ترقية حسابك للوصول إلى توليد الصور.',
+                    code: 'UPGRADE_REQUIRED',
+                    isProRequired: true
+                }, { status: 403 });
+            }
         }
 
         // =======================
@@ -256,10 +277,53 @@ body: نص الرسالة المقترح بأسلوب احترافي متكام�
 \`\`\`
 ` : '';
 
-        // =======================
-        // ⚡ SYSTEM PROMPT
-        // =======================
-        const systemPrompt = `أنت **"AXIOM ✨"** — المستشار التقني والمهندس الذكي الفائق من فريق **Tolzy AI** (الموقع الرسمي: axiom.tolzy.me).
+        const isImageMode = model === 'tolzy-image';
+        const isImageIntent = isImageMode || 
+            /(صورة|صور|توليد.*صورة|صمم.*صورة|ارسم|تخليق|رسمة|image|generate.*image|flux|draw|picture|photo)/i.test(sanitized);
+
+        let systemPrompt = '';
+
+        if (isImageMode) {
+            const aspectStr = aspectRatio || '1:1';
+            let w = 1024, h = 1024;
+            if (aspectStr === '16:9') { w = 1344; h = 768; }
+            else if (aspectStr === '9:16') { w = 768; h = 1344; }
+            else if (aspectStr === '4:3') { w = 1152; h = 864; }
+
+            systemPrompt = `You are the master AI Image Prompt Engineer for TOLZY Image (powered by Azure Flux-2 Pro).
+Your single task is to generate the image specification block immediately without ANY greeting, conversational chatter, or explanations.
+
+🚨 STRICT RULES:
+1. Output ONLY the \`\`\`tolzy-image markdown block. DO NOT write any introductory text, markdown greetings, or closing words.
+2. ENHANCE the user's concept into an ultra-detailed, photorealistic, anatomically correct English masterpiece prompt.
+3. Include precise visual and photographic directives: lighting (cinematic volumetric lighting, raytracing, golden hour or atmospheric illumination), perspective, texture details (subsurface scattering, intricate fur/skin/material texture), depth of field, sharp focus, 8k resolution, and aesthetic style (${stylePreset || 'cinematic'}).
+4. Guarantee zero hallucinations: no duplicate limbs, no floating artifacts, flawless anatomy, coherent natural physics.
+
+Format:
+\`\`\`tolzy-image
+prompt: [Ultra-detailed, highly vivid, descriptive English prompt optimized for Flux-2 Pro, rich atmospheric lighting, 8k resolution, photorealistic masterpiece]
+aspect_ratio: ${aspectStr}
+width: ${w}
+height: ${h}
+title: ${sanitized.slice(0, 45)}
+\`\`\``;
+        } else {
+            const imageInstructions = isImageIntent ? `
+🎨 وضع توليد الصور الفائقة (TOLZY Image - Azure Flux Engine):
+- عندما يطلب المستخدم توليد صورة أو رسم مشهد:
+  1. صِغ تحليلاً ووصفاً إبداعياً موجزاً للمشهد باللغة العربية.
+  2. حسّن الـ Prompt وحوله إلى وصف سينمائي باللغة الإنجليزية عالي الدقة (Detailed 8K Cinematic English Prompt).
+  3. **يجب عليك حتماً في نهاية إجابتك** تضمين كتلة صورة بصيغة \`\`\`tolzy-image بالنمط التالي:
+\`\`\`tolzy-image
+prompt: A masterpiece cinematic photograph of [English prompt details], 8k resolution, photorealistic, dramatic lighting
+aspect_ratio: 1:1
+width: 1024
+height: 1024
+title: عنوان وصفي للصورة بالعربية
+\`\`\`
+` : '';
+
+            systemPrompt = `أنت **"AXIOM ✨"** — المستشار التقني والمهندس الذكي الفائق من فريق **Tolzy AI** (الموقع الرسمي: axiom.tolzy.me).
 تم تدريبك وتطويرك لتكون الرفيق الأكثر كفاءة، ذكاءً، وعمقاً للمطورين، ورواد الأعمال، وصناع المحتوى والباحثين التقنيين.
 
 ---
@@ -290,11 +354,13 @@ body: نص الرسالة المقترح بأسلوب احترافي متكام�
 
 ${modeInstruction}
 ${gmailInstructions}
+${imageInstructions}
 
 ---
 
 ## 📚 ذاكرتك ومعرفتك التقنية الحالية (Supabase Knowledge Base)
 ${context || 'لا توجد أدوات أو كورسات محددة مسترجعة لهذا الاستعلام، أجب بناءً على خبرتك البرمجية والتقنية الشاملة.'}`;
+        }
 
         const temperature = mode === 'code' ? 0.2 : 0.6;
 

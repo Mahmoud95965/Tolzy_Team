@@ -109,7 +109,7 @@ const formatMessageContent = (text: string) => {
 export default function AskYouTubeLearn({ onStateChange, isForceOpen, onCloseForceOpen }: AskYouTubeLearnProps) {
     const { user, userProfile } = useAuth();
     const normalizedPlan = String(userProfile?.plan || 'free').toLowerCase();
-    const isPro = normalizedPlan.includes('pro') || normalizedPlan.includes('ultra');
+    const isPro = normalizedPlan.includes('pro') || normalizedPlan.includes('max') || normalizedPlan.includes('ultra') || normalizedPlan.includes('admin') || userProfile?.role === 'admin';
 
     const [youtubeUrl, setYoutubeUrl] = useState('');
     const [error, setError] = useState('');
@@ -737,7 +737,7 @@ export default function AskYouTubeLearn({ onStateChange, isForceOpen, onCloseFor
                                                             th: ({ children }) => <th className="px-3 py-2 border-b border-slate-200 dark:border-white/[0.06] text-slate-700 dark:text-slate-300 font-semibold">{children}</th>,
                                                             td: ({ children }) => <td className="px-3 py-2 border-b border-slate-100 dark:border-white/[0.04] text-slate-650 dark:text-slate-400">{children}</td>,
                                                             code: ({ node, className, children, ...props }: any) => {
-                                                                const match = /language-(\w+)/.exec(className || '');
+                                                                const match = /language-([\w-]+)/.exec(className || '');
                                                                 return match ? (
                                                                     <div className="bg-slate-950 rounded-xl overflow-hidden my-3 border border-slate-800 dark:border-white/[0.08] w-full max-w-full" dir="ltr">
                                                                         {/* Code block header */}

@@ -184,39 +184,30 @@ export async function PATCH(request: NextRequest) {
 
                 if (error) {
                     const errorMsg = error.message || '';
-                    // Check for quota exceeded error
                     if (errorMsg.includes('exceed_cached_egress_quota') || errorMsg.includes('restricted')) {
                         console.warn(`⚠️ Supabase quota exceeded, using Firebase fallback for ${uid}`);
                         supabaseErrorMsg = 'Supabase quota exceeded';
                     } else {
-                        const isTableError = errorMsg.includes('user_limits') || errorMsg.includes('not found') || 
-                                            errorMsg.includes('does not exist') || errorMsg.includes('schema cache');
-                        
-                        if (isTableError) {
-                            console.warn(`⚠️ Supabase table/schema error for ${uid}: ${errorMsg}`);
-                        } else {
-                            console.error(`❌ Supabase error updating user ${uid}: ${errorMsg}`);
-                            supabaseErrorMsg = errorMsg;
-                        }
+                        console.warn(`⚠️ Supabase error updating user_limits for ${uid}: ${errorMsg}`);
+                        supabaseErrorMsg = errorMsg;
                     }
                 } else {
                     supabaseSuccess = true;
-                    console.log(`✅ Supabase updated successfully for user ${uid}`);
+                    console.log(`✅ Supabase user_limits updated successfully for user ${uid}`);
                 }
+
+                // Also update profiles table
+                try {
+                    await supabaseAdmin
+                        .from('profiles')
+                        .update({ plan, updated_at: new Date().toISOString() })
+                        .eq('id', uid);
+                } catch {}
             } catch (supabaseError: any) {
                 const errorMsg = supabaseError?.message || String(supabaseError);
-                if (errorMsg.includes('exceed_cached_egress_quota') || errorMsg.includes('restricted')) {
-                    console.warn(`⚠️ Supabase quota exceeded, using Firebase fallback for ${uid}`);
-                    supabaseErrorMsg = 'Supabase quota exceeded';
-                } else if (errorMsg.includes('user_limits') || errorMsg.includes('not found')) {
-                    console.warn(`⚠️ user_limits table not found, using Firebase fallback for ${uid}`);
-                } else {
-                    console.error(`❌ Supabase error: ${errorMsg}`);
-                    supabaseErrorMsg = errorMsg;
-                }
+                console.warn(`⚠️ Supabase error: ${errorMsg}`);
+                supabaseErrorMsg = errorMsg;
             }
-        } else {
-            console.warn(`⚠️ Supabase not configured, using Firebase only for ${uid}`);
         }
 
         // Always update Firestore as primary/fallback storage
@@ -228,6 +219,7 @@ export async function PATCH(request: NextRequest) {
                     {
                         plan,
                         subscriptionPlan: plan,
+                        subscription_plan: plan,
                         tokenAllowance: targetAllowance,
                         tokensUsed: 0,
                         aiTokensUsed: 0,

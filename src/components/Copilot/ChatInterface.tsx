@@ -128,6 +128,22 @@ const generateId = () => {
     return result;
 };
 
+const ASPECT_RATIO_OPTIONS = [
+    { id: '1:1', label: '1:1 مربع', subtitle: '1024x1024 • مناسب للبروفايل والمنشورات' },
+    { id: '16:9', label: '16:9 عريض', subtitle: '1344x768 • مناسب لليوتيوب والمشاهد السينمائية' },
+    { id: '9:16', label: '9:16 طولي', subtitle: '768x1344 • مناسب للريلز والستوري وتيك توك' },
+    { id: '4:3', label: '4:3 كلاسيكي', subtitle: '1152x896 • مناسب للعروض التوضيحية' },
+];
+
+const STYLE_PRESET_OPTIONS = [
+    { id: 'cinematic', label: 'سينمائي 🎬', subtitle: 'إضاءة درامية وتفاصيل تصوير احترافية' },
+    { id: 'photorealistic', label: 'واقعي 📸', subtitle: 'صورة فوتوغرافية حقيقية 8K فائقة الواقعية' },
+    { id: '3d-render', label: '3D Render 🧊', subtitle: 'تصميم ثلاثي الأبعاد احترافي بجودة Unreal Engine' },
+    { id: 'anime', label: 'أنيمي 🎨', subtitle: 'فن كرتوني ورسم رقمي ياباني دقيق' },
+    { id: 'digital-art', label: 'فن رقمي 🖌️', subtitle: 'لوحة فنية معاصرة بالألوان الزيتية والمائية' },
+    { id: 'cyberpunk', label: 'سايبربانك 🏙️', subtitle: 'أضواء نيون ومستقبلية تكنولوجية خيالية' },
+];
+
 const getApiBase = () => '';
 
 // ─── Gmail Inbox Widget (Ultra-Premium Glassmorphic) ───
@@ -400,6 +416,355 @@ const GmailComposeWidget = ({
     );
 };
 
+// ─── Azure Neural Voice Options ───
+const VOICE_OPTIONS = [
+    { id: 'ar-EG-SalmaNeural', name: 'سلمى', label: 'مصرية عامية / فصحى', gender: 'أنثى', flag: '🇪🇬' },
+    { id: 'ar-EG-ShakirNeural', name: 'شاكر', label: 'مصرية عامية / فصحى', gender: 'ذكر', flag: '🇪🇬' },
+    { id: 'ar-SA-HamedNeural', name: 'حامد', label: 'فصحى / سعودية', gender: 'ذكر', flag: '🇸🇦' },
+    { id: 'ar-SA-ZariyahNeural', name: 'زارية', label: 'فصحى / سعودية', gender: 'أنثى', flag: '🇸🇦' },
+    { id: 'ar-AE-FatimaNeural', name: 'فاطمة', label: 'إماراتية / خليجية', gender: 'أنثى', flag: '🇦🇪' },
+    { id: 'en-US-JennyNeural', name: 'Jenny', label: 'English (US)', gender: 'Female', flag: '🇺🇸' },
+];
+
+// ─── Upgrade Plan Modal for Pro/Max Features ───
+const UpgradePlanModal = ({
+    isOpen,
+    onClose,
+    title = 'ميزة TOLZY Voice متاحة حصرياً لباقات Pro و MAX 👑',
+    description = 'نموذج TOLZY Voice يتيح لك توليد وتحويل أي نصوص إلى أصوات واقعية وإذاعية فائقة النقاء باستخدام تقنيات Azure Neural Voices المتطورة.'
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    title?: string;
+    description?: string;
+}) => {
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200" dir="rtl">
+            <div className="relative w-full max-w-lg rounded-3xl bg-neutral-900 border border-neutral-800 shadow-2xl p-6 sm:p-8 text-right overflow-hidden">
+                {/* Ambient glow */}
+                <div className="absolute -top-24 -right-24 w-60 h-60 bg-amber-500/20 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-24 -left-24 w-60 h-60 bg-orange-500/20 rounded-full blur-3xl pointer-events-none" />
+
+                <div className="flex items-center justify-between mb-5 relative z-10">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/25">
+                            <span className="material-symbols-outlined text-white text-[24px]">graphic_eq</span>
+                        </div>
+                        <div>
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                PRO & MAX EXCLUSIVE ⚡
+                            </span>
+                            <h3 className="text-base sm:text-lg font-black text-white mt-1">{title}</h3>
+                        </div>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-neutral-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                    >
+                        <span className="material-symbols-outlined text-[18px]">close</span>
+                    </button>
+                </div>
+
+                <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed mb-6 relative z-10 font-medium">
+                    {description}
+                </p>
+
+                {/* Features List */}
+                <div className="space-y-2.5 mb-6 bg-white/[0.03] border border-white/[0.06] rounded-2xl p-4 relative z-10">
+                    <div className="flex items-center gap-2.5 text-xs text-neutral-200">
+                        <span className="material-symbols-outlined text-amber-400 text-[18px]">verified</span>
+                        <span>توليد أصوات واقعية بلهجات متعددة (مصرية، خليجية، فصحى، إنجليزية).</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-xs text-neutral-200">
+                        <span className="material-symbols-outlined text-amber-400 text-[18px]">verified</span>
+                        <span>حصة توكن ضخمة (500 ألف إلى 2.5 مليون توكن شهرياً).</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-xs text-neutral-200">
+                        <span className="material-symbols-outlined text-amber-400 text-[18px]">verified</span>
+                        <span>تنزيل المقطوعات الصوتية بصيغة MP3 بجودة استوديو فائق النقاء.</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-xs text-neutral-200">
+                        <span className="material-symbols-outlined text-amber-400 text-[18px]">verified</span>
+                        <span>أولوية قصوى وسرعة استجابة فائقة لمعالجة البيانات والنماذج.</span>
+                    </div>
+                </div>
+
+                {/* CTA Buttons */}
+                <div className="flex items-center gap-3 relative z-10">
+                    <Link
+                        href="/pricing"
+                        onClick={onClose}
+                        className="flex-1 py-3 px-5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white text-xs sm:text-sm font-black text-center shadow-lg shadow-orange-500/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2 no-underline"
+                    >
+                        <span>ترقية الحساب إلى Pro / MAX ⚡</span>
+                        <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                    </Link>
+                    <button
+                        onClick={onClose}
+                        className="py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-neutral-300 text-xs font-bold transition-colors cursor-pointer"
+                    >
+                        إلغاء
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// ─── Local image cache helpers to prevent repeated Azure generation on page reload ───
+const getImageCacheKey = (prompt: string, ratio: string) => {
+    if (!prompt) return '';
+    return `tolzy_img_cache_${ratio}_${prompt.trim().toLowerCase().slice(0, 100).replace(/\s+/g, '_')}`;
+};
+
+const getCachedImage = (prompt: string, ratio: string): string | null => {
+    if (typeof window === 'undefined' || !prompt) return null;
+    try {
+        const key = getImageCacheKey(prompt, ratio);
+        return localStorage.getItem(key);
+    } catch {
+        return null;
+    }
+};
+
+const setCachedImage = (prompt: string, ratio: string, url: string) => {
+    if (typeof window === 'undefined' || !prompt || !url) return;
+    try {
+        const key = getImageCacheKey(prompt, ratio);
+        localStorage.setItem(key, url);
+    } catch {}
+};
+
+// ─── TOLZY Image Card & Lightbox Widget ───
+const TolzyImageWidget = ({
+    rawContent,
+    userPlan,
+    userId,
+    onOpenUpgradeModal
+}: {
+    rawContent: string;
+    userPlan?: string;
+    userId?: string;
+    onOpenUpgradeModal?: () => void;
+}) => {
+    const parseField = (key: string) => {
+        if (!rawContent) return '';
+        const match = rawContent.match(new RegExp(`^${key}:\\s*(.+)`, 'im'));
+        return match ? match[1].trim() : '';
+    };
+
+    const promptText = parseField('prompt') || rawContent.replace(/^aspect_ratio:.*$/gim, '').replace(/^width:.*$/gim, '').replace(/^height:.*$/gim, '').replace(/^title:.*$/gim, '').replace(/^image_url:.*$/gim, '').replace(/^url:.*$/gim, '').trim();
+    const titleText = parseField('title') || 'صورة مولدة بواسطة TOLZY Image';
+    const initialRatio = parseField('aspect_ratio') || '1:1';
+    const parsedImageUrl = parseField('image_url') || parseField('url') || '';
+
+    const [aspectRatio, setAspectRatio] = React.useState(initialRatio);
+    const [imageUrl, setImageUrl] = React.useState<string | null>(() => {
+        if (parsedImageUrl) return parsedImageUrl;
+        return getCachedImage(promptText, initialRatio);
+    });
+    const [isGenerating, setIsGenerating] = React.useState(false);
+    const [error, setError] = React.useState<string | null>(null);
+    const [isLightboxOpen, setIsLightboxOpen] = React.useState(false);
+
+    const normalized = String(userPlan || 'free').toLowerCase();
+    const isProOrMax = normalized.includes('pro') || normalized.includes('max') || normalized.includes('ultra') || normalized.includes('admin');
+
+    const generateImage = async (ratio = aspectRatio, force = false) => {
+        // If not forced (e.g. on page mount), use cached image if it exists
+        if (!force) {
+            const cached = getCachedImage(promptText, ratio);
+            if (cached) {
+                setImageUrl(cached);
+                return;
+            }
+        }
+
+        setIsGenerating(true);
+        setError(null);
+        try {
+            const res = await fetch('/api/axiom/image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    prompt: promptText,
+                    aspectRatio: ratio,
+                    userId,
+                    userPlan: userPlan || 'pro'
+                })
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                if (data.code === 'UPGRADE_REQUIRED' && onOpenUpgradeModal) {
+                    onOpenUpgradeModal();
+                }
+                throw new Error(data.error || 'فشل تخليق الصورة');
+            }
+            setImageUrl(data.imageUrl);
+            setCachedImage(promptText, ratio, data.imageUrl);
+        } catch (e: any) {
+            setError(e.message || 'حدث خطأ أثناء تخليق الصورة');
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    React.useEffect(() => {
+        if (imageUrl) return; // Already loaded from state, block, or cache
+        const cached = getCachedImage(promptText, aspectRatio);
+        if (cached) {
+            setImageUrl(cached);
+            return;
+        }
+        if (promptText && !imageUrl && !isGenerating && !error) {
+            generateImage(aspectRatio);
+        }
+    }, [promptText]);
+
+    const handleDownload = (e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
+        if (!imageUrl) return;
+        const a = document.createElement('a');
+        a.href = imageUrl;
+        a.download = `tolzy-image-${Date.now()}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        toast.success('جاري تنزيل الصورة PNG بدقة عالية 🖼️');
+    };
+
+    return (
+        <div className="my-3 w-full max-w-[640px] animate-in fade-in duration-300" dir="rtl">
+            {/* Main Image Box - Clean and Minimal */}
+            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200/80 dark:border-white/10 bg-slate-950 shadow-xl group">
+                {isGenerating ? (
+                    <div className="w-full aspect-square flex flex-col items-center justify-center gap-3 p-6 bg-gradient-to-br from-neutral-900 via-neutral-950 to-indigo-950/30 text-center relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" />
+                        <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                            <span className="material-symbols-outlined text-[20px] animate-spin">sync</span>
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold text-white tracking-wide">جاري توليد الصورة...</p>
+                            <p className="text-[10px] text-neutral-400 mt-1 max-w-sm line-clamp-1">{promptText}</p>
+                        </div>
+                    </div>
+                ) : imageUrl ? (
+                    <div 
+                        className="relative cursor-pointer overflow-hidden group/img" 
+                        onClick={() => setIsLightboxOpen(true)}
+                    >
+                        <img
+                            src={imageUrl}
+                            alt={promptText}
+                            className="w-full h-auto max-h-[520px] object-cover transition-transform duration-500 group-hover/img:scale-[1.02]"
+                        />
+                        {/* Hover Overlay Controls */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity duration-200 flex items-end justify-between p-3.5">
+                            <span className="text-xs text-white/90 font-medium truncate max-w-[70%]" dir="ltr">{promptText}</span>
+                            <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                                <button
+                                    type="button"
+                                    onClick={handleDownload}
+                                    className="p-2 rounded-xl bg-white/20 hover:bg-white/30 text-white backdrop-blur-md transition-all cursor-pointer"
+                                    title="تنزيل الصورة PNG"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">download</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => generateImage(aspectRatio, true)}
+                                    className="p-2 rounded-xl bg-white/20 hover:bg-white/30 text-white backdrop-blur-md transition-all cursor-pointer"
+                                    title="إعادة التوليد"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">refresh</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                ) : error ? (
+                    <div className="p-5 text-center bg-red-500/10 text-red-400 text-xs font-medium">
+                        <p>{error}</p>
+                        {!isProOrMax ? (
+                            <button
+                                type="button"
+                                onClick={onOpenUpgradeModal}
+                                className="mt-2 px-3 py-1.5 bg-red-500 text-white rounded-lg text-[10px] font-bold cursor-pointer"
+                            >
+                                ترقية الحساب إلى Pro / MAX
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => generateImage(aspectRatio, true)}
+                                className="mt-2 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-[10px] font-bold cursor-pointer"
+                            >
+                                إعادة المحاولة
+                            </button>
+                        )}
+                    </div>
+                ) : null}
+            </div>
+
+            {/* Prompt preview footer */}
+            <div className="mt-1.5 flex items-center justify-between text-[10px] text-neutral-400 px-1">
+                <span className="truncate max-w-[80%] font-mono" dir="ltr">{promptText}</span>
+                <button
+                    type="button"
+                    onClick={() => {
+                        navigator.clipboard.writeText(promptText);
+                        toast.success('تم نسخ الـ Prompt');
+                    }}
+                    className="hover:text-neutral-200 transition-colors cursor-pointer flex items-center gap-1"
+                >
+                    <span className="material-symbols-outlined text-[13px]">content_copy</span>
+                    <span>نسخ</span>
+                </button>
+            </div>
+
+            {/* Lightbox Modal (تمويه سينمائي يغطي الشاشة بالكامل وشريط الإرسال) */}
+            {isLightboxOpen && imageUrl && (
+                <div 
+                    className="fixed inset-0 z-[99999] bg-black/75 backdrop-blur-2xl flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-200"
+                    onClick={() => setIsLightboxOpen(false)}
+                >
+                    <div 
+                        className="relative max-w-4xl max-h-[88vh] flex flex-col items-center w-full rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-black/40 backdrop-blur-md" 
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <img 
+                            src={imageUrl} 
+                            alt={promptText} 
+                            className="max-h-[75vh] w-auto max-w-full rounded-2xl object-contain"
+                        />
+                        <div className="w-full flex items-center justify-between px-5 py-3 bg-black/60 border-t border-white/10 text-white">
+                            <span className="text-xs text-neutral-300 font-medium truncate max-w-[65%]" dir="ltr">{promptText}</span>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={handleDownload}
+                                    className="px-3.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                                >
+                                    <span className="material-symbols-outlined text-[15px]">download</span>
+                                    <span>تنزيل</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsLightboxOpen(false)}
+                                    className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer"
+                                    title="إغلاق"
+                                >
+                                    <span className="material-symbols-outlined text-[18px]">close</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 const formatMessageContent = (text: string) => {
     if (!text) return '';
     return text
@@ -408,10 +773,12 @@ const formatMessageContent = (text: string) => {
 };
 
 // ─── Message Item Component (Premium Glassmorphic Styles) ───
-const MessageItem = React.memo(({ msg, user, onResend }: {
+const MessageItem = React.memo(({ msg, user, userPlan, onResend, onOpenUpgradeModal }: {
     msg: Message,
     user: any,
-    onResend?: (content: string) => void
+    userPlan?: string,
+    onResend?: (content: string) => void,
+    onOpenUpgradeModal?: () => void
 }) => {
     const [displayedContent, setDisplayedContent] = useState(msg.isStreaming ? '' : msg.content);
     const [isCopied, setIsCopied] = useState(false);
@@ -532,8 +899,10 @@ const MessageItem = React.memo(({ msg, user, onResend }: {
                                     th: ({ children }) => <th className="px-4 py-3 border-b border-slate-200 dark:border-white/[0.06] text-slate-700 dark:text-slate-300 font-semibold">{children}</th>,
                                     td: ({ children }) => <td className="px-4 py-3 border-b border-slate-100 dark:border-white/[0.04] text-slate-600 dark:text-slate-300">{children}</td>,
                                     code: ({ node, className, children, ...props }: any) => {
-                                        const match = /language-(\w+)/.exec(className || '');
-                                        if (match && match[1] === 'tool') {
+                                        const match = /language-([\w-]+)/.exec(className || '');
+                                        const lang = (match ? match[1] : '').toLowerCase();
+
+                                        if (lang === 'tool') {
                                             const content = String(children);
                                             const lines = content.split('\n');
                                             const toolData: any = {};
@@ -569,7 +938,7 @@ const MessageItem = React.memo(({ msg, user, onResend }: {
                                             );
                                         }
 
-                                        if (match && match[1] === 'course') {
+                                        if (lang === 'course') {
                                             const content = String(children);
                                             const lines = content.split('\n');
                                             const courseData: any = {};
@@ -604,14 +973,26 @@ const MessageItem = React.memo(({ msg, user, onResend }: {
                                             );
                                         }
 
-                                        if (match && match[1] === 'gmail-inbox') {
+                                        if (lang === 'gmail-inbox') {
                                             const content = String(children).replace(/\n$/, '');
                                             return <GmailInboxWidget rawContent={content} />;
                                         }
 
-                                        if (match && match[1] === 'gmail-compose') {
+                                        if (lang === 'gmail-compose') {
                                             const content = String(children).replace(/\n$/, '');
                                             return <GmailComposeWidget rawContent={content} />;
+                                        }
+
+                                        if (lang.includes('tolzy-image') || lang === 'image' || lang === 'flux' || lang.includes('tolzy-voice')) {
+                                            const content = String(children).replace(/\n$/, '');
+                                            return (
+                                                <TolzyImageWidget
+                                                    rawContent={content}
+                                                    userPlan={userPlan}
+                                                    userId={user?.uid}
+                                                    onOpenUpgradeModal={onOpenUpgradeModal}
+                                                />
+                                            );
                                         }
 
                                         return match ? (
@@ -737,6 +1118,16 @@ const MessageItem = React.memo(({ msg, user, onResend }: {
                                 )}
                             </div>
                         )}
+
+                        {/* Fallback auto-render for TOLZY Image messages if no code block was outputted */}
+                        {msg.role === 'assistant' && msg.modelId === 'tolzy-image' && !msg.isStreaming && msg.status !== 'thinking' && !/```(?:tolzy-image|image|flux)/i.test(processedContent) && (
+                            <TolzyImageWidget
+                                rawContent={`prompt: ${msg.content || 'A masterpiece cinematic photograph'}\naspect_ratio: 1:1\ntitle: صورة مولدة بواسطة TOLZY Image`}
+                                userPlan={userPlan}
+                                userId={user?.uid}
+                                onOpenUpgradeModal={onOpenUpgradeModal}
+                            />
+                        )}
                     </div>
                 )}
 
@@ -794,8 +1185,36 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
     const { user, userProfile, loading } = useAuth();
     const { userData, refreshUserData } = useUserData();
     const { isDarkMode, toggleDarkMode } = useTheme();
-    const normalizedPlan = String(userProfile?.plan || 'free').toLowerCase();
-    const isProPlan = normalizedPlan.includes('pro') || normalizedPlan.includes('ultra');
+    const [livePlan, setLivePlan] = useState<string>(userProfile?.plan || 'free');
+
+    useEffect(() => {
+        if (userProfile?.plan && userProfile.plan !== 'free') {
+            setLivePlan(userProfile.plan);
+        }
+    }, [userProfile?.plan]);
+
+    useEffect(() => {
+        if (!user?.uid) return;
+        let isCancelled = false;
+        const fetchPlan = async () => {
+            try {
+                const res = await fetch(`/api/user/plan?uid=${encodeURIComponent(user.uid)}`, { cache: 'no-store' });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (!isCancelled && data?.plan) {
+                        setLivePlan(data.plan);
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to fetch live plan in ChatInterface:', e);
+            }
+        };
+        fetchPlan();
+        return () => { isCancelled = true; };
+    }, [user?.uid]);
+
+    const normalizedPlan = String(livePlan || userProfile?.plan || userData?.plan || 'free').toLowerCase();
+    const isProPlan = normalizedPlan.includes('pro') || normalizedPlan.includes('max') || normalizedPlan.includes('ultra') || normalizedPlan.includes('admin') || userProfile?.role === 'admin' || userData?.role === 'admin' || user?.email === 'mahmoud.m.moussa5310@gmail.com';
     const isFree = !isProPlan;
     const [showGuestOverlay, setShowGuestOverlay] = useState(true);
 
@@ -843,8 +1262,13 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
     const [currentConversationId, setCurrentConversationId] = useState<string | null>(initialChatId || null);
     const [selectedTool, setSelectedTool] = useState(TOOLS[0]);
     const [mode, setMode] = useState<AxiomMode>('general');
-    const [selectedModel, setSelectedModel] = useState<'pro' | 'flash' | 'thinker'>('pro');
+    const [selectedModel, setSelectedModel] = useState<'axiom-core' | 'tolzy-image'>('axiom-core');
+    const [selectedAspectRatio, setSelectedAspectRatio] = useState<'1:1' | '16:9' | '9:16'>('1:1');
+    const [selectedStylePreset, setSelectedStylePreset] = useState<string>('cinematic');
     const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
+    const [isAspectRatioDropdownOpen, setIsAspectRatioDropdownOpen] = useState(false);
+    const [isStyleDropdownOpen, setIsStyleDropdownOpen] = useState(false);
+    const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isInputModeDropdownOpen, setIsInputModeDropdownOpen] = useState(false);
@@ -957,6 +1381,12 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
         if (!promptText && selectedFiles.length === 0) return;
         if (isLoading) return;
 
+        // 🔒 Check Pro/Max permission for TOLZY Image model
+        if (selectedModel === 'tolzy-image' && isFree) {
+            setIsUpgradeModalOpen(true);
+            return;
+        }
+
         if (selectedFiles.length > 0) {
             const filesList = selectedFiles.map(f => `📄 ${f.name}`).join('\n');
             promptText = promptText 
@@ -988,7 +1418,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
             content: '',
             isStreaming: false,
             status: 'thinking',
-            modelId: 'axiom',
+            modelId: selectedModel,
             tools: []
         };
         setMessages(prev => [...prev, assistantMessage]);
@@ -1002,11 +1432,14 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                     message: promptText,
                     history: currentMsgs.map(m => ({ role: m.role, content: m.content })),
                     userId: user?.uid,
-                    userPlan: isProPlan ? 'pro' : 'free',
+                    userPlan: normalizedPlan,
                     userName: userData?.displayName || user?.displayName || user?.email || 'مستخدم',
                     enableSearch: isSearchEnabled,
                     selectedTool: selectedTool.id,
                     mode: mode,
+                    model: selectedModel,
+                    aspectRatio: selectedAspectRatio,
+                    stylePreset: selectedStylePreset,
                     isGmailConnected: isGmailConnected,
                 })
             });
@@ -1165,7 +1598,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
         textareaRef.current?.focus();
     };
 
-    const handle開KeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleSendMessage();
@@ -1258,7 +1691,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
-                className="relative w-full max-w-2xl mx-auto transition-all duration-300 z-30"
+                className="relative w-full max-w-xl mx-auto transition-all duration-300 z-30"
             >
                 {/* Hidden File Upload Input */}
                 <input
@@ -1275,7 +1708,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                 />
 
                 {/* Floating Composer Card */}
-                <div className="flex flex-col bg-white dark:bg-[#18181b] rounded-[18px] sm:rounded-[22px] border border-neutral-200/90 dark:border-neutral-800 shadow-[0_0.25rem_1.25rem_rgba(0,0,0,0.035),0_0_0_1px_rgba(0,0,0,0.04)] hover:shadow-[0_0.25rem_1.25rem_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.08)] focus-within:shadow-[0_0.25rem_1.5rem_rgba(0,0,0,0.08),0_0_0_1.5px_rgba(59,130,246,0.5)] dark:shadow-[0_0.25rem_1.25rem_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.06)] dark:focus-within:border-neutral-700 transition-all duration-200 p-2.5 sm:p-3.5 gap-2 sm:gap-2.5">
+                <div className="flex flex-col bg-white dark:bg-[#18181b] rounded-[18px] sm:rounded-[20px] border border-neutral-200/90 dark:border-neutral-800 shadow-[0_0.25rem_1.25rem_rgba(0,0,0,0.035),0_0_0_1px_rgba(0,0,0,0.04)] hover:shadow-[0_0.25rem_1.25rem_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.08)] focus-within:shadow-[0_0.25rem_1.5rem_rgba(0,0,0,0.08),0_0_0_1.5px_rgba(59,130,246,0.5)] dark:shadow-[0_0.25rem_1.25rem_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.06)] dark:focus-within:border-neutral-700 transition-all duration-200 p-2 sm:p-3 gap-1.5 sm:gap-2">
                     
                     {/* Attached Files Chips Bar */}
                     {selectedFiles.length > 0 && (
@@ -1305,10 +1738,10 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                 if (showAtMenu && e.key === 'Escape') { setShowAtMenu(false); e.preventDefault(); return; }
                                 if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); }
                             }}
-                            placeholder="How can I help you today?"
+                            placeholder="اسأل AXIOM الذكي أو اختر وضع البرمجة..."
                             rows={1}
                             disabled={isLoading}
-                            className="w-full bg-transparent border-none focus:ring-0 resize-none px-1 py-0.5 text-[14px] sm:text-[16px] font-medium text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 max-h-72 min-h-[40px] sm:min-h-[48px] outline-none leading-relaxed"
+                            className="w-full bg-transparent border-none focus:ring-0 resize-none px-1 py-0.5 text-[13.5px] sm:text-[15px] font-medium text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 max-h-60 min-h-[38px] sm:min-h-[42px] outline-none leading-relaxed"
                             dir="auto"
                         />
 
@@ -1357,10 +1790,10 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                         </AnimatePresence>
                     </div>
 
-                    {/* Bottom Toolbar: Attach + Segmented Control + Spacer + Model + Mic + Send */}
+                    {/* Bottom Toolbar: Attach + (Segmented Control) + Spacer + Model + Mic + Send */}
                     <div className="relative flex items-center justify-between w-full gap-1 sm:gap-2 pt-1 border-t border-neutral-100/80 dark:border-neutral-800/80">
                         
-                        {/* Left Side: Attachment + Segmented Control */}
+                        {/* Left Side: Attachment + Segmented Control (Chat / Code) */}
                         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                             {/* Attachment Button */}
                             <button
@@ -1374,31 +1807,31 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                 </svg>
                             </button>
 
-                            {/* Segmented Control Pill: Chat / Code */}
+                            {/* Regular Segmented Control Pill: Chat / Code */}
                             <div className="inline-flex rounded-lg p-0.5 bg-neutral-100 dark:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-800 text-[10px] sm:text-[11px] font-semibold">
                                 <button
                                     type="button"
                                     onClick={() => setMode('general')}
-                                    className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-md transition-all ${mode === 'general' ? 'bg-white dark:bg-neutral-750 text-neutral-900 dark:text-white shadow-xs font-bold' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}`}
+                                    className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-md transition-all cursor-pointer ${mode === 'general' ? 'bg-white dark:bg-neutral-750 text-neutral-900 dark:text-white shadow-xs font-bold' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}`}
                                 >
                                     دردشة
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setMode('code')}
-                                    className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-md transition-all ${mode === 'code' ? 'bg-white dark:bg-neutral-750 text-neutral-900 dark:text-white shadow-xs font-bold' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}`}
+                                    className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-md transition-all cursor-pointer ${mode === 'code' ? 'bg-white dark:bg-neutral-750 text-neutral-900 dark:text-white shadow-xs font-bold' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}`}
                                 >
                                     برمجة
                                 </button>
                             </div>
                         </div>
 
-                        {/* Right Side: AXIOM Model Badge + Mic Audio Wave + Send */}
+                        {/* Right Side: Model Indicator + Mic Audio Wave + Send */}
                         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-                            {/* Pure AXIOM Model Badge */}
-                            <div className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold text-neutral-800 dark:text-neutral-200 bg-neutral-100/70 dark:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-800 select-none">
+                            {/* Model Indicator (AXIOM Core) */}
+                            <div className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold bg-neutral-100/70 dark:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200 select-none">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                <span>AXIOM</span>
+                                <span>AXIOM Core</span>
                             </div>
 
                             {/* Voice Audio Wave Button */}
@@ -1910,6 +2343,11 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                             <div className="flex items-center gap-2">
                                 <span className="text-sm font-black text-slate-900 dark:text-white tracking-tight">AXIOM</span>
                                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Active" />
+                                {selectedModel === 'tolzy-image' && (
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/25">
+                                        TOLZY Image 🎨
+                                    </span>
+                                )}
                             </div>
                         </div>
 
@@ -1966,7 +2404,9 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                                 key={msg.id}
                                                 msg={msg}
                                                 user={user}
+                                                userPlan={normalizedPlan}
                                                 onResend={(content) => handleSendMessage(content)}
+                                                onOpenUpgradeModal={() => setIsUpgradeModalOpen(true)}
                                             />
                                         ))}
                                         <div ref={messagesEndRef} className="h-1" />
@@ -1988,6 +2428,11 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                             )}
                         </>
                     )}
+
+                    <UpgradePlanModal
+                        isOpen={isUpgradeModalOpen}
+                        onClose={() => setIsUpgradeModalOpen(false)}
+                    />
 
                     {renderGoogleAuthModal()}
                 </main>

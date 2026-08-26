@@ -60,6 +60,7 @@ export const useUserData = () => {
             photoURL: user.photoURL,
             createdAt: new Date().toISOString(),
             role: 'user',
+            plan: 'free',
             copilotRequestCount: 0
           };
           cachedUserData[uid] = defaultData;
@@ -76,6 +77,7 @@ export const useUserData = () => {
           photoURL: user.photoURL,
           createdAt: new Date().toISOString(),
           role: 'user',
+          plan: 'free',
           copilotRequestCount: 0
         };
         return fallbackData;

@@ -48,7 +48,7 @@ const Navbar: React.FC = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   const normalizedPlan = String(userProfile?.plan || 'free').toLowerCase();
-  const isPro = normalizedPlan.includes('pro') || normalizedPlan.includes('ultra');
+  const isPro = normalizedPlan.includes('pro') || normalizedPlan.includes('max') || normalizedPlan.includes('ultra') || normalizedPlan.includes('admin') || userProfile?.role === 'admin';
 
   // Combine all available tools for search
   const allTools = React.useMemo(() => {

@@ -9,7 +9,7 @@ import Link from 'next/link';
 export default function BuildWithAIPage() {
     const { user, userProfile } = useAuth();
     const normalizedPlan = String(userProfile?.plan || 'free').toLowerCase();
-    const isPro = normalizedPlan.includes('pro') || normalizedPlan.includes('ultra');
+    const isPro = normalizedPlan.includes('pro') || normalizedPlan.includes('max') || normalizedPlan.includes('ultra') || normalizedPlan.includes('admin') || userProfile?.role === 'admin';
 
     const [result, setResult] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(false);

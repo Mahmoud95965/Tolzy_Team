@@ -13,17 +13,19 @@ interface WelcomeScreenProps {
 
 const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onQuickAction, userName, userPlan = 'free', children }) => {
     const suggestions = [
+        { text: 'ساعدني في بناء وتطوير فكرة مشروع ذكاء اصطناعي 💡', label: 'أفكار مشاريع' },
         { text: 'اشرح لي كود برمجي بالتفصيل 💻', label: 'تحليل الأكواد' },
-        { text: 'اكتب خوارزمية ذكية بلغة TypeScript ⚡', label: 'برمجة ذكية' },
-        { text: 'اقترح لي أدوات الذكاء الاصطناعي لمشروعي 🚀', label: 'اكتشاف أدوات' },
+        { text: 'اقترح لي أفضل أدوات الذكاء الاصطناعي 🚀', label: 'اكتشاف أدوات' },
         { text: 'ضع لي مسار تعلم متكامل للذكاء الاصطناعي 🎓', label: 'مسار تعلم' }
     ];
 
-    const normalizedPlan = (userPlan || 'free').toLowerCase();
-    const isMax = normalizedPlan.includes('max');
-    const isPro = !isMax && normalizedPlan.includes('pro');
+    const normalizedPlan = (userPlan || 'free').toLowerCase().trim();
+    const isAdmin = normalizedPlan.includes('admin');
+    const isMax = !isAdmin && (normalizedPlan.includes('max') || normalizedPlan.includes('ultra') || normalizedPlan.includes('studio'));
+    const isPro = !isAdmin && !isMax && (normalizedPlan.includes('pro') || normalizedPlan.includes('plus') || normalizedPlan.includes('premium'));
+    const isPaid = isAdmin || isMax || isPro;
 
-    const planLabel = isMax ? 'خطة MAX 👑' : isPro ? 'خطة Pro ⭐' : 'الخطة المجانية';
+    const planLabel = isAdmin ? 'حساب الإدارة (Admin) ⚡' : isMax ? 'خطة MAX 👑' : isPro ? 'خطة Pro ⭐' : 'الخطة المجانية';
 
     return (
         <div className="mx-auto w-full flex-1 px-2.5 sm:px-6 md:px-8 max-w-4xl relative flex h-full flex-col items-center justify-center gap-4 sm:gap-6 pt-2 pb-6 sm:pt-4 select-none text-center" dir="rtl">
@@ -37,7 +39,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onQuickAction, userName, 
             >
                 <div className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full h-7 sm:h-8 px-3 sm:px-4 text-center text-[10px] sm:text-xs font-semibold text-neutral-700 dark:text-neutral-300 select-none bg-neutral-100 dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 shadow-xs backdrop-blur-md">
                     <span className="flex items-center gap-1">
-                        <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${isPro || isMax ? 'bg-emerald-500 animate-pulse' : 'bg-neutral-400 dark:bg-neutral-500'}`} />
+                        <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${isPaid ? 'bg-emerald-500 animate-pulse' : 'bg-neutral-400 dark:bg-neutral-500'}`} />
                         <span>{planLabel}</span>
                     </span>
                     <div className="size-[2.5px] bg-neutral-300 dark:bg-neutral-700 rounded-full" />
@@ -45,7 +47,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onQuickAction, userName, 
                         href="/pricing"
                         className="text-blue-600 dark:text-blue-400 font-bold hover:underline transition-colors cursor-pointer"
                     >
-                        {isPro || isMax ? 'إدارة الاشتراك' : 'ترقية الحساب ⚡'}
+                        {isPaid ? 'إدارة الاشتراك' : 'ترقية الحساب ⚡'}
                     </Link>
                 </div>
             </motion.div>

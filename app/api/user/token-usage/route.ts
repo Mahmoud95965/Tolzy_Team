@@ -1,26 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb } from '@/src/config/firebase-admin';
+import { adminDb as configAdminDb } from '@/src/config/firebase-admin';
+import { adminDb as libAdminDb } from '@/lib/firebase-admin';
 import { hasSupabaseAdminConfig, supabaseAdmin } from '@/src/config/supabase-admin';
 import { parsePlan, PLAN_CONFIGS } from '@/src/lib/ai-quota';
 
 export const maxDuration = 15;
+export const dynamic = 'force-dynamic';
 
 const ADMIN_EMAIL = 'mahmoud.m.moussa5310@gmail.com';
+
+function getActiveAdminDb() {
+    return configAdminDb || libAdminDb || null;
+}
 
 export async function GET(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url);
-        const userId = searchParams.get('userId');
+        const userId = searchParams.get('userId')?.trim();
 
         if (!userId) {
             return NextResponse.json({ error: 'userId is required' }, { status: 400 });
         }
 
+        const adminDb = getActiveAdminDb();
         let firestoreData: any = {};
-        let supabaseData: any = null;
+        let supabaseLimitsData: any = null;
+        let supabaseProfileData: any = null;
 
         // Fetch from Firestore and Supabase concurrently
-        const [firestoreTask, supabaseTask] = await Promise.allSettled([
+        const [firestoreTask, supabaseLimitsTask, supabaseProfileTask] = await Promise.allSettled([
             (async () => {
                 if (!adminDb) return {};
                 const userSnap = await adminDb.collection('users').doc(userId).get();
@@ -34,16 +42,26 @@ export async function GET(req: NextRequest) {
                     .eq('user_id', userId)
                     .maybeSingle();
                 return data;
+            })(),
+            (async () => {
+                if (!hasSupabaseAdminConfig) return null;
+                const { data } = await supabaseAdmin
+                    .from('profiles')
+                    .select('plan, role')
+                    .eq('id', userId)
+                    .maybeSingle();
+                return data;
             })()
         ]);
 
         if (firestoreTask.status === 'fulfilled') firestoreData = firestoreTask.value || {};
-        if (supabaseTask.status === 'fulfilled') supabaseData = supabaseTask.value;
+        if (supabaseLimitsTask.status === 'fulfilled') supabaseLimitsData = supabaseLimitsTask.value;
+        if (supabaseProfileTask.status === 'fulfilled') supabaseProfileData = supabaseProfileTask.value;
 
-        const userEmail = String(firestoreData?.email || supabaseData?.email || '').toLowerCase();
+        const userEmail = String(firestoreData?.email || supabaseLimitsData?.email || '').toLowerCase().trim();
 
         // Check if admin
-        if (userEmail === ADMIN_EMAIL || firestoreData?.role === 'admin') {
+        if (userEmail === ADMIN_EMAIL || firestoreData?.role === 'admin' || supabaseProfileData?.role === 'admin') {
             return NextResponse.json({
                 plan: 'admin',
                 planName: 'حساب الإدارة (Admin)',
@@ -58,13 +76,23 @@ export async function GET(req: NextRequest) {
         }
 
         // Determine plan with priority: MAX/Studio > Pro > Free
-        const rawFsPlan = String(firestoreData?.plan || firestoreData?.subscriptionPlan || 'free').toLowerCase();
-        const rawSbPlan = String(supabaseData?.plan || 'free').toLowerCase();
+        const rawFsPlan = String(firestoreData?.plan || firestoreData?.subscriptionPlan || firestoreData?.subscription_plan || firestoreData?.tier || 'free').toLowerCase();
+        const rawSbLimitsPlan = String(supabaseLimitsData?.plan || 'free').toLowerCase();
+        const rawSbProfilePlan = String(supabaseProfileData?.plan || 'free').toLowerCase();
 
         let plan: 'free' | 'pro' | 'max' = 'free';
-        if (rawFsPlan.includes('max') || rawFsPlan.includes('ultra') || rawFsPlan.includes('studio') || rawSbPlan.includes('max') || rawSbPlan.includes('ultra')) {
+        if (
+            rawFsPlan.includes('max') || rawFsPlan.includes('ultra') || rawFsPlan.includes('studio') ||
+            rawSbLimitsPlan.includes('max') || rawSbLimitsPlan.includes('ultra') ||
+            rawSbProfilePlan.includes('max') || rawSbProfilePlan.includes('ultra') ||
+            firestoreData?.isMax
+        ) {
             plan = 'max';
-        } else if (rawFsPlan.includes('pro') || rawFsPlan.includes('plus') || rawSbPlan.includes('pro')) {
+        } else if (
+            rawFsPlan.includes('pro') || rawFsPlan.includes('plus') || rawFsPlan.includes('premium') ||
+            rawSbLimitsPlan.includes('pro') || rawSbProfilePlan.includes('pro') ||
+            firestoreData?.isPro
+        ) {
             plan = 'pro';
         }
 

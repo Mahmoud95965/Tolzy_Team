@@ -1,69 +1,169 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb, adminInitError } from '@/lib/firebase-admin';
+import { hasSupabaseAdminConfig, supabaseAdmin } from '@/src/config/supabase-admin';
+import { adminDb as configAdminDb } from '@/src/config/firebase-admin';
+import { adminDb as libAdminDb } from '@/lib/firebase-admin';
 
-// Helper to check if error is quota-related
-function isQuotaError(error: any): boolean {
-  const message = String(error?.message || error);
-  return message.includes('quota') || 
-         message.includes('egress') || 
-         message.includes('exceed') ||
-         message.includes('restricted');
+export const maxDuration = 15;
+export const dynamic = 'force-dynamic';
+
+const ADMIN_EMAIL = 'mahmoud.m.moussa5310@gmail.com';
+
+function getActiveAdminDb() {
+  return configAdminDb || libAdminDb || null;
 }
 
-export async function GET(request: NextRequest) {
+function normalizePlanTier(raw: unknown): 'free' | 'pro' | 'max' | 'admin' {
+  const p = String(raw || 'free').toLowerCase().trim();
+  if (p.includes('admin')) return 'admin';
+  if (p.includes('max') || p.includes('ultra') || p.includes('studio') || p.includes('tolzy_max') || p.includes('tolzy_ultra')) return 'max';
+  if (p.includes('pro') || p.includes('plus') || p.includes('premium') || p.includes('tolzy_pro')) return 'pro';
+  return 'free';
+}
+
+export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const uid = searchParams.get('uid');
-
+    const uid = req.nextUrl.searchParams.get('uid')?.trim();
     if (!uid) {
-      return NextResponse.json({ plan: 'free' }, { status: 200 });
+      return NextResponse.json({ error: 'Missing uid', plan: 'free', isPro: false, isMax: false }, { status: 400 });
     }
 
-    if (!adminDb) {
-      console.warn('[API /user/plan] Database not initialized, returning free plan');
-      return NextResponse.json({ plan: 'free' }, { status: 200 });
+    const adminDb = getActiveAdminDb();
+    let firestorePlan = 'free';
+    let firestoreEmail = '';
+    let firestoreRole = 'user';
+    let supabasePlan = 'free';
+    let supabaseProfilePlan = 'free';
+    let supabaseRole = 'user';
+    let isAdminDoc = false;
+
+    // Fetch from all Firestore and Supabase tables concurrently
+    const [firestoreUserTask, firestoreAdminTask, supabaseLimitsTask, supabaseProfileTask] = await Promise.allSettled([
+      // 1. Firestore Users Collection
+      (async () => {
+        if (!adminDb) return null;
+        const userDoc = await adminDb.collection('users').doc(uid).get();
+        if (userDoc.exists) {
+          const data = userDoc.data() || {};
+          const planValue = data.plan || data.subscriptionPlan || data.subscription_plan || data.tier || (data.isMax ? 'max' : data.isPro ? 'pro' : 'free');
+          return {
+            plan: String(planValue || 'free'),
+            email: String(data.email || '').toLowerCase().trim(),
+            role: String(data.role || 'user').toLowerCase().trim(),
+          };
+        }
+        return null;
+      })(),
+
+      // 2. Firestore Admins Collection
+      (async () => {
+        if (!adminDb) return false;
+        try {
+          const adminDoc = await adminDb.collection('admins').doc(uid).get();
+          return adminDoc.exists;
+        } catch {
+          return false;
+        }
+      })(),
+
+      // 3. Supabase user_limits Table
+      (async () => {
+        if (!hasSupabaseAdminConfig) return 'free';
+        const { data, error } = await supabaseAdmin
+          .from('user_limits')
+          .select('plan')
+          .eq('user_id', uid)
+          .maybeSingle();
+        if (!error && data?.plan) {
+          return String(data.plan);
+        }
+        return 'free';
+      })(),
+
+      // 4. Supabase profiles Table
+      (async () => {
+        if (!hasSupabaseAdminConfig) return { plan: 'free', role: 'user' };
+        const { data, error } = await supabaseAdmin
+          .from('profiles')
+          .select('plan, role')
+          .eq('id', uid)
+          .maybeSingle();
+        if (!error && data) {
+          return {
+            plan: String(data.plan || 'free'),
+            role: String(data.role || 'user').toLowerCase().trim(),
+          };
+        }
+        return { plan: 'free', role: 'user' };
+      })(),
+    ]);
+
+    if (firestoreUserTask.status === 'fulfilled' && firestoreUserTask.value) {
+      firestorePlan = firestoreUserTask.value.plan;
+      firestoreEmail = firestoreUserTask.value.email;
+      firestoreRole = firestoreUserTask.value.role;
     }
 
-    try {
-      // Fetch user plan from Firestore with timeout
-      const userDocPromise = adminDb.collection('users').doc(uid).get();
-      
-      // Add 5 second timeout to avoid hanging
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout')), 5000)
-      );
-      
-      const userDoc = await Promise.race([userDocPromise, timeoutPromise]) as any;
-      
-      if (!userDoc?.exists) {
-        return NextResponse.json({ plan: 'free' }, { status: 200 });
-      }
-
-      const userData = userDoc.data();
-      const rawPlan = userData?.plan || 'free';
-      
-      // Normalize plan value
-      const plan = String(rawPlan).toLowerCase();
-      const normalizedPlan = plan.includes('ultra') ? 'ultra' : 
-                             plan.includes('pro') ? 'pro' : 'free';
-
-      return NextResponse.json({ plan: normalizedPlan }, { status: 200 });
-      
-    } catch (dbError: any) {
-      // Check if it's a quota error
-      if (isQuotaError(dbError)) {
-        console.warn('[API /user/plan] Quota exceeded, returning free plan as fallback');
-        return NextResponse.json({ plan: 'free', quotaExceeded: true }, { status: 200 });
-      }
-      
-      // For any other DB error, also return free
-      console.warn('[API /user/plan] DB error:', dbError?.message || dbError);
-      return NextResponse.json({ plan: 'free' }, { status: 200 });
+    if (firestoreAdminTask.status === 'fulfilled' && firestoreAdminTask.value) {
+      isAdminDoc = true;
     }
 
-  } catch (error) {
-    // Final catch-all - never fail the auth flow
-    console.error('[API /user/plan] Unexpected error:', error);
-    return NextResponse.json({ plan: 'free' }, { status: 200 });
+    if (supabaseLimitsTask.status === 'fulfilled' && supabaseLimitsTask.value) {
+      supabasePlan = supabaseLimitsTask.value;
+    }
+
+    if (supabaseProfileTask.status === 'fulfilled' && supabaseProfileTask.value) {
+      supabaseProfilePlan = supabaseProfileTask.value.plan;
+      supabaseRole = supabaseProfileTask.value.role;
+    }
+
+    // Check for Admin Override
+    const isOwnerEmail = firestoreEmail === ADMIN_EMAIL;
+    const hasAdminRole = firestoreRole === 'admin' || supabaseRole === 'admin' || isAdminDoc || isOwnerEmail;
+
+    if (hasAdminRole) {
+      return NextResponse.json({
+        plan: 'admin',
+        isPro: true,
+        isMax: true,
+        isAdmin: true,
+        source: 'admin_role'
+      }, { status: 200 });
+    }
+
+    const nFs = normalizePlanTier(firestorePlan);
+    const nSbLimits = normalizePlanTier(supabasePlan);
+    const nSbProfile = normalizePlanTier(supabaseProfilePlan);
+
+    // Prioritize highest active tier: max > pro > free
+    let finalPlan: 'free' | 'pro' | 'max' = 'free';
+    let source = 'none';
+
+    if (nFs === 'max' || nSbLimits === 'max' || nSbProfile === 'max') {
+      finalPlan = 'max';
+      source = nFs === 'max' ? 'firestore' : nSbLimits === 'max' ? 'supabase_limits' : 'supabase_profiles';
+    } else if (nFs === 'pro' || nSbLimits === 'pro' || nSbProfile === 'pro') {
+      finalPlan = 'pro';
+      source = nFs === 'pro' ? 'firestore' : nSbLimits === 'pro' ? 'supabase_limits' : 'supabase_profiles';
+    } else {
+      source = 'default_free';
+    }
+
+    return NextResponse.json({
+      plan: finalPlan,
+      isPro: finalPlan === 'pro' || finalPlan === 'max',
+      isMax: finalPlan === 'max',
+      isAdmin: false,
+      source
+    }, { status: 200 });
+
+  } catch (error: any) {
+    console.error('❌ Error in /api/user/plan:', error);
+    return NextResponse.json({
+      plan: 'free',
+      isPro: false,
+      isMax: false,
+      isAdmin: false,
+      error: error?.message || 'Internal error'
+    }, { status: 200 });
   }
 }

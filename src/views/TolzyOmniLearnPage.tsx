@@ -139,7 +139,7 @@ export default function TolzyOmniLearnPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const normalizedPlan = String(userProfile?.plan || 'free').toLowerCase();
-    const isPro = normalizedPlan.includes('pro') || normalizedPlan.includes('ultra');
+    const isPro = normalizedPlan.includes('pro') || normalizedPlan.includes('max') || normalizedPlan.includes('ultra') || normalizedPlan.includes('admin') || userProfile?.role === 'admin';
 
     const [inputUrl, setInputUrl] = useState('');
     const [error, setError] = useState('');
@@ -549,7 +549,7 @@ export default function TolzyOmniLearnPage() {
                     li: ({ children }) => <li className="mb-0.5 text-right text-slate-300 leading-relaxed text-[11px] sm:text-[12px]">{children}</li>,
                     code: ({ className, children, ...props }) => {
                         const { ref, node, ...cleanProps } = props as any;
-                        const match = /language-(\w+)/.exec(className || '');
+                        const match = /language-([\w-]+)/.exec(className || '');
                         const codeStr = String(children).replace(/\n$/, '');
                         
                         // Check if it's a short timestamp like `03:45` or `[03:45]`

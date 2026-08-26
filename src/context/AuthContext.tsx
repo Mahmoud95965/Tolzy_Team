@@ -86,10 +86,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [authInstance, setAuthInstance] = useState<Auth | null>(null);
 
   const normalizePlan = (rawPlan: unknown): 'free' | 'pro' | 'max' | 'ultra' => {
-    const value = String(rawPlan || 'free').toLowerCase();
-    if (value.includes('max')) return 'max';
+    const value = String(rawPlan || 'free').toLowerCase().trim();
+    if (value.includes('max') || value.includes('studio') || value.includes('tolzy_max') || value.includes('tolzy_ultra')) return 'max';
     if (value.includes('ultra')) return 'ultra';
-    if (value.includes('pro')) return 'pro';
+    if (value.includes('pro') || value.includes('plus') || value.includes('premium') || value.includes('tolzy_pro')) return 'pro';
     return 'free';
   };
 
@@ -164,6 +164,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     coverURL: baseData.coverURL || null,
                     createdAt: baseData.createdAt || new Date().toISOString(),
                     role: baseData.role || 'user',
+                    plan: baseData.plan || baseData.subscriptionPlan || 'free',
+                    subscriptionPlan: baseData.subscriptionPlan || baseData.plan || 'free',
                     copilotRequestCount: baseData.copilotRequestCount || 0,
                     lastCopilotRequestDate: baseData.lastCopilotRequestDate || null
                   };
@@ -172,28 +174,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 console.warn('⚠️ [AuthContext] Firestore user fetch failed:', fsErr);
               }
 
-              let truePlan = 'free';
+              const userPlanFromBase = baseData.plan || baseData.subscriptionPlan || baseData.subscription_plan || baseData.tier || (baseData.isMax ? 'max' : baseData.isPro ? 'pro' : 'free');
+              let truePlan = userPlanFromBase || 'free';
+              
               try {
                 const res = await fetch(`/api/user/plan?uid=${encodeURIComponent(firebaseUser.uid)}`, {
                   cache: 'no-store'
                 });
                 if (res.ok) {
                   const result = await res.json();
-                  truePlan = normalizePlan(result?.plan);
-                } else {
-                  truePlan = normalizePlan(baseData.plan);
+                  if (result?.plan && result.plan !== 'free') {
+                    truePlan = result.plan;
+                  } else if (userPlanFromBase && userPlanFromBase !== 'free') {
+                    truePlan = userPlanFromBase;
+                  } else {
+                    truePlan = result?.plan || 'free';
+                  }
                 }
               } catch (e) {
                 console.error("Error fetching plan from backend:", e);
-                truePlan = normalizePlan(baseData.plan);
               }
+
+              const finalNormalizedPlan = normalizePlan(truePlan);
 
               setUserProfile({
                 uid: firebaseUser.uid,
                 email: firebaseUser.email || '',
                 displayName: baseData.displayName || firebaseUser.displayName || '',
                 photoURL: baseData.photoURL || firebaseUser.photoURL,
-                plan: normalizePlan(truePlan),
+                plan: finalNormalizedPlan,
                 role: baseData.role || 'user'
               });
 

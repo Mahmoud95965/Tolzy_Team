@@ -66,8 +66,8 @@ export default function PricingPage() {
   };
 
   // Payment details
-  const whatsappNumber = '201027016529';
-  const vodafoneCash = '01027016529';
+  const whatsappNumber = '201026795965';
+  const vodafoneCash = '01026795965';
   const instapay = 'mahmoud159208@instapay';
 
   const [activePlan, setActivePlan] = useState<'free' | 'pro' | 'max' | 'admin'>('free');
@@ -123,19 +123,31 @@ export default function PricingPage() {
     }
     const fetchUserPlan = async () => {
       try {
-        const res = await fetch(`/api/user/token-usage?userId=${user.uid}`);
+        let detectedPlan = 'free';
+        const res = await fetch(`/api/user/token-usage?userId=${user.uid}`, { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
-          const fetchedPlan = String(data.plan || 'free').toLowerCase();
-          if (fetchedPlan.includes('admin') || user.email === 'mahmoud.m.moussa5310@gmail.com') {
-            setActivePlan('admin');
-          } else if (fetchedPlan.includes('max') || fetchedPlan.includes('ultra')) {
-            setActivePlan('max');
-          } else if (fetchedPlan.includes('pro') || fetchedPlan.includes('plus')) {
-            setActivePlan('pro');
-          } else {
-            setActivePlan('free');
+          detectedPlan = String(data.plan || 'free').toLowerCase();
+        }
+
+        if (detectedPlan === 'free') {
+          const planRes = await fetch(`/api/user/plan?uid=${encodeURIComponent(user.uid)}`, { cache: 'no-store' });
+          if (planRes.ok) {
+            const planData = await planRes.json();
+            if (planData?.plan && planData.plan !== 'free') {
+              detectedPlan = String(planData.plan).toLowerCase();
+            }
           }
+        }
+
+        if (detectedPlan.includes('admin') || user.email === 'mahmoud.m.moussa5310@gmail.com') {
+          setActivePlan('admin');
+        } else if (detectedPlan.includes('max') || detectedPlan.includes('ultra') || detectedPlan.includes('studio')) {
+          setActivePlan('max');
+        } else if (detectedPlan.includes('pro') || detectedPlan.includes('plus') || detectedPlan.includes('premium')) {
+          setActivePlan('pro');
+        } else {
+          setActivePlan('free');
         }
       } catch (e) {
         console.error('Failed to fetch user plan on PricingPage:', e);
@@ -396,7 +408,8 @@ export default function PricingPage() {
       priceUsd: 19,
       tokenCount: '500,000 توكن شهرياً',
       features: [
-        '500,000 توكن شهرياً مدعومة بنموذج Kimi 2.5 Pro فائق الذكاء.',
+        '500,000 توكن شهرياً مدعومة بنماذج الذكاء الاصطناعي الفائقة.',
+        'استخدام غير محدود لتحليل واستكشاف الأدوات البرمجية والمستشار الذكي AXIOM.',
         'استخدام غير محدود لتحليل المحاضرات والكويزات في OmniLearn.',
         'توليد معماريات برمجية كاملة (Schemas, Prompts, PRD) عبر TOLZY Build.',
         'تصدير العروض التقديمية والمستندات الذكية عبر TOLZY Flow.',
@@ -416,7 +429,7 @@ export default function PricingPage() {
         '2,500,000 توكن شهرياً لأداء مكثف وسياق برمجي غير محدود.',
         'أولوية معالجة قصوى (Priority Execution) لجميع الأدوات والمحركات.',
         'استخراج وتصدير مشاريع Build و Flow بصيغ متعددة متكاملة للفرق.',
-        'معالجة ملفات ومستندات ضخمة بأعلى سعة سياق مع Kimi Pro.',
+        'معالجة ملفات ومستندات ضخمة بأعلى سعة سياق مع المستشار الذكي.',
         'شارة العضوية المتقدمة ودعم فني مخصص على مدار الساعة.',
       ],
       cta: 'ترقية إلى MAX',
@@ -426,7 +439,7 @@ export default function PricingPage() {
 
   const comparisonFeatures = [
     { name: 'حصة التوكن الذكي (Token Allowance)', free: '10,000 توكن ترحيبي', pro: '500,000 توكن شهرياً', max: '2,500,000 توكن شهرياً' },
-    { name: 'محرك النماذج والذكاء الاصطناعي', free: 'النماذج القياسية', pro: 'Kimi 2.5 Pro فائق الذكاء', max: 'Kimi Pro بأعلى سعة سياق' },
+    { name: 'المستشار التقني الفائق AXIOM', free: 'وصول قياسي', pro: 'وصول متقدم وسريع', max: 'أولوية قصوى وسياق غير محدود ⚡' },
     { name: 'منصة التعلم الذكي OmniLearn', free: 'حتى 3 فيديوهات', pro: 'استخدام غير محدود وتحليل كامل', max: 'استخدام غير محدود + أولوية معالجة' },
     { name: 'هندسة المشاريع TOLZY Build', free: 'مشروع واحد (تخطيط أولي)', pro: 'معماريات كاملة (SQL, PRD, Prompts)', max: 'تصدير مشاريع متكاملة للفرق بصيغ متعددة' },
     { name: 'العروض والمستندات الذكية TOLZY Flow', free: 'غير متوفر', pro: 'تصدير كامل', max: 'تصدير كامل ومتقدم للفرق' },

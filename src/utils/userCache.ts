@@ -7,6 +7,8 @@ export interface UserData {
   coverURL?: string | null;
   createdAt: string;
   role: string;
+  plan?: string;
+  subscriptionPlan?: string;
   copilotRequestCount?: number;
   lastCopilotRequestDate?: any;
 }
