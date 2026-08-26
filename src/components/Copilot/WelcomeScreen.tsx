@@ -13,7 +13,7 @@ interface WelcomeScreenProps {
 
 const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onQuickAction, userName, userPlan = 'free', children }) => {
     const suggestions = [
-        { text: 'ساعدني في بناء وتطوير فكرة مشروع ذكاء اصطناعي 💡', label: 'أفكار مشاريع' },
+        { text: 'ولّد صورة سينمائية لغابة في الخريف مع إضاءة شمس ذهبية 🎨', label: 'توليد وتصميم صور' },
         { text: 'اشرح لي كود برمجي بالتفصيل 💻', label: 'تحليل الأكواد' },
         { text: 'اقترح لي أفضل أدوات الذكاء الاصطناعي 🚀', label: 'اكتشاف أدوات' },
         { text: 'ضع لي مسار تعلم متكامل للذكاء الاصطناعي 🎓', label: 'مسار تعلم' }

@@ -1790,10 +1790,10 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                         </AnimatePresence>
                     </div>
 
-                    {/* Bottom Toolbar: Attach + (Segmented Control) + Spacer + Model + Mic + Send */}
+                    {/* Bottom Toolbar: Attach + (Segmented Control OR Image Dropdowns) + Spacer + Model + Mic + Send */}
                     <div className="relative flex items-center justify-between w-full gap-1 sm:gap-2 pt-1 border-t border-neutral-100/80 dark:border-neutral-800/80">
                         
-                        {/* Left Side: Attachment + Segmented Control (Chat / Code) */}
+                        {/* Left Side: Attachment + (Segmented Control or Image Dropdowns) */}
                         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                             {/* Attachment Button */}
                             <button
@@ -1807,31 +1807,250 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                 </svg>
                             </button>
 
-                            {/* Regular Segmented Control Pill: Chat / Code */}
-                            <div className="inline-flex rounded-lg p-0.5 bg-neutral-100 dark:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-800 text-[10px] sm:text-[11px] font-semibold">
-                                <button
-                                    type="button"
-                                    onClick={() => setMode('general')}
-                                    className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-md transition-all cursor-pointer ${mode === 'general' ? 'bg-white dark:bg-neutral-750 text-neutral-900 dark:text-white shadow-xs font-bold' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}`}
-                                >
-                                    دردشة
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setMode('code')}
-                                    className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-md transition-all cursor-pointer ${mode === 'code' ? 'bg-white dark:bg-neutral-750 text-neutral-900 dark:text-white shadow-xs font-bold' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}`}
-                                >
-                                    برمجة
-                                </button>
-                            </div>
+                            {/* If TOLZY Image model is active: Show Aspect Ratio & Style Dropdowns */}
+                            {selectedModel === 'tolzy-image' ? (
+                                <div className="flex items-center gap-1 sm:gap-1.5">
+                                    {/* 1. Aspect Ratio Dropdown */}
+                                    <div className="relative">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setIsAspectRatioDropdownOpen(!isAspectRatioDropdownOpen);
+                                                setIsStyleDropdownOpen(false);
+                                                setIsModelDropdownOpen(false);
+                                            }}
+                                            className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold transition-all cursor-pointer select-none bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 shadow-xs"
+                                        >
+                                            <span className="material-symbols-outlined text-[13px] sm:text-[14px]">aspect_ratio</span>
+                                            <span>{ASPECT_RATIO_OPTIONS.find(r => r.id === selectedAspectRatio)?.label || '1:1 مربع'}</span>
+                                            <span className="material-symbols-outlined text-[12px] opacity-70">expand_more</span>
+                                        </button>
+
+                                        <AnimatePresence>
+                                            {isAspectRatioDropdownOpen && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                                                    className="absolute bottom-full right-0 sm:right-auto sm:left-0 mb-2 w-60 p-2 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl z-50 text-right backdrop-blur-xl"
+                                                    dir="rtl"
+                                                >
+                                                    <div className="px-2.5 py-1.5 mb-1 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+                                                        <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400">أبعاد الصورة</span>
+                                                        <span className="material-symbols-outlined text-[14px] text-purple-500">aspect_ratio</span>
+                                                    </div>
+                                                    <div className="space-y-0.5">
+                                                        {ASPECT_RATIO_OPTIONS.map(r => (
+                                                            <button
+                                                                key={r.id}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setSelectedAspectRatio(r.id as any);
+                                                                    setIsAspectRatioDropdownOpen(false);
+                                                                }}
+                                                                className={`w-full text-right p-2 rounded-xl flex items-center justify-between transition-all cursor-pointer ${
+                                                                    selectedAspectRatio === r.id
+                                                                        ? 'bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 font-bold'
+                                                                        : 'hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
+                                                                }`}
+                                                            >
+                                                                <div>
+                                                                    <div className="text-xs font-bold">{r.label}</div>
+                                                                    <div className="text-[9.5px] text-neutral-400 font-medium">{r.subtitle}</div>
+                                                                </div>
+                                                                {selectedAspectRatio === r.id && (
+                                                                    <span className="material-symbols-outlined text-[16px] text-purple-500">check</span>
+                                                                )}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+
+                                    {/* 2. Style Preset Dropdown */}
+                                    <div className="relative">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setIsStyleDropdownOpen(!isStyleDropdownOpen);
+                                                setIsAspectRatioDropdownOpen(false);
+                                                setIsModelDropdownOpen(false);
+                                            }}
+                                            className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold transition-all cursor-pointer select-none bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 shadow-xs"
+                                        >
+                                            <span className="material-symbols-outlined text-[13px] sm:text-[14px]">palette</span>
+                                            <span>{STYLE_PRESET_OPTIONS.find(s => s.id === selectedStylePreset)?.label || 'سينمائي 🎬'}</span>
+                                            <span className="material-symbols-outlined text-[12px] opacity-70">expand_more</span>
+                                        </button>
+
+                                        <AnimatePresence>
+                                            {isStyleDropdownOpen && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                                                    className="absolute bottom-full right-0 sm:right-auto sm:left-0 mb-2 w-64 p-2 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl z-50 text-right backdrop-blur-xl max-h-72 overflow-y-auto"
+                                                    dir="rtl"
+                                                >
+                                                    <div className="px-2.5 py-1.5 mb-1 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+                                                        <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400">نمط التصميم والرسم</span>
+                                                        <span className="material-symbols-outlined text-[14px] text-purple-500">palette</span>
+                                                    </div>
+                                                    <div className="space-y-0.5">
+                                                        {STYLE_PRESET_OPTIONS.map(s => (
+                                                            <button
+                                                                key={s.id}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setSelectedStylePreset(s.id);
+                                                                    setIsStyleDropdownOpen(false);
+                                                                }}
+                                                                className={`w-full text-right p-2 rounded-xl flex items-center justify-between transition-all cursor-pointer ${
+                                                                    selectedStylePreset === s.id
+                                                                        ? 'bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 font-bold'
+                                                                        : 'hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
+                                                                }`}
+                                                            >
+                                                                <div>
+                                                                    <div className="text-xs font-bold">{s.label}</div>
+                                                                    <div className="text-[9.5px] text-neutral-400 font-medium">{s.subtitle}</div>
+                                                                </div>
+                                                                {selectedStylePreset === s.id && (
+                                                                    <span className="material-symbols-outlined text-[16px] text-purple-500">check</span>
+                                                                )}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+                                </div>
+                            ) : (
+                                /* Regular Segmented Control Pill: Chat / Code */
+                                <div className="inline-flex rounded-lg p-0.5 bg-neutral-100 dark:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-800 text-[10px] sm:text-[11px] font-semibold">
+                                    <button
+                                        type="button"
+                                        onClick={() => setMode('general')}
+                                        className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-md transition-all cursor-pointer ${mode === 'general' ? 'bg-white dark:bg-neutral-750 text-neutral-900 dark:text-white shadow-xs font-bold' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}`}
+                                    >
+                                        دردشة
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setMode('code')}
+                                        className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-md transition-all cursor-pointer ${mode === 'code' ? 'bg-white dark:bg-neutral-750 text-neutral-900 dark:text-white shadow-xs font-bold' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}`}
+                                    >
+                                        برمجة
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
-                        {/* Right Side: Model Indicator + Mic Audio Wave + Send */}
+                        {/* Right Side: Interactive Model Selector Dropdown + Mic Audio Wave + Send */}
                         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-                            {/* Model Indicator (AXIOM Core) */}
-                            <div className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold bg-neutral-100/70 dark:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200 select-none">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                <span>AXIOM Core</span>
+                            {/* Interactive Model Selector Button & Dropdown */}
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsModelDropdownOpen(!isModelDropdownOpen);
+                                        setIsAspectRatioDropdownOpen(false);
+                                        setIsStyleDropdownOpen(false);
+                                    }}
+                                    className={`inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold transition-all cursor-pointer select-none ${
+                                        selectedModel === 'tolzy-image'
+                                            ? 'bg-gradient-to-r from-purple-500/15 to-indigo-500/15 border border-purple-500/40 text-purple-700 dark:text-purple-300 shadow-xs'
+                                            : 'bg-neutral-100/70 dark:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200 hover:border-neutral-300 dark:hover:border-neutral-700'
+                                    }`}
+                                >
+                                    <span className={`w-1.5 h-1.5 rounded-full ${selectedModel === 'tolzy-image' ? 'bg-purple-500 animate-pulse' : 'bg-emerald-500 animate-pulse'}`} />
+                                    <span>{selectedModel === 'tolzy-image' ? 'TOLZY Image 🎨' : 'AXIOM Core'}</span>
+                                    <span className="material-symbols-outlined text-[13px] opacity-70">expand_more</span>
+                                </button>
+
+                                {/* Model Dropdown Menu */}
+                                <AnimatePresence>
+                                    {isModelDropdownOpen && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                                            className="absolute bottom-full left-0 mb-2 w-64 p-2 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl z-50 text-right backdrop-blur-xl"
+                                            dir="rtl"
+                                        >
+                                            <div className="px-2.5 py-1.5 mb-1 border-b border-neutral-100 dark:border-neutral-800">
+                                                <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400">اختر محرك الذكاء الاصطناعي</span>
+                                            </div>
+
+                                            {/* Option 1: AXIOM Core */}
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setSelectedModel('axiom-core');
+                                                    setIsModelDropdownOpen(false);
+                                                }}
+                                                className={`w-full text-right p-2.5 rounded-xl flex items-center justify-between transition-all cursor-pointer ${
+                                                    selectedModel === 'axiom-core'
+                                                        ? 'bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 font-bold'
+                                                        : 'hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-medium'
+                                                }`}
+                                            >
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
+                                                        <span className="material-symbols-outlined text-[16px]">smart_toy</span>
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-xs font-bold">AXIOM Core</div>
+                                                        <div className="text-[10px] text-neutral-400 font-medium">محادثة وبرمجة وتحليل</div>
+                                                    </div>
+                                                </div>
+                                                {selectedModel === 'axiom-core' && (
+                                                    <span className="material-symbols-outlined text-[16px] text-blue-500">check</span>
+                                                )}
+                                            </button>
+
+                                            {/* Option 2: TOLZY Image */}
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if (isFree) {
+                                                        setIsModelDropdownOpen(false);
+                                                        setIsUpgradeModalOpen(true);
+                                                    } else {
+                                                        setSelectedModel('tolzy-image');
+                                                        setIsModelDropdownOpen(false);
+                                                    }
+                                                }}
+                                                className={`w-full text-right p-2.5 mt-1 rounded-xl flex items-center justify-between transition-all cursor-pointer ${
+                                                    selectedModel === 'tolzy-image'
+                                                        ? 'bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 font-bold'
+                                                        : 'hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-medium'
+                                                }`}
+                                            >
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 via-indigo-600 to-pink-500 flex items-center justify-center text-white">
+                                                        <span className="material-symbols-outlined text-[16px]">photo_camera</span>
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="text-xs font-bold">TOLZY Image</span>
+                                                            <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-500/30">PRO</span>
+                                                        </div>
+                                                        <div className="text-[10px] text-neutral-400 font-medium">توليد وتصميم الصور فائقة الدقة</div>
+                                                    </div>
+                                                </div>
+                                                {isFree ? (
+                                                    <span className="material-symbols-outlined text-[15px] text-amber-500">lock</span>
+                                                ) : selectedModel === 'tolzy-image' ? (
+                                                    <span className="material-symbols-outlined text-[16px] text-purple-500">check</span>
+                                                ) : null}
+                                            </button>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
 
                             {/* Voice Audio Wave Button */}
