@@ -47,7 +47,9 @@ export async function OPTIONS() {
 
 /**
  * 📥 GET /api/agent/tools
- * يجلب قائمة بجميع الأدوات الموجودة حالياً في collection tools
+ * يجلب قائمة خفيفة ومختصرة جداً بالأدوات الموجودة (slug, name, official_url فقط)
+ * لمنع التكرار وتقليل استهلاك التوكنز والـ Payload.
+ * يدعم query parameter: ?limit=150 (الافتراضي 150) أو ?limit=all
  */
 export async function GET(req: NextRequest) {
     try {
@@ -58,28 +60,59 @@ export async function GET(req: NextRequest) {
             );
         }
 
-        const toolsList: any[] = [];
+        const url = new URL(req.url);
+        const limitParam = url.searchParams.get('limit')?.toLowerCase();
+        const isAll = limitParam === 'all';
+        const limitVal = isAll ? 0 : Math.max(1, parseInt(limitParam || '150', 10) || 150);
 
-        // 1. محاولة الجلب باستخدام Firebase Admin SDK
+        const toolsList: { slug: string; name: string; official_url: string }[] = [];
+
+        // 1. محاولة الجلب باستخدام Firebase Admin SDK مع select خفيف
         if (adminDb) {
             try {
-                const snapshot = await adminDb.collection('tools').get();
-                if (!snapshot.empty) {
+                if (limitVal > 0) {
+                    try {
+                        const snapshot = await adminDb.collection('tools')
+                            .orderBy('updated_at', 'desc')
+                            .limit(limitVal)
+                            .select('slug', 'name', 'title', 'official_url', 'link', 'website', 'url')
+                            .get();
+                        
+                        snapshot.forEach((docSnap: any) => {
+                            const data = docSnap.data();
+                            toolsList.push({
+                                slug: data.slug || docSnap.id,
+                                name: data.name || data.title || docSnap.id,
+                                official_url: data.official_url || data.link || data.website || data.url || ''
+                            });
+                        });
+                    } catch {
+                        // Fallback بدون orderBy في حال عدم وجود index مركب
+                        const snapshot = await adminDb.collection('tools')
+                            .limit(limitVal)
+                            .select('slug', 'name', 'title', 'official_url', 'link', 'website', 'url')
+                            .get();
+                        
+                        snapshot.forEach((docSnap: any) => {
+                            const data = docSnap.data();
+                            toolsList.push({
+                                slug: data.slug || docSnap.id,
+                                name: data.name || data.title || docSnap.id,
+                                official_url: data.official_url || data.link || data.website || data.url || ''
+                            });
+                        });
+                    }
+                } else {
+                    const snapshot = await adminDb.collection('tools')
+                        .select('slug', 'name', 'title', 'official_url', 'link', 'website', 'url')
+                        .get();
+                    
                     snapshot.forEach((docSnap: any) => {
                         const data = docSnap.data();
                         toolsList.push({
-                            id: docSnap.id,
                             slug: data.slug || docSnap.id,
-                            name: data.name || data.title || '',
-                            official_url: data.official_url || data.link || data.website || data.url || '',
-                            category: data.category || '',
-                            description: data.description || data.short_desc || '',
-                            pricing: data.pricing || data.price || 'free',
-                            imageUrl: data.imageUrl || data.image || data.logo || data.icon || '',
-                            tags: data.tags || [],
-                            isFeatured: data.isFeatured || false,
-                            updated_at: data.updated_at ? (data.updated_at.toDate ? data.updated_at.toDate().toISOString() : data.updated_at) : null,
-                            created_at: data.created_at ? (data.created_at.toDate ? data.created_at.toDate().toISOString() : data.created_at) : null
+                            name: data.name || data.title || docSnap.id,
+                            official_url: data.official_url || data.link || data.website || data.url || ''
                         });
                     });
                 }
@@ -88,28 +121,22 @@ export async function GET(req: NextRequest) {
             }
         }
 
-        // 2. Fallback إلى Firebase Client SDK إذا كانت القائمة فارغة ولم يعمل adminDb
+        // 2. Fallback إلى Firebase Client SDK
         if (toolsList.length === 0 && db) {
             try {
                 const toolsCol = collection(db, 'tools');
                 const snapshot = await getDocs(toolsCol);
                 if (!snapshot.empty) {
+                    let count = 0;
                     snapshot.forEach((docSnap: any) => {
+                        if (limitVal > 0 && count >= limitVal) return;
                         const data = docSnap.data();
                         toolsList.push({
-                            id: docSnap.id,
                             slug: data.slug || docSnap.id,
-                            name: data.name || data.title || '',
-                            official_url: data.official_url || data.link || data.website || data.url || '',
-                            category: data.category || '',
-                            description: data.description || data.short_desc || '',
-                            pricing: data.pricing || data.price || 'free',
-                            imageUrl: data.imageUrl || data.image || data.logo || data.icon || '',
-                            tags: data.tags || [],
-                            isFeatured: data.isFeatured || false,
-                            updated_at: data.updated_at ? (data.updated_at.toDate ? data.updated_at.toDate().toISOString() : data.updated_at) : null,
-                            created_at: data.created_at ? (data.created_at.toDate ? data.created_at.toDate().toISOString() : data.created_at) : null
+                            name: data.name || data.title || docSnap.id,
+                            official_url: data.official_url || data.link || data.website || data.url || ''
                         });
+                        count++;
                     });
                 }
             } catch (clientErr) {
