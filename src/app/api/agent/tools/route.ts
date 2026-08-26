@@ -47,9 +47,9 @@ export async function OPTIONS() {
 
 /**
  * 📥 GET /api/agent/tools
- * يجلب قائمة خفيفة ومختصرة جداً بالأدوات الموجودة (slug, name, official_url فقط)
- * لمنع التكرار وتقليل استهلاك التوكنز والـ Payload.
- * يدعم query parameter: ?limit=150 (الافتراضي 150) أو ?limit=all
+ * يجلب قائمة بأسماء الأدوات فقط دون أي تفاصيل أخرى لتقليل استهلاك التوكنز والـ Payload إلى أدنى حد ممكن
+ * يدعم query parameters:
+ *  - ?limit=150 (الافتراضي 150) أو ?limit=all
  */
 export async function GET(req: NextRequest) {
     try {
@@ -65,64 +65,32 @@ export async function GET(req: NextRequest) {
         const isAll = limitParam === 'all';
         const limitVal = isAll ? 0 : Math.max(1, parseInt(limitParam || '150', 10) || 150);
 
-        const toolsList: { slug: string; name: string; official_url: string }[] = [];
+        const toolNames: string[] = [];
 
-        // 1. محاولة الجلب باستخدام Firebase Admin SDK مع select خفيف
+        // 1. محاولة الجلب باستخدام Firebase Admin SDK مع سحب حقل الاسم فقط (name, title)
         if (adminDb) {
             try {
-                if (limitVal > 0) {
-                    try {
-                        const snapshot = await adminDb.collection('tools')
-                            .orderBy('updated_at', 'desc')
-                            .limit(limitVal)
-                            .select('slug', 'name', 'title', 'official_url', 'link', 'website', 'url')
-                            .get();
-                        
-                        snapshot.forEach((docSnap: any) => {
-                            const data = docSnap.data();
-                            toolsList.push({
-                                slug: data.slug || docSnap.id,
-                                name: data.name || data.title || docSnap.id,
-                                official_url: data.official_url || data.link || data.website || data.url || ''
-                            });
-                        });
-                    } catch {
-                        // Fallback بدون orderBy في حال عدم وجود index مركب
-                        const snapshot = await adminDb.collection('tools')
-                            .limit(limitVal)
-                            .select('slug', 'name', 'title', 'official_url', 'link', 'website', 'url')
-                            .get();
-                        
-                        snapshot.forEach((docSnap: any) => {
-                            const data = docSnap.data();
-                            toolsList.push({
-                                slug: data.slug || docSnap.id,
-                                name: data.name || data.title || docSnap.id,
-                                official_url: data.official_url || data.link || data.website || data.url || ''
-                            });
-                        });
-                    }
-                } else {
-                    const snapshot = await adminDb.collection('tools')
-                        .select('slug', 'name', 'title', 'official_url', 'link', 'website', 'url')
-                        .get();
-                    
+                const queryRef = limitVal > 0 
+                    ? adminDb.collection('tools').limit(limitVal).select('name', 'title')
+                    : adminDb.collection('tools').select('name', 'title');
+
+                const snapshot = await queryRef.get();
+                if (!snapshot.empty) {
                     snapshot.forEach((docSnap: any) => {
                         const data = docSnap.data();
-                        toolsList.push({
-                            slug: data.slug || docSnap.id,
-                            name: data.name || data.title || docSnap.id,
-                            official_url: data.official_url || data.link || data.website || data.url || ''
-                        });
+                        const name = (data.name || data.title || docSnap.id || '').trim();
+                        if (name) {
+                            toolNames.push(name);
+                        }
                     });
                 }
             } catch (adminErr) {
-                console.warn('⚠️ [GET /api/agent/tools] AdminDb failed, falling back to client SDK:', adminErr);
+                console.warn('⚠️ [GET /api/agent/tools] AdminDb select failed, falling back:', adminErr);
             }
         }
 
         // 2. Fallback إلى Firebase Client SDK
-        if (toolsList.length === 0 && db) {
+        if (toolNames.length === 0 && db) {
             try {
                 const toolsCol = collection(db, 'tools');
                 const snapshot = await getDocs(toolsCol);
@@ -131,12 +99,11 @@ export async function GET(req: NextRequest) {
                     snapshot.forEach((docSnap: any) => {
                         if (limitVal > 0 && count >= limitVal) return;
                         const data = docSnap.data();
-                        toolsList.push({
-                            slug: data.slug || docSnap.id,
-                            name: data.name || data.title || docSnap.id,
-                            official_url: data.official_url || data.link || data.website || data.url || ''
-                        });
-                        count++;
+                        const name = (data.name || data.title || docSnap.id || '').trim();
+                        if (name) {
+                            toolNames.push(name);
+                            count++;
+                        }
                     });
                 }
             } catch (clientErr) {
@@ -145,8 +112,8 @@ export async function GET(req: NextRequest) {
         }
 
         return NextResponse.json({
-            count: toolsList.length,
-            tools: toolsList
+            count: toolNames.length,
+            tools: toolNames
         }, { headers: corsHeaders });
 
     } catch (error: any) {
