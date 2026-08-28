@@ -44,26 +44,25 @@ interface Conversation {
 }
 
 const TOOLS = [
-    { id: 'programming', name: 'الأكواد', icon: <span className="material-symbols-outlined text-[16px]">code</span> },
+    { id: 'programming', name: 'الأدوات', icon: <span className="material-symbols-outlined text-[16px]">layers</span> },
     { id: 'build', name: 'ابنِ مشروعك', icon: <span className="material-symbols-outlined text-[16px]">rocket_launch</span> }
 ];
 
 // @ mention commands
 const AT_COMMANDS = [
-    { id: 'code', label: 'برمجة', description: 'وضع تحليل وكتابة الأكواد', icon: <span className="material-symbols-outlined text-[15px]">code</span>, color: 'text-blue-400', comingSoon: true },
-    { id: 'tools', label: 'أدوات', description: 'اكتشف أدوات AI المناسبة', icon: <span className="material-symbols-outlined text-[15px]">layers</span>, color: 'text-emerald-400', comingSoon: false },
-    { id: 'learn', label: 'تعلم', description: 'مسارات التعلم والكورسات', icon: <span className="material-symbols-outlined text-[15px]">school</span>, color: 'text-amber-400', comingSoon: false },
-    { id: 'general', label: 'عام', description: 'محادثة عامة مع معالج AXIOM', icon: <span className="material-symbols-outlined text-[15px]">chat_bubble_outline</span>, color: 'text-indigo-400', comingSoon: false },
+    { id: 'tools', label: 'أدوات', description: 'استكشف أكثر من 1000 أداة ذكاء اصطناعي', icon: <span className="material-symbols-outlined text-[15px]">layers</span>, color: 'text-emerald-400', comingSoon: false },
+    { id: 'learn', label: 'تعلم', description: 'مسارات التعلم والكورسات (+150)', icon: <span className="material-symbols-outlined text-[15px]">school</span>, color: 'text-amber-400', comingSoon: false },
+    { id: 'general', label: 'عام', description: 'دليل شامل لمنظومة Tolzy AI', icon: <span className="material-symbols-outlined text-[15px]">chat_bubble_outline</span>, color: 'text-indigo-400', comingSoon: false },
 ];
 
 const QUICK_SUGGESTIONS = [
-    { text: 'أفضل أدوات البرمجة بالذكاء الاصطناعي 💻', mode: 'tools' },
-    { text: 'كورس لتعلم البيانات وتحليلها 📊', mode: 'learn' },
-    { text: 'شرح كود برمجي بالتفصيل ⚙️', mode: 'code' },
-    { text: 'مسار تعلم الذكاء الاصطناعي 🎓', mode: 'learn' }
+    { text: 'ما هي أقوى أدوات الذكاء الاصطناعي في المنصة؟ 🚀', mode: 'tools' },
+    { text: 'أفضل الكورسات المتاحة لتعلم الذكاء الاصطناعي 🎓', mode: 'learn' },
+    { text: 'ما هي أحدث التحديثات والميزات في Tolzy؟ ⚡', mode: 'general' },
+    { text: 'كيف أستفيد من خدمات ومشاريع المنظومة؟ 💡', mode: 'general' }
 ];
 
-type AxiomMode = 'general' | 'code' | 'tools' | 'learn';
+type AxiomMode = 'general' | 'tools' | 'learn';
 
 interface ModeConfig {
     id: AxiomMode;
@@ -81,17 +80,7 @@ const MODES: ModeConfig[] = [
         id: 'general',
         label: 'عام',
         icon: <span className="material-symbols-outlined text-[16px]">chat_bubble_outline</span>,
-        placeholder: 'اسأل AXIOM الذكي...',
-        color: 'text-slate-300',
-        bg: 'bg-white/[0.05]',
-        border: 'border-white/[0.08]',
-        glow: '',
-    },
-    {
-        id: 'code',
-        label: 'برمجة',
-        icon: <span className="material-symbols-outlined text-[16px]">code</span>,
-        placeholder: 'اكتب وصف الكود أو الصق الكود المراد شرحه أو تصحيحه...',
+        placeholder: 'اسأل AXIOM عن أي شيء في منظومة Tolzy...',
         color: 'text-slate-300',
         bg: 'bg-white/[0.05]',
         border: 'border-white/[0.08]',
@@ -101,7 +90,7 @@ const MODES: ModeConfig[] = [
         id: 'tools',
         label: 'أدوات',
         icon: <span className="material-symbols-outlined text-[16px]">layers</span>,
-        placeholder: 'صِف ما تحتاجه وسأقترح عليك أدوات Tolzy المناسبة...',
+        placeholder: 'صِف ما تحتاجه وسأقترح عليك أفضل أدوات Tolzy من بين +1000 أداة...',
         color: 'text-slate-300',
         bg: 'bg-white/[0.05]',
         border: 'border-white/[0.08]',
@@ -111,7 +100,7 @@ const MODES: ModeConfig[] = [
         id: 'learn',
         label: 'تعلم',
         icon: <span className="material-symbols-outlined text-[16px]">school</span>,
-        placeholder: 'ماذا تريد أن تتعلم اليوم؟ اكتب الموضوع أو المسار...',
+        placeholder: 'ماذا تريد أن تتعلم؟ اكتب الموضوع لترشيح أفضل الكورسات المتاحة...',
         color: 'text-slate-300',
         bg: 'bg-white/[0.05]',
         border: 'border-white/[0.08]',
@@ -127,22 +116,6 @@ const generateId = () => {
     }
     return result;
 };
-
-const ASPECT_RATIO_OPTIONS = [
-    { id: '1:1', label: '1:1 مربع', subtitle: '1024x1024 • مناسب للبروفايل والمنشورات' },
-    { id: '16:9', label: '16:9 عريض', subtitle: '1344x768 • مناسب لليوتيوب والمشاهد السينمائية' },
-    { id: '9:16', label: '9:16 طولي', subtitle: '768x1344 • مناسب للريلز والستوري وتيك توك' },
-    { id: '4:3', label: '4:3 كلاسيكي', subtitle: '1152x896 • مناسب للعروض التوضيحية' },
-];
-
-const STYLE_PRESET_OPTIONS = [
-    { id: 'cinematic', label: 'سينمائي 🎬', subtitle: 'إضاءة درامية وتفاصيل تصوير احترافية' },
-    { id: 'photorealistic', label: 'واقعي 📸', subtitle: 'صورة فوتوغرافية حقيقية 8K فائقة الواقعية' },
-    { id: '3d-render', label: '3D Render 🧊', subtitle: 'تصميم ثلاثي الأبعاد احترافي بجودة Unreal Engine' },
-    { id: 'anime', label: 'أنيمي 🎨', subtitle: 'فن كرتوني ورسم رقمي ياباني دقيق' },
-    { id: 'digital-art', label: 'فن رقمي 🖌️', subtitle: 'لوحة فنية معاصرة بالألوان الزيتية والمائية' },
-    { id: 'cyberpunk', label: 'سايبربانك 🏙️', subtitle: 'أضواء نيون ومستقبلية تكنولوجية خيالية' },
-];
 
 const getApiBase = () => '';
 
@@ -478,14 +451,6 @@ const UpgradePlanModal = ({
                     </div>
                     <div className="flex items-center gap-2.5 text-xs text-neutral-200">
                         <span className="material-symbols-outlined text-amber-400 text-[18px]">verified</span>
-                        <span>حصة توكن ضخمة (500 ألف إلى 2.5 مليون توكن شهرياً).</span>
-                    </div>
-                    <div className="flex items-center gap-2.5 text-xs text-neutral-200">
-                        <span className="material-symbols-outlined text-amber-400 text-[18px]">verified</span>
-                        <span>تنزيل المقطوعات الصوتية بصيغة MP3 بجودة استوديو فائق النقاء.</span>
-                    </div>
-                    <div className="flex items-center gap-2.5 text-xs text-neutral-200">
-                        <span className="material-symbols-outlined text-amber-400 text-[18px]">verified</span>
                         <span>أولوية قصوى وسرعة استجابة فائقة لمعالجة البيانات والنماذج.</span>
                     </div>
                 </div>
@@ -508,259 +473,6 @@ const UpgradePlanModal = ({
                     </button>
                 </div>
             </div>
-        </div>
-    );
-};
-
-// ─── Local image cache helpers to prevent repeated Azure generation on page reload ───
-const getImageCacheKey = (prompt: string, ratio: string) => {
-    if (!prompt) return '';
-    return `tolzy_img_cache_${ratio}_${prompt.trim().toLowerCase().slice(0, 100).replace(/\s+/g, '_')}`;
-};
-
-const getCachedImage = (prompt: string, ratio: string): string | null => {
-    if (typeof window === 'undefined' || !prompt) return null;
-    try {
-        const key = getImageCacheKey(prompt, ratio);
-        return localStorage.getItem(key);
-    } catch {
-        return null;
-    }
-};
-
-const setCachedImage = (prompt: string, ratio: string, url: string) => {
-    if (typeof window === 'undefined' || !prompt || !url) return;
-    try {
-        const key = getImageCacheKey(prompt, ratio);
-        localStorage.setItem(key, url);
-    } catch {}
-};
-
-// ─── TOLZY Image Card & Lightbox Widget ───
-const TolzyImageWidget = ({
-    rawContent,
-    userPlan,
-    userId,
-    onOpenUpgradeModal
-}: {
-    rawContent: string;
-    userPlan?: string;
-    userId?: string;
-    onOpenUpgradeModal?: () => void;
-}) => {
-    const parseField = (key: string) => {
-        if (!rawContent) return '';
-        const match = rawContent.match(new RegExp(`^${key}:\\s*(.+)`, 'im'));
-        return match ? match[1].trim() : '';
-    };
-
-    const promptText = parseField('prompt') || rawContent.replace(/^aspect_ratio:.*$/gim, '').replace(/^width:.*$/gim, '').replace(/^height:.*$/gim, '').replace(/^title:.*$/gim, '').replace(/^image_url:.*$/gim, '').replace(/^url:.*$/gim, '').trim();
-    const titleText = parseField('title') || 'صورة مولدة بواسطة TOLZY Image';
-    const initialRatio = parseField('aspect_ratio') || '1:1';
-    const parsedImageUrl = parseField('image_url') || parseField('url') || '';
-
-    const [aspectRatio, setAspectRatio] = React.useState(initialRatio);
-    const [imageUrl, setImageUrl] = React.useState<string | null>(() => {
-        if (parsedImageUrl) return parsedImageUrl;
-        return getCachedImage(promptText, initialRatio);
-    });
-    const [isGenerating, setIsGenerating] = React.useState(false);
-    const [error, setError] = React.useState<string | null>(null);
-    const [isLightboxOpen, setIsLightboxOpen] = React.useState(false);
-
-    const normalized = String(userPlan || 'free').toLowerCase();
-    const isProOrMax = normalized.includes('pro') || normalized.includes('max') || normalized.includes('ultra') || normalized.includes('admin');
-
-    const generateImage = async (ratio = aspectRatio, force = false) => {
-        // If not forced (e.g. on page mount), use cached image if it exists
-        if (!force) {
-            const cached = getCachedImage(promptText, ratio);
-            if (cached) {
-                setImageUrl(cached);
-                return;
-            }
-        }
-
-        setIsGenerating(true);
-        setError(null);
-        try {
-            const res = await fetch('/api/axiom/image', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    prompt: promptText,
-                    aspectRatio: ratio,
-                    userId,
-                    userPlan: userPlan || 'pro'
-                })
-            });
-            const data = await res.json();
-            if (!res.ok || !data.success) {
-                if (data.code === 'UPGRADE_REQUIRED' && onOpenUpgradeModal) {
-                    onOpenUpgradeModal();
-                }
-                throw new Error(data.error || 'فشل تخليق الصورة');
-            }
-            setImageUrl(data.imageUrl);
-            setCachedImage(promptText, ratio, data.imageUrl);
-        } catch (e: any) {
-            setError(e.message || 'حدث خطأ أثناء تخليق الصورة');
-        } finally {
-            setIsGenerating(false);
-        }
-    };
-
-    React.useEffect(() => {
-        if (imageUrl) return; // Already loaded from state, block, or cache
-        const cached = getCachedImage(promptText, aspectRatio);
-        if (cached) {
-            setImageUrl(cached);
-            return;
-        }
-        if (promptText && !imageUrl && !isGenerating && !error) {
-            generateImage(aspectRatio);
-        }
-    }, [promptText]);
-
-    const handleDownload = (e?: React.MouseEvent) => {
-        if (e) e.stopPropagation();
-        if (!imageUrl) return;
-        const a = document.createElement('a');
-        a.href = imageUrl;
-        a.download = `tolzy-image-${Date.now()}.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        toast.success('جاري تنزيل الصورة PNG بدقة عالية 🖼️');
-    };
-
-    return (
-        <div className="my-3 w-full max-w-[640px] animate-in fade-in duration-300" dir="rtl">
-            {/* Main Image Box - Clean and Minimal */}
-            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200/80 dark:border-white/10 bg-slate-950 shadow-xl group">
-                {isGenerating ? (
-                    <div className="w-full aspect-square flex flex-col items-center justify-center gap-3 p-6 bg-gradient-to-br from-neutral-900 via-neutral-950 to-indigo-950/30 text-center relative overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" />
-                        <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-                            <span className="material-symbols-outlined text-[20px] animate-spin">sync</span>
-                        </div>
-                        <div>
-                            <p className="text-xs font-bold text-white tracking-wide">جاري توليد الصورة...</p>
-                            <p className="text-[10px] text-neutral-400 mt-1 max-w-sm line-clamp-1">{promptText}</p>
-                        </div>
-                    </div>
-                ) : imageUrl ? (
-                    <div 
-                        className="relative cursor-pointer overflow-hidden group/img" 
-                        onClick={() => setIsLightboxOpen(true)}
-                    >
-                        <img
-                            src={imageUrl}
-                            alt={promptText}
-                            className="w-full h-auto max-h-[520px] object-cover transition-transform duration-500 group-hover/img:scale-[1.02]"
-                        />
-                        {/* Hover Overlay Controls */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity duration-200 flex items-end justify-between p-3.5">
-                            <span className="text-xs text-white/90 font-medium truncate max-w-[70%]" dir="ltr">{promptText}</span>
-                            <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
-                                <button
-                                    type="button"
-                                    onClick={handleDownload}
-                                    className="p-2 rounded-xl bg-white/20 hover:bg-white/30 text-white backdrop-blur-md transition-all cursor-pointer"
-                                    title="تنزيل الصورة PNG"
-                                >
-                                    <span className="material-symbols-outlined text-[16px]">download</span>
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => generateImage(aspectRatio, true)}
-                                    className="p-2 rounded-xl bg-white/20 hover:bg-white/30 text-white backdrop-blur-md transition-all cursor-pointer"
-                                    title="إعادة التوليد"
-                                >
-                                    <span className="material-symbols-outlined text-[16px]">refresh</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                ) : error ? (
-                    <div className="p-5 text-center bg-red-500/10 text-red-400 text-xs font-medium">
-                        <p>{error}</p>
-                        {!isProOrMax ? (
-                            <button
-                                type="button"
-                                onClick={onOpenUpgradeModal}
-                                className="mt-2 px-3 py-1.5 bg-red-500 text-white rounded-lg text-[10px] font-bold cursor-pointer"
-                            >
-                                ترقية الحساب إلى Pro / MAX
-                            </button>
-                        ) : (
-                            <button
-                                type="button"
-                                onClick={() => generateImage(aspectRatio, true)}
-                                className="mt-2 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-[10px] font-bold cursor-pointer"
-                            >
-                                إعادة المحاولة
-                            </button>
-                        )}
-                    </div>
-                ) : null}
-            </div>
-
-            {/* Prompt preview footer */}
-            <div className="mt-1.5 flex items-center justify-between text-[10px] text-neutral-400 px-1">
-                <span className="truncate max-w-[80%] font-mono" dir="ltr">{promptText}</span>
-                <button
-                    type="button"
-                    onClick={() => {
-                        navigator.clipboard.writeText(promptText);
-                        toast.success('تم نسخ الـ Prompt');
-                    }}
-                    className="hover:text-neutral-200 transition-colors cursor-pointer flex items-center gap-1"
-                >
-                    <span className="material-symbols-outlined text-[13px]">content_copy</span>
-                    <span>نسخ</span>
-                </button>
-            </div>
-
-            {/* Lightbox Modal (تمويه سينمائي يغطي الشاشة بالكامل وشريط الإرسال) */}
-            {isLightboxOpen && imageUrl && (
-                <div 
-                    className="fixed inset-0 z-[99999] bg-black/75 backdrop-blur-2xl flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-200"
-                    onClick={() => setIsLightboxOpen(false)}
-                >
-                    <div 
-                        className="relative max-w-4xl max-h-[88vh] flex flex-col items-center w-full rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-black/40 backdrop-blur-md" 
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <img 
-                            src={imageUrl} 
-                            alt={promptText} 
-                            className="max-h-[75vh] w-auto max-w-full rounded-2xl object-contain"
-                        />
-                        <div className="w-full flex items-center justify-between px-5 py-3 bg-black/60 border-t border-white/10 text-white">
-                            <span className="text-xs text-neutral-300 font-medium truncate max-w-[65%]" dir="ltr">{promptText}</span>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    type="button"
-                                    onClick={handleDownload}
-                                    className="px-3.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
-                                >
-                                    <span className="material-symbols-outlined text-[15px]">download</span>
-                                    <span>تنزيل</span>
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setIsLightboxOpen(false)}
-                                    className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer"
-                                    title="إغلاق"
-                                >
-                                    <span className="material-symbols-outlined text-[18px]">close</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };
@@ -983,18 +695,6 @@ const MessageItem = React.memo(({ msg, user, userPlan, onResend, onOpenUpgradeMo
                                             return <GmailComposeWidget rawContent={content} />;
                                         }
 
-                                        if (lang.includes('tolzy-image') || lang === 'image' || lang === 'flux' || lang.includes('tolzy-voice')) {
-                                            const content = String(children).replace(/\n$/, '');
-                                            return (
-                                                <TolzyImageWidget
-                                                    rawContent={content}
-                                                    userPlan={userPlan}
-                                                    userId={user?.uid}
-                                                    onOpenUpgradeModal={onOpenUpgradeModal}
-                                                />
-                                            );
-                                        }
-
                                         return match ? (
                                             <div className="bg-[#0d1117] dark:bg-[#0b0c10] rounded-xl overflow-hidden my-4 border border-slate-700/60 dark:border-white/[0.08] w-full max-w-full shadow-md" dir="ltr">
                                                 <div className="bg-slate-800/80 dark:bg-white/[0.03] px-4 py-2.5 flex justify-between items-center border-b border-slate-700/60 dark:border-white/[0.06]">
@@ -1117,16 +817,6 @@ const MessageItem = React.memo(({ msg, user, userPlan, onResend, onOpenUpgradeMo
                                     />
                                 )}
                             </div>
-                        )}
-
-                        {/* Fallback auto-render for TOLZY Image messages if no code block was outputted */}
-                        {msg.role === 'assistant' && msg.modelId === 'tolzy-image' && !msg.isStreaming && msg.status !== 'thinking' && !/```(?:tolzy-image|image|flux)/i.test(processedContent) && (
-                            <TolzyImageWidget
-                                rawContent={`prompt: ${msg.content || 'A masterpiece cinematic photograph'}\naspect_ratio: 1:1\ntitle: صورة مولدة بواسطة TOLZY Image`}
-                                userPlan={userPlan}
-                                userId={user?.uid}
-                                onOpenUpgradeModal={onOpenUpgradeModal}
-                            />
                         )}
                     </div>
                 )}
@@ -1262,12 +952,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
     const [currentConversationId, setCurrentConversationId] = useState<string | null>(initialChatId || null);
     const [selectedTool, setSelectedTool] = useState(TOOLS[0]);
     const [mode, setMode] = useState<AxiomMode>('general');
-    const [selectedModel, setSelectedModel] = useState<'axiom-core' | 'tolzy-image'>('axiom-core');
-    const [selectedAspectRatio, setSelectedAspectRatio] = useState<'1:1' | '16:9' | '9:16'>('1:1');
-    const [selectedStylePreset, setSelectedStylePreset] = useState<string>('cinematic');
-    const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
-    const [isAspectRatioDropdownOpen, setIsAspectRatioDropdownOpen] = useState(false);
-    const [isStyleDropdownOpen, setIsStyleDropdownOpen] = useState(false);
     const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1284,10 +968,10 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     const LOADING_MESSAGES = [
-        "جاري تحليل طلبك البرمجي...",
-        "أقوم بالبحث والتقصي لك في الأدوات...",
-        "جاري صياغة إجابة ذكية متكاملة...",
-        "تتم مراجعة البيانات وتحسين الكفاءة...",
+        "جاري البحث في منظومة Tolzy...",
+        "أقوم باسترجاع أفضل الأدوات والكورسات لك...",
+        "جاري صياغة إجابة شاملة من قاعدة بيانات Tolzy...",
+        "تتم مراجعة التحديثات والمعلومات...",
         "لحظات سريعة وسأكون جاهزاً..."
     ];
 
@@ -1381,12 +1065,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
         if (!promptText && selectedFiles.length === 0) return;
         if (isLoading) return;
 
-        // 🔒 Check Pro/Max permission for TOLZY Image model
-        if (selectedModel === 'tolzy-image' && isFree) {
-            setIsUpgradeModalOpen(true);
-            return;
-        }
-
         if (selectedFiles.length > 0) {
             const filesList = selectedFiles.map(f => `📄 ${f.name}`).join('\n');
             promptText = promptText 
@@ -1418,7 +1096,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
             content: '',
             isStreaming: false,
             status: 'thinking',
-            modelId: selectedModel,
+            modelId: 'axiom-core',
             tools: []
         };
         setMessages(prev => [...prev, assistantMessage]);
@@ -1437,9 +1115,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                     enableSearch: isSearchEnabled,
                     selectedTool: selectedTool.id,
                     mode: mode,
-                    model: selectedModel,
-                    aspectRatio: selectedAspectRatio,
-                    stylePreset: selectedStylePreset,
+                    model: 'axiom-core',
                     isGmailConnected: isGmailConnected,
                 })
             });
@@ -1790,10 +1466,10 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                         </AnimatePresence>
                     </div>
 
-                    {/* Bottom Toolbar: Attach + (Segmented Control OR Image Dropdowns) + Spacer + Model + Mic + Send */}
+                    {/* Bottom Toolbar: Attach + Segmented Control + AXIOM Badge + Mic + Send */}
                     <div className="relative flex items-center justify-between w-full gap-1 sm:gap-2 pt-1 border-t border-neutral-100/80 dark:border-neutral-800/80">
                         
-                        {/* Left Side: Attachment + (Segmented Control or Image Dropdowns) */}
+                        {/* Left Side: Attachment + Mode Pills */}
                         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                             {/* Attachment Button */}
                             <button
@@ -1807,250 +1483,38 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                                 </svg>
                             </button>
 
-                            {/* If TOLZY Image model is active: Show Aspect Ratio & Style Dropdowns */}
-                            {selectedModel === 'tolzy-image' ? (
-                                <div className="flex items-center gap-1 sm:gap-1.5">
-                                    {/* 1. Aspect Ratio Dropdown */}
-                                    <div className="relative">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setIsAspectRatioDropdownOpen(!isAspectRatioDropdownOpen);
-                                                setIsStyleDropdownOpen(false);
-                                                setIsModelDropdownOpen(false);
-                                            }}
-                                            className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold transition-all cursor-pointer select-none bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 shadow-xs"
-                                        >
-                                            <span className="material-symbols-outlined text-[13px] sm:text-[14px]">aspect_ratio</span>
-                                            <span>{ASPECT_RATIO_OPTIONS.find(r => r.id === selectedAspectRatio)?.label || '1:1 مربع'}</span>
-                                            <span className="material-symbols-outlined text-[12px] opacity-70">expand_more</span>
-                                        </button>
-
-                                        <AnimatePresence>
-                                            {isAspectRatioDropdownOpen && (
-                                                <motion.div
-                                                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                                                    className="absolute bottom-full right-0 sm:right-auto sm:left-0 mb-2 w-60 p-2 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl z-50 text-right backdrop-blur-xl"
-                                                    dir="rtl"
-                                                >
-                                                    <div className="px-2.5 py-1.5 mb-1 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
-                                                        <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400">أبعاد الصورة</span>
-                                                        <span className="material-symbols-outlined text-[14px] text-purple-500">aspect_ratio</span>
-                                                    </div>
-                                                    <div className="space-y-0.5">
-                                                        {ASPECT_RATIO_OPTIONS.map(r => (
-                                                            <button
-                                                                key={r.id}
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setSelectedAspectRatio(r.id as any);
-                                                                    setIsAspectRatioDropdownOpen(false);
-                                                                }}
-                                                                className={`w-full text-right p-2 rounded-xl flex items-center justify-between transition-all cursor-pointer ${
-                                                                    selectedAspectRatio === r.id
-                                                                        ? 'bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 font-bold'
-                                                                        : 'hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
-                                                                }`}
-                                                            >
-                                                                <div>
-                                                                    <div className="text-xs font-bold">{r.label}</div>
-                                                                    <div className="text-[9.5px] text-neutral-400 font-medium">{r.subtitle}</div>
-                                                                </div>
-                                                                {selectedAspectRatio === r.id && (
-                                                                    <span className="material-symbols-outlined text-[16px] text-purple-500">check</span>
-                                                                )}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                    </div>
-
-                                    {/* 2. Style Preset Dropdown */}
-                                    <div className="relative">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setIsStyleDropdownOpen(!isStyleDropdownOpen);
-                                                setIsAspectRatioDropdownOpen(false);
-                                                setIsModelDropdownOpen(false);
-                                            }}
-                                            className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold transition-all cursor-pointer select-none bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 shadow-xs"
-                                        >
-                                            <span className="material-symbols-outlined text-[13px] sm:text-[14px]">palette</span>
-                                            <span>{STYLE_PRESET_OPTIONS.find(s => s.id === selectedStylePreset)?.label || 'سينمائي 🎬'}</span>
-                                            <span className="material-symbols-outlined text-[12px] opacity-70">expand_more</span>
-                                        </button>
-
-                                        <AnimatePresence>
-                                            {isStyleDropdownOpen && (
-                                                <motion.div
-                                                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                                                    className="absolute bottom-full right-0 sm:right-auto sm:left-0 mb-2 w-64 p-2 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl z-50 text-right backdrop-blur-xl max-h-72 overflow-y-auto"
-                                                    dir="rtl"
-                                                >
-                                                    <div className="px-2.5 py-1.5 mb-1 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
-                                                        <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400">نمط التصميم والرسم</span>
-                                                        <span className="material-symbols-outlined text-[14px] text-purple-500">palette</span>
-                                                    </div>
-                                                    <div className="space-y-0.5">
-                                                        {STYLE_PRESET_OPTIONS.map(s => (
-                                                            <button
-                                                                key={s.id}
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setSelectedStylePreset(s.id);
-                                                                    setIsStyleDropdownOpen(false);
-                                                                }}
-                                                                className={`w-full text-right p-2 rounded-xl flex items-center justify-between transition-all cursor-pointer ${
-                                                                    selectedStylePreset === s.id
-                                                                        ? 'bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 font-bold'
-                                                                        : 'hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
-                                                                }`}
-                                                            >
-                                                                <div>
-                                                                    <div className="text-xs font-bold">{s.label}</div>
-                                                                    <div className="text-[9.5px] text-neutral-400 font-medium">{s.subtitle}</div>
-                                                                </div>
-                                                                {selectedStylePreset === s.id && (
-                                                                    <span className="material-symbols-outlined text-[16px] text-purple-500">check</span>
-                                                                )}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                    </div>
-                                </div>
-                            ) : (
-                                /* Regular Segmented Control Pill: Chat / Code */
-                                <div className="inline-flex rounded-lg p-0.5 bg-neutral-100 dark:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-800 text-[10px] sm:text-[11px] font-semibold">
-                                    <button
-                                        type="button"
-                                        onClick={() => setMode('general')}
-                                        className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-md transition-all cursor-pointer ${mode === 'general' ? 'bg-white dark:bg-neutral-750 text-neutral-900 dark:text-white shadow-xs font-bold' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}`}
-                                    >
-                                        دردشة
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setMode('code')}
-                                        className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-md transition-all cursor-pointer ${mode === 'code' ? 'bg-white dark:bg-neutral-750 text-neutral-900 dark:text-white shadow-xs font-bold' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}`}
-                                    >
-                                        برمجة
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Right Side: Interactive Model Selector Dropdown + Mic Audio Wave + Send */}
-                        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-                            {/* Interactive Model Selector Button & Dropdown */}
-                            <div className="relative">
+                            {/* Segmented Control Pill: عام / أدوات / تعلم */}
+                            <div className="inline-flex rounded-lg p-0.5 bg-neutral-100 dark:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-800 text-[10px] sm:text-[11px] font-semibold">
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        setIsModelDropdownOpen(!isModelDropdownOpen);
-                                        setIsAspectRatioDropdownOpen(false);
-                                        setIsStyleDropdownOpen(false);
-                                    }}
-                                    className={`inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold transition-all cursor-pointer select-none ${
-                                        selectedModel === 'tolzy-image'
-                                            ? 'bg-gradient-to-r from-purple-500/15 to-indigo-500/15 border border-purple-500/40 text-purple-700 dark:text-purple-300 shadow-xs'
-                                            : 'bg-neutral-100/70 dark:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200 hover:border-neutral-300 dark:hover:border-neutral-700'
-                                    }`}
+                                    onClick={() => setMode('general')}
+                                    className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md transition-all cursor-pointer ${mode === 'general' ? 'bg-white dark:bg-neutral-750 text-neutral-900 dark:text-white shadow-xs font-bold' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}`}
                                 >
-                                    <span className={`w-1.5 h-1.5 rounded-full ${selectedModel === 'tolzy-image' ? 'bg-purple-500 animate-pulse' : 'bg-emerald-500 animate-pulse'}`} />
-                                    <span>{selectedModel === 'tolzy-image' ? 'TOLZY Image 🎨' : 'AXIOM Core'}</span>
-                                    <span className="material-symbols-outlined text-[13px] opacity-70">expand_more</span>
+                                    عام
                                 </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setMode('tools')}
+                                    className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md transition-all cursor-pointer ${mode === 'tools' ? 'bg-white dark:bg-neutral-750 text-neutral-900 dark:text-white shadow-xs font-bold' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}`}
+                                >
+                                    أدوات
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setMode('learn')}
+                                    className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md transition-all cursor-pointer ${mode === 'learn' ? 'bg-white dark:bg-neutral-750 text-neutral-900 dark:text-white shadow-xs font-bold' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}`}
+                                >
+                                    تعلم
+                                </button>
+                            </div>
+                        </div>
 
-                                {/* Model Dropdown Menu */}
-                                <AnimatePresence>
-                                    {isModelDropdownOpen && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                                            exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                                            className="absolute bottom-full left-0 mb-2 w-64 p-2 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl z-50 text-right backdrop-blur-xl"
-                                            dir="rtl"
-                                        >
-                                            <div className="px-2.5 py-1.5 mb-1 border-b border-neutral-100 dark:border-neutral-800">
-                                                <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400">اختر محرك الذكاء الاصطناعي</span>
-                                            </div>
-
-                                            {/* Option 1: AXIOM Core */}
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setSelectedModel('axiom-core');
-                                                    setIsModelDropdownOpen(false);
-                                                }}
-                                                className={`w-full text-right p-2.5 rounded-xl flex items-center justify-between transition-all cursor-pointer ${
-                                                    selectedModel === 'axiom-core'
-                                                        ? 'bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 font-bold'
-                                                        : 'hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-medium'
-                                                }`}
-                                            >
-                                                <div className="flex items-center gap-2.5">
-                                                    <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
-                                                        <span className="material-symbols-outlined text-[16px]">smart_toy</span>
-                                                    </div>
-                                                    <div>
-                                                        <div className="text-xs font-bold">AXIOM Core</div>
-                                                        <div className="text-[10px] text-neutral-400 font-medium">محادثة وبرمجة وتحليل</div>
-                                                    </div>
-                                                </div>
-                                                {selectedModel === 'axiom-core' && (
-                                                    <span className="material-symbols-outlined text-[16px] text-blue-500">check</span>
-                                                )}
-                                            </button>
-
-                                            {/* Option 2: TOLZY Image */}
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    if (isFree) {
-                                                        setIsModelDropdownOpen(false);
-                                                        setIsUpgradeModalOpen(true);
-                                                    } else {
-                                                        setSelectedModel('tolzy-image');
-                                                        setIsModelDropdownOpen(false);
-                                                    }
-                                                }}
-                                                className={`w-full text-right p-2.5 mt-1 rounded-xl flex items-center justify-between transition-all cursor-pointer ${
-                                                    selectedModel === 'tolzy-image'
-                                                        ? 'bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 font-bold'
-                                                        : 'hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-medium'
-                                                }`}
-                                            >
-                                                <div className="flex items-center gap-2.5">
-                                                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 via-indigo-600 to-pink-500 flex items-center justify-center text-white">
-                                                        <span className="material-symbols-outlined text-[16px]">photo_camera</span>
-                                                    </div>
-                                                    <div>
-                                                        <div className="flex items-center gap-1.5">
-                                                            <span className="text-xs font-bold">TOLZY Image</span>
-                                                            <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-500/30">PRO</span>
-                                                        </div>
-                                                        <div className="text-[10px] text-neutral-400 font-medium">توليد وتصميم الصور فائقة الدقة</div>
-                                                    </div>
-                                                </div>
-                                                {isFree ? (
-                                                    <span className="material-symbols-outlined text-[15px] text-amber-500">lock</span>
-                                                ) : selectedModel === 'tolzy-image' ? (
-                                                    <span className="material-symbols-outlined text-[16px] text-purple-500">check</span>
-                                                ) : null}
-                                            </button>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
+                        {/* Right Side: AXIOM Badge + Mic + Send */}
+                        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+                            {/* AXIOM Status Badge */}
+                            <div className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold select-none bg-neutral-100/70 dark:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                <span>AXIOM ✨</span>
                             </div>
 
                             {/* Voice Audio Wave Button */}
@@ -2562,11 +2026,6 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                             <div className="flex items-center gap-2">
                                 <span className="text-sm font-black text-slate-900 dark:text-white tracking-tight">AXIOM</span>
                                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Active" />
-                                {selectedModel === 'tolzy-image' && (
-                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/25">
-                                        TOLZY Image 🎨
-                                    </span>
-                                )}
                             </div>
                         </div>
 

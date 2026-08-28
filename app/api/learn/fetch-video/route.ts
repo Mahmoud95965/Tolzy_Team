@@ -102,7 +102,7 @@ async function customProxyFetch(input: RequestInfo | URL, init?: RequestInit): P
     const headers = init?.headers || {};
     let reqHeaders: Record<string, string> = {};
     if (headers instanceof Headers) {
-        headers.forEach((value, key) => {
+        headers.forEach((value: string, key: string) => {
             reqHeaders[key] = value;
         });
     } else if (typeof headers === 'object') {

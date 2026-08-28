@@ -1,12 +1,11 @@
 import React from 'react';
-import { Sparkles, Calendar, Code, Palette, MessageSquare, Image } from 'lucide-react';
+import { Sparkles, Calendar, Code, Palette, MessageSquare } from 'lucide-react';
 
 const TolzyComingSoon: React.FC = () => {
   const upcomingTools = [
     { icon: Code, name: 'Tolzy Code', color: 'text-blue-500 bg-blue-500/10' },
     { icon: Palette, name: 'Tolzy Design', color: 'text-purple-500 bg-purple-500/10' },
-    { icon: MessageSquare, name: 'Tolzy Chat', color: 'text-green-500 bg-green-500/10' },
-    { icon: Image, name: 'Tolzy Image', color: 'text-orange-500 bg-orange-500/10' }
+    { icon: MessageSquare, name: 'Tolzy Chat', color: 'text-green-500 bg-green-500/10' }
   ];
 
   return (

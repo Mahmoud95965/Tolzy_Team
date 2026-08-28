@@ -17,7 +17,6 @@ export interface PlanConfig {
         deepReasoning: boolean;
         prioritySpeed: boolean;
         tolzyVoice?: boolean;
-        tolzyImage: boolean;
     };
 }
 
@@ -36,7 +35,6 @@ export const PLAN_CONFIGS: Record<PlanType, PlanConfig> = {
             deepReasoning: true,
             prioritySpeed: true,
             tolzyVoice: false,
-            tolzyImage: false, // 🔒 حصري لـ Pro و Max
         }
     },
     pro: {
@@ -53,7 +51,6 @@ export const PLAN_CONFIGS: Record<PlanType, PlanConfig> = {
             deepReasoning: true,
             prioritySpeed: true,
             tolzyVoice: true,
-            tolzyImage: true,
         }
     },
     max: {
@@ -70,7 +67,6 @@ export const PLAN_CONFIGS: Record<PlanType, PlanConfig> = {
             deepReasoning: true,
             prioritySpeed: true,
             tolzyVoice: true,
-            tolzyImage: true,
         }
     },
     ultra: {
@@ -87,7 +83,6 @@ export const PLAN_CONFIGS: Record<PlanType, PlanConfig> = {
             deepReasoning: true,
             prioritySpeed: true,
             tolzyVoice: true,
-            tolzyImage: true,
         }
     },
     admin: {
@@ -104,15 +99,9 @@ export const PLAN_CONFIGS: Record<PlanType, PlanConfig> = {
             deepReasoning: true,
             prioritySpeed: true,
             tolzyVoice: true,
-            tolzyImage: true,
         }
     }
 };
-
-export function canAccessTolzyImage(rawPlan: unknown): boolean {
-    const plan = parsePlan(rawPlan);
-    return PLAN_CONFIGS[plan]?.features?.tolzyImage ?? false;
-}
 
 export function canAccessTolzyVoice(rawPlan: unknown): boolean {
     const plan = parsePlan(rawPlan);
