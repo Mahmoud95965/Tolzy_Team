@@ -139,13 +139,10 @@ const CallToAction: React.FC = () => {
                       <div className="relative flex-shrink-0">
                         <div className="rounded-2xl ring-4 ring-white dark:ring-gray-800 overflow-hidden">
                           <ToolImage
-                            imageUrl={tool.imageUrl}
                             name={tool.name}
                             categoryName={primaryCategory}
                             subcategoryName={primarySubcategory}
                             size="md"
-                            className="shadow-xl"
-                            priority={index === 0} // Ensure LCP image gets priority
                           />
                         </div>
                         {/* Verified Badge */}

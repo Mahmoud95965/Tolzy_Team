@@ -29,6 +29,7 @@ import UserProfile from '../auth/UserProfile';
 import NotificationBell from './NotificationBell';
 import { getSubdomainUrl } from '../../utils/domain';
 import { getCentralAuthUrl } from '../../utils/authRedirect';
+import ToolImage from './ToolImage';
 
 
 
@@ -293,7 +294,12 @@ const Navbar: React.FC = () => {
                         className="block px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border-b border-slate-50 dark:border-slate-700/50 last:border-none"
                       >
                         <div className="flex items-center gap-3">
-                          <Image src={tool.imageUrl} alt={tool.name} width={32} height={32} className="object-cover rounded-lg" />
+                          <ToolImage
+                            name={tool.name}
+                            categoryName={Array.isArray(tool.category) ? tool.category[0] : tool.category}
+                            size="sm"
+                            className="!w-8 !h-8 !rounded-lg"
+                          />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">{tool.name}</p>
                             <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{tool.description.substring(0, 30)}...</p>

@@ -250,11 +250,10 @@ const ToolDrawer: React.FC<ToolDrawerProps> = ({ isOpen, onClose, tool }) => {
                   {/* Small Glass Square Icon */}
                   <div className="p-1 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl shadow-inner">
                     <ToolImage
-                      imageUrl={tool.imageUrl}
                       name={tool.name}
                       categoryName={primaryCategory}
+                      subcategoryName={Array.isArray(tool.subcategory) ? tool.subcategory?.[0] : tool.subcategory}
                       size="lg"
-                      className="rounded-xl object-cover"
                     />
                   </div>
 
@@ -454,11 +453,10 @@ const ToolDrawer: React.FC<ToolDrawerProps> = ({ isOpen, onClose, tool }) => {
                           }}
                         >
                           <ToolImage
-                            imageUrl={relatedTool.imageUrl}
                             name={relatedTool.name}
                             categoryName={Array.isArray(relatedTool.category) ? relatedTool.category[0] : relatedTool.category}
+                            subcategoryName={Array.isArray(relatedTool.subcategory) ? relatedTool.subcategory?.[0] : relatedTool.subcategory}
                             size="md"
-                            className="rounded-lg object-cover"
                           />
                           <div className="flex-1 text-right space-y-1">
                             <h5 className="text-xs font-black text-white">{relatedTool.name}</h5>

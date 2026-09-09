@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
+import ToolImage from '../common/ToolImage';
 import { X, Link as LinkIcon, Twitter, Facebook, MessageCircle, Copy, Share2, Linkedin, CheckCircle2 } from 'lucide-react';
 import { Tool } from '../../types';
 
@@ -132,8 +132,13 @@ const ShareToolModal: React.FC<ShareToolModalProps> = ({ tool, isOpen, onClose }
           <div className="p-6 md:p-8 space-y-8">
             {/* Tool Preview (Optional mini view) */}
             <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-100 dark:border-gray-700">
-              <div className="w-12 h-12 flex-shrink-0 rounded-lg bg-white p-1 shadow-sm">
-                <Image src={tool.imageUrl} alt={tool.name} width={48} height={48} className="object-cover rounded" />
+              <div className="flex-shrink-0">
+                <ToolImage
+                  name={tool.name}
+                  categoryName={Array.isArray(tool.category) ? tool.category[0] : tool.category}
+                  subcategoryName={Array.isArray(tool.subcategory) ? tool.subcategory?.[0] : tool.subcategory}
+                  size="sm"
+                />
               </div>
               <div>
                 <h4 className="font-bold text-gray-900 dark:text-white text-sm">{tool.name}</h4>

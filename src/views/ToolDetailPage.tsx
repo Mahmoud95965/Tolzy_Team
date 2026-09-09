@@ -332,12 +332,10 @@ const ToolDetailPageNew: React.FC<ToolDetailPageProps> = ({ initialTool }) => {
                 <div className="flex-shrink-0 mx-auto md:mx-0">
                   <div className="p-1 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900 dark:to-purple-900 shadow-lg">
                     <ToolImage
-                      imageUrl={tool.imageUrl}
                       name={tool.name}
                       categoryName={Array.isArray(tool.category) ? tool.category[0] : tool.category}
                       subcategoryName={Array.isArray(tool.subcategory) ? tool.subcategory?.[0] : tool.subcategory}
                       size="lg"
-                      className="rounded-xl"
                     />
                   </div>
                 </div>

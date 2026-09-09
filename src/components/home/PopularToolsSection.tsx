@@ -163,12 +163,10 @@ const PopularToolsSection: React.FC<PopularToolsSectionProps> = ({
                       {/* Tool Icon */}
                       <div className="flex-shrink-0">
                         <ToolImage
-                          imageUrl={tool.imageUrl}
                           name={tool.name}
                           categoryName={primaryCategory}
                           subcategoryName={primarySubcategory}
                           size="sm"
-                          className="shadow-sm"
                         />
                       </div>
 

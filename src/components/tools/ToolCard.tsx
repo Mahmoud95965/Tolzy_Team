@@ -149,13 +149,12 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
         </div>
 
         {/* Small Glass Square Icon */}
-        <div className="flex-shrink-0 p-1 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md group-hover:border-white/20 transition-all duration-300">
+        <div className="flex-shrink-0 p-0.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md group-hover:border-white/20 transition-all duration-300">
           <ToolImage
-            imageUrl={tool.imageUrl}
             name={tool.name}
             categoryName={primaryCategory}
+            subcategoryName={Array.isArray(tool.subcategory) ? tool.subcategory[0] : tool.subcategory}
             size="md"
-            className="rounded-lg object-cover"
           />
         </div>
       </div>

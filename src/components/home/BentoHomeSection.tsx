@@ -66,13 +66,10 @@ const BentoCard = ({ tool }: { tool: Tool }) => {
       <div className="relative z-10 flex flex-col h-full">
         <div className="flex justify-between items-start mb-4">
           <ToolImage 
-            imageUrl={tool.imageUrl} 
             name={tool.name} 
             categoryName={primaryCategory} 
+            subcategoryName={Array.isArray(tool.subcategory) ? tool.subcategory?.[0] : tool.subcategory}
             size="md" 
-            className={`rounded-xl border transition-all duration-300 group-hover:scale-105 ${
-              isDarkMode ? 'border-slate-800' : 'border-slate-100'
-            }`} 
           />
           {getPricingBadge()}
         </div>

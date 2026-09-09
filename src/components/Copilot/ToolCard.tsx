@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import Image from 'next/image';
+import ToolImage from '../common/ToolImage';
 
 interface ToolCardProps {
     name: string;
@@ -11,9 +11,7 @@ interface ToolCardProps {
     image?: string;
 }
 
-const ToolCard: React.FC<ToolCardProps> = ({ name, description, category, reason, link, image }) => {
-    const [imgError, setImgError] = useState(false);
-
+const ToolCard: React.FC<ToolCardProps> = ({ name, description, category, reason, link }) => {
     return (
         <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -25,22 +23,11 @@ const ToolCard: React.FC<ToolCardProps> = ({ name, description, category, reason
             <div className="flex gap-3 p-4">
                 {/* Tool avatar */}
                 <div className="shrink-0">
-                    <div className="relative w-10 h-10 rounded-lg bg-white/[0.06] border border-white/[0.08] overflow-hidden flex items-center justify-center">
-                        {image && !imgError ? (
-                            <Image
-                                src={image}
-                                alt={name}
-                                fill
-                                sizes="40px"
-                                className="object-cover"
-                                onError={() => setImgError(true)}
-                            />
-                        ) : (
-                            <span className="material-symbols-outlined text-[18px] text-slate-400">
-                                build
-                            </span>
-                        )}
-                    </div>
+                    <ToolImage
+                        name={name}
+                        categoryName={category}
+                        size="sm"
+                    />
                 </div>
 
                 {/* Content */}
