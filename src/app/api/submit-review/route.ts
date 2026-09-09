@@ -13,9 +13,9 @@ export async function POST(req: NextRequest) {
         if (!adminDb) {
             console.error('❌ [API] Database not initialized. Checking env vars...');
             const envCheck = {
-                HAS_PROJECT_ID: !!process.env.FIREBASE_PROJECT_ID || !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-                HAS_CLIENT_EMAIL: !!process.env.FIREBASE_CLIENT_EMAIL,
-                HAS_PRIVATE_KEY: !!process.env.FIREBASE_PRIVATE_KEY,
+                HAS_PROJECT_ID: !!(process.env.FIREBASE_PROJECT_ID || process.env.FIREBASE_ADMIN_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID),
+                HAS_CLIENT_EMAIL: !!(process.env.FIREBASE_CLIENT_EMAIL || process.env.FIREBASE_ADMIN_CLIENT_EMAIL),
+                HAS_PRIVATE_KEY: !!(process.env.FIREBASE_PRIVATE_KEY || process.env.FIREBASE_ADMIN_PRIVATE_KEY),
             };
             console.error('Env vars status:', envCheck);
 

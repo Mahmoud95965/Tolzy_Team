@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { getCentralAuthUrl } from '../../utils/authRedirect';
 import { 
   Wrench, 
   BookOpen, 
@@ -599,7 +600,8 @@ export default function WhatIsTolzy() {
             
             <Link
               id="bento-register-btn"
-              href="/auth"
+              href={getCentralAuthUrl()}
+              prefetch={false}
               className={`inline-flex items-center justify-center gap-2 border px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-all duration-300 ${
                 isDarkMode 
                   ? 'border-white/10 bg-white/5 text-white hover:bg-white/10' 

@@ -3,6 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/src/context/AuthContext';
+import { redirectToAuth } from '@/src/utils/authRedirect';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 
 const StartJourneyButton: React.FC = () => {
@@ -14,7 +15,7 @@ const StartJourneyButton: React.FC = () => {
         if (user) {
             router.push('/tools');
         } else {
-            router.push('/auth');
+            redirectToAuth();
         }
     };
 

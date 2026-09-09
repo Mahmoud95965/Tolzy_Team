@@ -24,9 +24,19 @@ export const useFCMToken = () => {
           return;
         }
 
-        const permission = await Notification.requestPermission();
+        if (typeof Notification === 'undefined') return;
+
+        // If user already dismissed or denied permission, do not prompt again to avoid browser console warnings
+        if (Notification.permission === 'denied') {
+          return;
+        }
+
+        let permission: NotificationPermission = Notification.permission;
+        if (permission === 'default') {
+          permission = await Notification.requestPermission();
+        }
+
         if (permission !== 'granted') {
-          console.log('Notification permission denied by the user.');
           return;
         }
 

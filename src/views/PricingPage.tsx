@@ -7,6 +7,7 @@ import {
   Download, Clock, ExternalLink, CreditCard, Zap, CheckCheck, AlertCircle
 } from 'lucide-react';
 import { useAuth } from '@/src/context/AuthContext';
+import { redirectToAuth, getCentralAuthUrl } from '@/src/utils/authRedirect';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import UserProfile from '@/src/components/auth/UserProfile';
@@ -224,7 +225,7 @@ export default function PricingPage() {
 
   const handleCheckout = (planId: 'free' | 'pro' | 'max') => {
     if (!user) {
-      window.location.href = '/auth';
+      redirectToAuth();
       return;
     }
     const cta = getCtaInfo(planId);
@@ -240,7 +241,7 @@ export default function PricingPage() {
 
   const handleXPayCheckout = async () => {
     if (!user) {
-      window.location.href = '/auth';
+      redirectToAuth();
       return;
     }
     setIsXPayLoading(true);
@@ -467,10 +468,10 @@ export default function PricingPage() {
           <div className="flex items-center gap-4">
             {!user ? (
               <>
-                <Link href="/auth" className="hidden sm:inline-block text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors">
+                <Link href={getCentralAuthUrl()} prefetch={false} className="hidden sm:inline-block text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors">
                   تسجيل الدخول
                 </Link>
-                <Link href="/auth" className="bg-black dark:bg-white text-white dark:text-black text-xs font-bold px-4 py-2 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors">
+                <Link href={getCentralAuthUrl()} prefetch={false} className="bg-black dark:bg-white text-white dark:text-black text-xs font-bold px-4 py-2 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors">
                   ابدأ مجاناً
                 </Link>
               </>

@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Home, Users, Bell, User, MoreHorizontal, X, GraduationCap, Zap, Newspaper, Bot } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
+import { getCentralAuthUrl } from '../../utils/authRedirect';
 
 interface NavItem {
   href: string;
@@ -38,7 +39,7 @@ const MobileBottomNav: React.FC = () => {
     { href: '/', icon: Home, label: 'الرئيسية' },
     { href: '/community', icon: Users, label: 'المجتمع' },
     { href: '/notifications', icon: Bell, label: 'الإشعارات', badge: unreadCount },
-    { href: user ? '/profile' : `/auth${pathname !== '/' && pathname !== '/auth' ? `?redirect=${encodeURIComponent(pathname)}` : ''}`, icon: User, label: user ? 'حسابي' : 'دخول' },
+    { href: user ? '/profile' : getCentralAuthUrl(pathname !== '/' && pathname !== '/auth' ? pathname : undefined), icon: User, label: user ? 'حسابي' : 'دخول' },
   ];
 
   const moreItems = [
@@ -133,7 +134,7 @@ const MobileBottomNav: React.FC = () => {
           const Icon = item.icon;
 
           return (
-            <Link key={item.href} href={item.href} className="flex-1">
+            <Link key={item.href} href={item.href} prefetch={false} className="flex-1">
               <motion.div
                 whileTap={{ scale: 0.82 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 17 }}

@@ -29,9 +29,9 @@ export async function POST(request: NextRequest) {
         if (!adminDb) {
             // Debugging: Check which env vars are missing
             const missingVars = [];
-            if (!process.env.FIREBASE_PROJECT_ID) missingVars.push('FIREBASE_PROJECT_ID');
-            if (!process.env.FIREBASE_CLIENT_EMAIL) missingVars.push('FIREBASE_CLIENT_EMAIL');
-            if (!process.env.FIREBASE_PRIVATE_KEY) missingVars.push('FIREBASE_PRIVATE_KEY');
+            if (!process.env.FIREBASE_PROJECT_ID && !process.env.FIREBASE_ADMIN_PROJECT_ID) missingVars.push('FIREBASE_PROJECT_ID');
+            if (!process.env.FIREBASE_CLIENT_EMAIL && !process.env.FIREBASE_ADMIN_CLIENT_EMAIL) missingVars.push('FIREBASE_CLIENT_EMAIL');
+            if (!process.env.FIREBASE_PRIVATE_KEY && !process.env.FIREBASE_ADMIN_PRIVATE_KEY) missingVars.push('FIREBASE_PRIVATE_KEY');
 
             return NextResponse.json(
                 {

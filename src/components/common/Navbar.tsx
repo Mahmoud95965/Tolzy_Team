@@ -28,6 +28,7 @@ import { Tool } from '../../types';
 import UserProfile from '../auth/UserProfile';
 import NotificationBell from './NotificationBell';
 import { getSubdomainUrl } from '../../utils/domain';
+import { getCentralAuthUrl } from '../../utils/authRedirect';
 
 
 
@@ -320,7 +321,8 @@ const Navbar: React.FC = () => {
                 </div>
               ) : (
                 <Link
-                  href="/auth"
+                  href={getCentralAuthUrl()}
+                  prefetch={false}
                   className="px-6 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-bold rounded-xl transition-all hover:bg-slate-800 dark:hover:bg-slate-100 flex items-center gap-2"
                 >
                   ابدأ الآن

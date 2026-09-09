@@ -146,6 +146,41 @@ const nextConfig: NextConfig = {
                     },
                 ],
             },
+            // Auth endpoints CORS support
+            {
+                source: '/auth/:path*',
+                headers: [
+                    {
+                        key: 'Access-Control-Allow-Credentials',
+                        value: 'true',
+                    },
+                    {
+                        key: 'Access-Control-Allow-Methods',
+                        value: 'GET,POST,OPTIONS,HEAD',
+                    },
+                    {
+                        key: 'Access-Control-Allow-Headers',
+                        value: 'Content-Type, Authorization, RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Url, Accept, X-Requested-With',
+                    },
+                ],
+            },
+            {
+                source: '/api/auth/:path*',
+                headers: [
+                    {
+                        key: 'Access-Control-Allow-Credentials',
+                        value: 'true',
+                    },
+                    {
+                        key: 'Access-Control-Allow-Methods',
+                        value: 'GET,POST,OPTIONS,HEAD',
+                    },
+                    {
+                        key: 'Access-Control-Allow-Headers',
+                        value: 'Content-Type, Authorization, RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Url, Accept, X-Requested-With',
+                    },
+                ],
+            },
         ];
     },
 

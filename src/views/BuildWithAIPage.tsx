@@ -5,6 +5,7 @@ import IdeaInputBox from '@/src/components/BuildWithAI/IdeaInputBox';
 import BuildPlanViewer from '@/src/components/BuildWithAI/BuildPlanViewer';
 import { ArrowRight, FolderOpen, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
+import { getCentralAuthUrl } from '@/src/utils/authRedirect';
 
 export default function BuildWithAIPage() {
     const { user, userProfile } = useAuth();
@@ -65,7 +66,7 @@ export default function BuildWithAIPage() {
                     <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-3xl shadow-xl">🚀</div>
                     <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-3">سجل دخولك أولاً</h2>
                     <p className="text-slate-500 dark:text-slate-400 mb-6 text-sm">تحتاج لتسجيل الدخول لاستخدام ميزة "ابنِ مع الذكاء الاصطناعي"</p>
-                    <Link href="/auth" className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all">
+                    <Link href={getCentralAuthUrl()} prefetch={false} className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all">
                         تسجيل الدخول <ArrowRight className="w-4 h-4 rtl:rotate-180" />
                     </Link>
                 </div>

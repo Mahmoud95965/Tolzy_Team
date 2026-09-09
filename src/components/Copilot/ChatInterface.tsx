@@ -17,6 +17,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useUserData } from '../../hooks/useUserData';
 import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
 import Link from 'next/link';
+import { getCentralAuthUrl } from '../../utils/authRedirect';
 import Image from 'next/image';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../../config/supabaseClient';
@@ -1352,7 +1353,8 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                         </div>
                     </div>
                     <Link
-                        href="/auth"
+                        href={getCentralAuthUrl()}
+                        prefetch={false}
                         className="w-full sm:w-auto px-4 py-2 bg-[#d97757] hover:bg-[#c46647] text-white rounded-xl text-xs font-bold text-center transition-colors shadow-xs whitespace-nowrap"
                     >
                         تسجيل الدخول
@@ -1769,7 +1771,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                         <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mb-6 leading-relaxed font-medium">مساعدك للتفكير والتحليل وحل المشكلات البرمجية والتعليمية بالذكاء الفائق. ابدأ رحلتك التفاعلية فوراً وبكل سهولة.</p>
 
                         <div className="flex flex-col gap-2.5 w-full justify-center">
-                            <Link href="/auth" className="w-full py-3 px-5 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-500/10 active:scale-[0.98] transition-all text-center flex items-center justify-center gap-2 font-sans">
+                            <Link href={getCentralAuthUrl()} prefetch={false} className="w-full py-3 px-5 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-500/10 active:scale-[0.98] transition-all text-center flex items-center justify-center gap-2 font-sans">
                                 <span className="material-symbols-outlined text-[16px]">login</span>
                                 <span>سجل الدخول / إنشاء حساب مجاني</span>
                             </Link>

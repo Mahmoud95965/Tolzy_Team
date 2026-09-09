@@ -1,7 +1,8 @@
 "use client";
 import React, { useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
+import { redirectToAuth } from '../../utils/authRedirect';
 import LoadingSpinner from '../common/LoadingSpinner';
 
 interface ProtectedRouteProps {
@@ -10,14 +11,13 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading } = useAuth();
-  const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push(`/auth?from=${encodeURIComponent(pathname)}`);
+      redirectToAuth(pathname);
     }
-  }, [user, loading, router, pathname]);
+  }, [user, loading, pathname]);
 
   if (loading) {
     return <LoadingSpinner />;
