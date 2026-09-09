@@ -3,7 +3,7 @@ import React, { createContext, useState, useEffect, useCallback, useRef } from '
 import { DocumentSnapshot } from 'firebase/firestore';
 import { Tool, FilterOptions } from '../types/index';
 import { filterTools } from '../utils/filterTools';
-import { getPaginatedTools, getFeaturedTools, getPopularTools, getNewTools, getCategoryCount as getCategoryCountService } from '../services/tools.service';
+import { getPaginatedTools, getFeaturedTools, getPopularTools, getNewTools, getCategoryCount as getCategoryCountService, getTotalToolsCount as getTotalToolsCountService } from '../services/tools.service';
 
 const TOOLS_PER_PAGE = 40;
 
@@ -16,6 +16,8 @@ interface ToolsContextType {
   featuredTools: Tool[];
   popularTools: Tool[];
   newTools: Tool[];
+  totalToolsCount: number;
+  getTotalToolsCount: () => Promise<number>;
   loadMore: () => Promise<void>;
   getToolById: (id: string) => Tool | undefined;
   getRelatedTools: (tool: Tool, limit?: number) => Tool[];
@@ -32,6 +34,7 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [featuredTools, setFeaturedTools] = useState<Tool[]>([]);
   const [popularTools, setPopularTools] = useState<Tool[]>([]);
   const [newTools, setNewTools] = useState<Tool[]>([]);
+  const [totalToolsCount, setTotalToolsCount] = useState<number>(1000);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -75,6 +78,27 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const getTotalToolsCountDeduped = useCallback(async () => {
+    const cacheKey = CACHE_KEY_COUNTS_PREFIX + 'total_all';
+    const cachedCount = getCache(cacheKey);
+    if (cachedCount !== null && typeof cachedCount === 'number') {
+      setTotalToolsCount(cachedCount);
+      return cachedCount;
+    }
+
+    try {
+      const count = await getTotalToolsCountService();
+      if (count && count > 0) {
+        setCache(cacheKey, count);
+        setTotalToolsCount(count);
+        return count;
+      }
+    } catch (e) {
+      console.error('Failed to get total tools count', e);
+    }
+    return 1000;
+  }, []);
+
   const getCategoryCountDeduped = useCallback(async (category: string) => {
     const cacheKey = CACHE_KEY_COUNTS_PREFIX + category;
     const cachedCount = getCache(cacheKey);
@@ -105,6 +129,10 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const unique = Array.from(new Set(categories)).filter(Boolean);
     await Promise.all(unique.map((cat) => getCategoryCountDeduped(cat)));
   }, [getCategoryCountDeduped]);
+
+  useEffect(() => {
+    getTotalToolsCountDeduped();
+  }, [getTotalToolsCountDeduped]);
 
   // دالة لجلب الأدوات الخاص (المميزة، الشائعة، الجديدة) بشكل مستقل مع استخدام الكاش
   const fetchSpecialTools = async () => {
@@ -295,6 +323,8 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setPopularTools(prev => prev.map(t => t.id === toolId ? { ...t, ...updates } : t));
       setNewTools(prev => prev.map(t => t.id === toolId ? { ...t, ...updates } : t));
     },
+    totalToolsCount,
+    getTotalToolsCount: getTotalToolsCountDeduped,
     getCategoryCount: getCategoryCountDeduped
   }), [
     tools,
@@ -305,6 +335,7 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     featuredTools,
     popularTools,
     newTools,
+    totalToolsCount,
     loadMore,
     getToolById,
     refreshTools,
@@ -312,6 +343,7 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setFeaturedTools,
     setPopularTools,
     setNewTools,
+    getTotalToolsCountDeduped,
     getCategoryCountDeduped,
   ]);
 

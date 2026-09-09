@@ -734,7 +734,7 @@ const ProfilePage: React.FC = () => {
             {[
               { title: 'رفع الأدوات', icon: Upload, href: '/admin/upload-tools', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20', hover: 'hover:border-blue-500/30' },
               { title: 'المحتوى', icon: BookOpen, href: '/admin/courses', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/20', hover: 'hover:border-purple-500/30' },
-              { title: 'الأخبار', icon: FileText, href: '/admin/courses?tab=news', color: 'text-pink-600 dark:text-pink-400', bg: 'bg-pink-50 dark:bg-pink-900/20', hover: 'hover:border-pink-500/30' },
+              { title: 'الأدوات', icon: Zap, href: '/tools', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/20', hover: 'hover:border-amber-500/30' },
               { title: 'اللوحة', icon: Shield, href: '/admin', color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-900/20', hover: 'hover:border-orange-500/30' },
             ].map((item, idx) => (
               <Link 

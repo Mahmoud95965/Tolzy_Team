@@ -157,6 +157,39 @@ export async function getToolByIdFromFirebase(id: string): Promise<Tool | null> 
     }
 }
 
+// Helper function to get total tools count without fetching tool documents
+export async function getToolsCountFromFirebase(): Promise<number> {
+    try {
+        if (!adminDb) {
+            console.warn('⚠️ Admin DB not available for count');
+            return 0;
+        }
+
+        const countSnapshot = await adminDb.collection('tools').count().get();
+        return countSnapshot.data().count;
+    } catch (error: unknown) {
+        logError(error, 'Error fetching tools count from Firebase Admin');
+        return 0;
+    }
+}
+
+// Helper function to get category tools count without fetching tool documents
+export async function getCategoryToolsCountFromFirebase(category: string): Promise<number> {
+    try {
+        if (!adminDb || !category || category === 'All') return 0;
+
+        const [arrayCountSnap, stringCountSnap] = await Promise.all([
+            adminDb.collection('tools').where('category', 'array-contains', category).count().get(),
+            adminDb.collection('tools').where('category', '==', category).count().get()
+        ]);
+
+        return arrayCountSnap.data().count + stringCountSnap.data().count;
+    } catch (error: unknown) {
+        logError(error, `Error fetching category count for ${category} from Firebase Admin`);
+        return 0;
+    }
+}
+
 // --- NEWS HELPERS ---
 
 export async function getAllNewsFromFirebase(): Promise<NewsArticle[]> {

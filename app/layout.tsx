@@ -80,7 +80,7 @@ export const metadata: Metadata = {
         description: 'منصة Tolzy العربية الأولى: +1000 أداة AI مجانية، كورسات برمجة، ChatGPT، Gemini، Claude، DeepSeek. ابدأ التعلم والإنجاز الآن!',
         images: [
             {
-                url: '/image/tools/Hero.png',
+                url: 'https://tolzy.me/image/tools/Hero.png',
                 width: 1200,
                 height: 630,
                 alt: 'Tolzy - منصة أدوات الذكاء الاصطناعي والكورسات المجانية 2026',
@@ -93,7 +93,7 @@ export const metadata: Metadata = {
         creator: '@tolzytools',
         title: 'Tolzy - اكتشف +1000 أداة ذكاء اصطناعي مجانية | كورسات برمجة 2026',
         description: 'منصة Tolzy العربية الأولى: +1000 أداة AI مجانية، كورسات برمجة، ChatGPT، Gemini، Claude، DeepSeek.',
-        images: ['/image/tools/Hero.png'],
+        images: ['https://tolzy.me/image/tools/Hero.png'],
     },
     verification: {
         google: 'CvfgfNzJGq2YOnvINe7ljJLpIgW4pDugHzdpbWaPvWY',
@@ -105,7 +105,7 @@ export const metadata: Metadata = {
         },
     },
     alternates: {
-        canonical: './',
+        canonical: 'https://tolzy.me/',
         languages: {
             ar: 'https://tolzy.me/',
             'x-default': 'https://tolzy.me/',

@@ -16,7 +16,6 @@ import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { getSubdomainUrl } from "../../utils/domain";
 
-const NewsPanelSection = dynamic(() => import("./NewsPanelSection"), { ssr: false });
 const LogoMarquee = dynamic(() => import("./LogoMarquee"), { ssr: false });
 
 export default function LoggedInHome() {
@@ -478,10 +477,7 @@ export default function LoggedInHome() {
                     </div>
                 </div>
 
-                {/* ── 5. News & Community Feed Section ── */}
-                <NewsPanelSection />
-
-                {/* ── 6. Logo Marquee ── */}
+                {/* ── 5. Logo Marquee ── */}
                 <div className="pt-6">
                     <LogoMarquee />
                 </div>

@@ -89,11 +89,6 @@ const Footer: React.FC = () => {
                       أكاديمية Tolzy
                     </Link>
               </li>
-              <li>
-                <Link href="/news" className="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                  الأخبار والشروحات
-                </Link>
-              </li>
             </ul>
           </div>
 
@@ -125,11 +120,6 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/pulse" className="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                  TOLZY Pulse
-                </Link>
-              </li>
-              <li>
                 <Link href="/docs" className="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                   التوثيق (Docs)
                 </Link>
@@ -151,7 +141,7 @@ const Footer: React.FC = () => {
           <div className="col-span-2 md:col-span-3 lg:col-span-1 bg-gradient-to-br from-indigo-50 to-violet-50 dark:from-slate-800 dark:to-slate-800/50 p-6 rounded-2xl border border-indigo-100 dark:border-slate-700 h-fit">
             <h3 className="font-bold text-indigo-900 dark:text-white mb-2 text-base">النشرة البريدية</h3>
             <p className="text-xs text-indigo-700 dark:text-slate-400 mb-4">
-              احصل على أحدث الأدوات والأخبار التقنية أسبوعياً.
+              احصل على أحدث أدوات الذكاء الاصطناعي ومصادر التعلم أسبوعياً.
             </p>
             {issubscribed ? (
               <div className="flex flex-col items-center justify-center py-6 text-green-600 animate-fade-in">

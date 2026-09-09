@@ -96,7 +96,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
   return (
     <div 
       onClick={handleCardClick}
-      className="group relative bg-slate-950/60 dark:bg-slate-900/35 backdrop-blur-xl border border-white/5 hover:border-indigo-500/50 rounded-2xl p-4 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1 cursor-pointer flex flex-col justify-between overflow-hidden h-[185px] text-right select-none"
+      className="group relative bg-white dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/80 dark:border-white/5 hover:border-indigo-500/50 rounded-2xl p-4 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1 cursor-pointer flex flex-col justify-between overflow-hidden h-[185px] text-right select-none"
     >
       {/* Top Section: Glass square icon, name, stars, bookmark */}
       <div className="flex items-start justify-between gap-3">
@@ -105,8 +105,8 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
           onClick={handleSave}
           className={`flex-shrink-0 p-2 rounded-lg border transition-all duration-200 ${
             isSaved
-              ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-500'
-              : 'bg-white/5 border-white/5 text-slate-500 hover:text-indigo-400 hover:border-white/10'
+              ? 'bg-amber-500/10 border-amber-500/20 text-amber-500'
+              : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/5 text-slate-400 hover:text-indigo-500 hover:border-indigo-500/30'
           }`}
           aria-label={isSaved ? 'إلغاء حفظ الأداة' : 'حفظ الأداة'}
         >
@@ -116,23 +116,23 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
         {/* Text Details & Title */}
         <div className="flex-1 min-w-0 pr-1 space-y-1">
           <div className="flex items-center gap-1.5 justify-end">
-            <h3 className="text-[14px] font-black text-white group-hover:text-indigo-400 transition-colors line-clamp-1 truncate">
+            <h3 className="text-[14px] font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1 truncate">
               {tool.name}
             </h3>
             {tool.isFeatured && (
-              <Award className="w-3.5 h-3.5 text-indigo-400 flex-shrink-0" />
+              <Award className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400 flex-shrink-0" />
             )}
           </div>
 
           {/* Rating stars & counts */}
           <div className="flex items-center gap-1 justify-end">
-            <span className="text-[10px] font-bold text-slate-500">
+            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
               ({tool.reviewCount})
             </span>
-            <span className="text-[10px] font-black text-amber-400">
+            <span className="text-[10px] font-black text-amber-500 dark:text-amber-400">
               {tool.rating.toFixed(1)}
             </span>
-            <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 flex-shrink-0" />
+            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 flex-shrink-0" />
           </div>
 
           {/* Pricing capsule */}
@@ -149,7 +149,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
         </div>
 
         {/* Small Glass Square Icon */}
-        <div className="flex-shrink-0 p-0.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md group-hover:border-white/20 transition-all duration-300">
+        <div className="flex-shrink-0 p-0.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 backdrop-blur-md group-hover:border-indigo-500/30 transition-all duration-300">
           <ToolImage
             name={tool.name}
             categoryName={primaryCategory}
@@ -160,7 +160,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
       </div>
 
       {/* Badges Grid (Pros & Cons Capsules) */}
-      <div className="border-t border-white/5 pt-2.5 space-y-1.5">
+      <div className="border-t border-slate-100 dark:border-white/5 pt-2.5 space-y-1.5">
         {/* Pros badges */}
         <div className="flex flex-wrap gap-1.5 justify-end">
           {displayPros.map((pro, index) => (

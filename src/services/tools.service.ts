@@ -76,6 +76,36 @@ export const getCategoryCount = async (categoryInput: any): Promise<number> => {
   return promise;
 };
 
+let totalToolsCountCache: { value: number; timestamp: number } | null = null;
+let totalToolsCountInFlight: Promise<number> | null = null;
+
+export const getTotalToolsCount = async (): Promise<number> => {
+  if (totalToolsCountCache && Date.now() - totalToolsCountCache.timestamp < CATEGORY_COUNT_TTL_MS) {
+    return totalToolsCountCache.value;
+  }
+
+  if (totalToolsCountInFlight) {
+    return totalToolsCountInFlight;
+  }
+
+  totalToolsCountInFlight = (async () => {
+    try {
+      const toolsRef = collection(db, 'tools');
+      const snapshot = await getCountFromServer(toolsRef);
+      const value = snapshot.data().count;
+      totalToolsCountCache = { value, timestamp: Date.now() };
+      return value;
+    } catch (error) {
+      console.error('Error in getTotalToolsCount:', error);
+      return 1000;
+    } finally {
+      totalToolsCountInFlight = null;
+    }
+  })();
+
+  return totalToolsCountInFlight;
+};
+
 export const getPaginatedTools = async (
   pageSize: number = 20,
   startAfterParam?: any,

@@ -1,11 +1,10 @@
 import type { Metadata } from 'next';
 import ToolsPage from '@/src/views/ToolsPage';
-import { getAllToolsFromFirebase } from '@/lib/firebase-admin';
+import { getToolsCountFromFirebase } from '@/lib/firebase-admin';
 import { generateCollectionPageSchema } from '@/src/utils/seoHelpers';
 
 export const dynamic = 'force-static';
 export const revalidate = 86400; // Revalidate every 24 hours (ISR)
-
 
 // Generate metadata dynamically based on search params (e.g. category)
 export async function generateMetadata({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }): Promise<Metadata> {
@@ -14,8 +13,6 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
 
     if (category && typeof category === 'string' && category !== 'All') {
         const { generateCategoryMetadata } = await import('@/src/utils/seoHelpers');
-        // Defaulting to 50+ tools for category pages to keep it fast
-        // In a real scenario, we could query the count specifically
         return generateCategoryMetadata(category, 50);
     }
 
@@ -32,8 +29,6 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
             'podcast adobe com enhance',
             'اداه كاتب المقالات',
             'adobe podcast enhance',
-            'Itz me',
-            'ltz. me',
             'ChatGPT',
             'Google Gemini',
             'Claude AI',
@@ -77,36 +72,34 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
 }
 
 export default async function Tools() {
-    let tools: any[] = [];
+    let totalTools = 1000;
     try {
-        tools = await getAllToolsFromFirebase(100);
+        const count = await getToolsCountFromFirebase();
+        if (count && count > 0) totalTools = count;
     } catch (error) {
-        console.error('❌ Error fetching tools for tools page schema:', error);
+        console.error('❌ Error fetching tools count for schema:', error);
     }
 
-    // Limit to the first 100 tools for schema speed and Google Search Console loading limits
-    const schemaItems = tools.slice(0, 100).map((tool: any) => ({
-        name: tool.name,
-        description: tool.description || `أداة ذكاء اصطناعي مميزة ومجانية لمختلف التخصصات.`,
-        url: `https://tolzy.me/tools/${tool.id}`,
-        imageUrl: tool.imageUrl || 'https://tolzy.me/image/tools/Hero.png',
-    }));
-
-    const collectionSchema = generateCollectionPageSchema(
-        'جميع أدوات الذكاء الاصطناعي - دليل Tolzy الشامل',
-        'استكشف أكبر دليل عربي لأدوات الذكاء الاصطناعي. أكثر من 1000 أداة مع تقييمات حقيقية ومراجعات مفصلة.',
-        'https://tolzy.me/tools',
-        schemaItems
-    );
+    const collectionSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        'name': 'جميع أدوات الذكاء الاصطناعي - دليل Tolzy الشامل',
+        'description': `استكشف أكبر دليل عربي لأدوات الذكاء الاصطناعي تضم أكثر من ${totalTools} أداة مصنفة ومراجعة بدقة.`,
+        'url': 'https://tolzy.me/tools',
+        'numberOfItems': totalTools,
+        'isPartOf': {
+            '@type': 'WebSite',
+            'name': 'Tolzy',
+            'url': 'https://tolzy.me'
+        }
+    };
 
     return (
         <>
-            {schemaItems.length > 0 && (
-                <script
-                    type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}
-                />
-            )}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}
+            />
             <ToolsPage />
         </>
     );

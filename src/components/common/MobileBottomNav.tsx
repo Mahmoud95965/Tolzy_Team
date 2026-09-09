@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Users, Bell, User, MoreHorizontal, X, GraduationCap, Zap, Newspaper, Bot } from 'lucide-react';
+import { Home, Users, Bell, User, MoreHorizontal, X, GraduationCap, Zap, Wand2, Bot } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { getCentralAuthUrl } from '../../utils/authRedirect';
@@ -46,7 +46,7 @@ const MobileBottomNav: React.FC = () => {
     { href: '/axiom', icon: Bot, label: 'مساعد AXIOM الذكي', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20' },
     { href: '/learn', icon: GraduationCap, label: 'Tolzy Learn', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
     { href: '/tools', icon: Zap, label: 'دليل الأدوات', color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20' },
-    { href: '/news', icon: Newspaper, label: 'الأخبار والشروحات', color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/20' },
+    { href: '/build', icon: Wand2, label: 'صانع المشاريع بـ AI', color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-900/20' },
   ];
 
   return (

@@ -33,8 +33,8 @@ export const SITE_CONFIG = {
         bing: 'EC6C9467B5FC8847928544F2987ABE66',
     },
     images: {
-        logo: '/image/tools/Logo.png',
-        ogDefault: '/image/tools/Hero.png',
+        logo: 'https://tolzy.me/image/tools/Logo.png',
+        ogDefault: 'https://tolzy.me/image/tools/Hero.png',
         ogWidth: 1200,
         ogHeight: 630,
     },

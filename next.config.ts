@@ -193,18 +193,43 @@ const nextConfig: NextConfig = {
                 permanent: true,
             },
             {
-                source: '/changelog',
-                destination: '/pulse',
+                source: '/pulse',
+                destination: '/',
                 permanent: true,
             },
             {
-                source: '/changelog/:id',
-                destination: '/pulse/:id',
+                source: '/pulse/:path*',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/admin/pulse',
+                destination: '/admin',
+                permanent: true,
+            },
+            {
+                source: '/news',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/news/:path*',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/changelog',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/changelog/:path*',
+                destination: '/',
                 permanent: true,
             },
             {
                 source: '/admin/changelog',
-                destination: '/admin/pulse',
+                destination: '/admin',
                 permanent: true,
             },
         ];

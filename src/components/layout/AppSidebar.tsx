@@ -23,9 +23,7 @@ const AppSidebar: React.FC = () => {
   const { userProfile } = useAuth();
 
   const navItems = [
-    { name: 'TOLZY Pulse', href: '/pulse', icon: Activity },
     { name: 'التحديثات القادمة', href: '/upcoming', icon: Sparkles },
-
     { name: 'المجتمع', href: '/community', icon: Users },
   ];
 

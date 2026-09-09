@@ -1,6 +1,5 @@
 import { MetadataRoute } from 'next';
 import { getAllToolsFromFirebase, getAllCoursesFromFirebase } from '@/lib/firebase-admin';
-import { getPublishedArticles } from '@/src/services/articles.service';
 
 export const dynamic = 'force-static';
 
@@ -19,13 +18,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             url: `${baseUrl}/tools`,
             lastModified: new Date(),
             changeFrequency: 'daily',
-            priority: 0.9,
+            priority: 0.95,
         },
         {
             url: `${baseUrl}/learn`,
             lastModified: new Date(),
             changeFrequency: 'weekly',
             priority: 0.9,
+        },
+        {
+            url: `${baseUrl}/build`,
+            lastModified: new Date(),
+            changeFrequency: 'weekly',
+            priority: 0.85,
         },
         {
             url: `${baseUrl}/axiom`,
@@ -35,12 +40,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         },
         {
             url: `${baseUrl}/community`,
-            lastModified: new Date(),
-            changeFrequency: 'daily',
-            priority: 0.8,
-        },
-        {
-            url: `${baseUrl}/news`,
             lastModified: new Date(),
             changeFrequency: 'daily',
             priority: 0.8,
@@ -94,23 +93,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             priority: 0.8,
         }));
 
-        // Dynamic news/articles pages (From Supabase)
-        // Fetch up to 1000 articles for sitemap
-        const { articles } = await getPublishedArticles(1, 1000);
-        const newsPages: MetadataRoute.Sitemap = articles.map((article: any) => ({
-            url: `${baseUrl}/news/${article.id}`,
-            lastModified: article.updated_at ? new Date(article.updated_at) : new Date(article.created_at),
-            changeFrequency: 'weekly',
-            priority: 0.8,
-        }));
-
         // Dynamic course pages
         const courses = await getAllCoursesFromFirebase();
         const coursePages: MetadataRoute.Sitemap = courses.map((course: any) => ({
             url: `${baseUrl}/learn/course/${course.id}`,
             lastModified: course.updatedAt ? new Date(course.updatedAt) : new Date(),
             changeFrequency: 'weekly',
-            priority: 0.9,
+            priority: 0.85,
         }));
 
         // Category pages - Important for SEO!
@@ -130,12 +119,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             priority: 0.8,
         }));
 
-        console.log(`✅ Generated sitemap with ${staticPages.length} static pages, ${toolPages.length} tools, ${newsPages.length} news, ${coursePages.length} courses, and ${categoryPages.length} categories`);
+        console.log(`✅ Generated sitemap with ${staticPages.length} static pages, ${toolPages.length} tools, ${coursePages.length} courses, and ${categoryPages.length} categories`);
 
-        return [...staticPages, ...toolPages, ...newsPages, ...coursePages, ...categoryPages];
+        return [...staticPages, ...toolPages, ...coursePages, ...categoryPages];
     } catch (error) {
         console.error('❌ Error generating dynamic sitemap:', error);
-        // Return static pages even if dynamic generation fails
         return staticPages;
     }
 }

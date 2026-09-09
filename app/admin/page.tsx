@@ -131,15 +131,6 @@ const AdminDashboard = () => {
             statLabel: 'كورس'
         },
         {
-            title: 'إدارة المقالات',
-            description: 'إدارة مقالات الذكاء الاصطناعي والأخبار',
-            icon: FileText,
-            href: '/admin/articles',
-            color: 'bg-rose-500',
-            stat: stats.news,
-            statLabel: 'مقال'
-        },
-        {
             title: 'إدارة الاختبارات',
             description: 'إدارة اختبارات الذكاء الاصطناعي وبنك الأسئلة',
             icon: FileQuestion,
@@ -147,15 +138,6 @@ const AdminDashboard = () => {
             color: 'bg-amber-500',
             stat: stats.exams,
             statLabel: 'اختبار'
-        },
-        {
-            title: 'إدارة TOLZY Pulse',
-            description: 'إضافة ومتابعة نبض التحديثات والميزات الجديدة',
-            icon: Activity,
-            href: '/admin/pulse',
-            color: 'bg-indigo-600',
-            stat: null,
-            statLabel: 'نبض/تحديث'
         }
     ];
 
