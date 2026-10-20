@@ -407,37 +407,37 @@ export default function UnifiedDirectoryHome() {
           </p>
 
           {/* Value Metric Strip (Parchment Cards, responsive, no elevation) */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 max-w-3xl mx-auto pt-1 sm:pt-2">
-            <div className="p-3 sm:p-5 rounded-2xl sm:rounded-[28px] bg-[#f5f5eb] border border-[#d2d2c8] text-center shadow-none">
-              <div className="flex items-center justify-center gap-1.5 text-[#14140f] font-bold text-lg sm:text-2xl md:text-3xl font-mono">
-                <Cpu className="w-4 h-4 sm:w-5 sm:h-5 text-[#14140f]" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 sm:gap-4 max-w-3xl mx-auto pt-1 sm:pt-2">
+            <div className="p-2 sm:p-5 rounded-xl sm:rounded-[28px] bg-[#f5f5eb] border border-[#d2d2c8] text-center shadow-none">
+              <div className="flex items-center justify-center gap-1 sm:gap-1.5 text-[#14140f] font-bold text-base sm:text-2xl md:text-3xl font-mono">
+                <Cpu className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-[#14140f]" />
                 <span>+{actualTotalTools}</span>
               </div>
-              <div className="text-[10px] sm:text-xs font-normal text-[#6e6e64] mt-0.5 sm:mt-1 uppercase tracking-[0.05em]">أداة ذكاء اصطناعي</div>
+              <div className="text-[9px] sm:text-xs font-normal text-[#6e6e64] mt-0.5 sm:mt-1 uppercase tracking-[0.05em]">أداة ذكاء اصطناعي</div>
             </div>
 
-            <div className="p-3 sm:p-5 rounded-2xl sm:rounded-[28px] bg-[#f5f5eb] border border-[#d2d2c8] text-center shadow-none">
-              <div className="flex items-center justify-center gap-1.5 text-[#14140f] font-bold text-lg sm:text-2xl md:text-3xl font-mono">
-                <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-[#14140f]" />
+            <div className="p-2 sm:p-5 rounded-xl sm:rounded-[28px] bg-[#f5f5eb] border border-[#d2d2c8] text-center shadow-none">
+              <div className="flex items-center justify-center gap-1 sm:gap-1.5 text-[#14140f] font-bold text-base sm:text-2xl md:text-3xl font-mono">
+                <GraduationCap className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-[#14140f]" />
                 <span>+{courses.length > 0 ? courses.length : 6}</span>
               </div>
-              <div className="text-[10px] sm:text-xs font-normal text-[#6e6e64] mt-0.5 sm:mt-1 uppercase tracking-[0.05em]">مسار تعليمي</div>
+              <div className="text-[9px] sm:text-xs font-normal text-[#6e6e64] mt-0.5 sm:mt-1 uppercase tracking-[0.05em]">مسار تعليمي</div>
             </div>
 
-            <div className="p-3 sm:p-5 rounded-2xl sm:rounded-[28px] bg-[#f5f5eb] border border-[#d2d2c8] text-center shadow-none">
-              <div className="flex items-center justify-center gap-1.5 text-[#14140f] font-bold text-lg sm:text-2xl md:text-3xl font-mono">
-                <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-[#14140f]" />
+            <div className="p-2 sm:p-5 rounded-xl sm:rounded-[28px] bg-[#f5f5eb] border border-[#d2d2c8] text-center shadow-none">
+              <div className="flex items-center justify-center gap-1 sm:gap-1.5 text-[#14140f] font-bold text-base sm:text-2xl md:text-3xl font-mono">
+                <Zap className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-[#14140f]" />
                 <span>0ms</span>
               </div>
-              <div className="text-[10px] sm:text-xs font-normal text-[#6e6e64] mt-0.5 sm:mt-1 uppercase tracking-[0.05em]">بحث فوري فائق</div>
+              <div className="text-[9px] sm:text-xs font-normal text-[#6e6e64] mt-0.5 sm:mt-1 uppercase tracking-[0.05em]">بحث فوري فائق</div>
             </div>
 
-            <div className="p-3 sm:p-5 rounded-2xl sm:rounded-[28px] bg-[#f5f5eb] border border-[#d2d2c8] text-center shadow-none">
-              <div className="flex items-center justify-center gap-1.5 text-[#14140f] font-bold text-lg sm:text-2xl md:text-3xl font-mono">
-                <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-[#14140f]" />
+            <div className="p-2 sm:p-5 rounded-xl sm:rounded-[28px] bg-[#f5f5eb] border border-[#d2d2c8] text-center shadow-none">
+              <div className="flex items-center justify-center gap-1 sm:gap-1.5 text-[#14140f] font-bold text-base sm:text-2xl md:text-3xl font-mono">
+                <Globe className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-[#14140f]" />
                 <span>100%</span>
               </div>
-              <div className="text-[10px] sm:text-xs font-normal text-[#6e6e64] mt-0.5 sm:mt-1 uppercase tracking-[0.05em]">محتوى عربي منسق</div>
+              <div className="text-[9px] sm:text-xs font-normal text-[#6e6e64] mt-0.5 sm:mt-1 uppercase tracking-[0.05em]">محتوى عربي منسق</div>
             </div>
           </div>
         </section>
@@ -445,7 +445,7 @@ export default function UnifiedDirectoryHome() {
         {/* ========================================================= */}
         {/* 2. INSTANT SEARCH BAR with Cmd+K / Ctrl+K badge           */}
         {/* ========================================================= */}
-        <div className="max-w-3xl mx-auto mb-6 sm:mb-8">
+        <div className="max-w-3xl mx-auto mb-4 sm:mb-6">
           <div className="flex items-center bg-[#ffffff] border border-[#d2d2c8] focus-within:border-[#14140f] rounded-2xl sm:rounded-[28px] p-1.5 sm:p-2 transition-colors">
             <div className="p-1.5 sm:p-3 text-[#6e6e64]">
               <Search className="w-4 h-4 sm:w-6 sm:h-6" />
@@ -458,10 +458,10 @@ export default function UnifiedDirectoryHome() {
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={
                 activeTab === 'tools'
-                  ? `ابحث في أكثر من ${actualTotalTools} أداة ذكاء اصطناعي (مثل: كود، توليد فيديو، تصميم، شات)...`
-                  : `ابحث في ${courses.length > 0 ? courses.length : 6} مسارات وكورسات تعليمية معتمدة...`
+                  ? `ابحث في أكثر من ${actualTotalTools} أداة ذكاء اصطناعي...`
+                  : `ابحث في ${courses.length > 0 ? courses.length : 6} مسارات تعليمية...`
               }
-              className="w-full bg-transparent text-[#14140f] placeholder-[#6e6e64] text-sm sm:text-base font-normal px-2 py-2 focus:outline-none"
+              className="w-full bg-transparent text-[#14140f] placeholder-[#6e6e64] text-xs sm:text-base font-normal px-1.5 sm:px-2 py-1.5 sm:py-2 focus:outline-none"
             />
 
             {searchQuery && (
@@ -477,7 +477,7 @@ export default function UnifiedDirectoryHome() {
             {/* AI Search Quick Action */}
             <Link
               href={searchQuery.trim() ? `/tools?q=${encodeURIComponent(searchQuery)}&ai=true` : '/tools?ai=true'}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#14140f] bg-[#beff50] hover:bg-[#abf03c] border border-[#14140f] rounded-full transition-all shrink-0 ml-1.5 select-none"
+              className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-medium text-[#14140f] bg-[#beff50] hover:bg-[#abf03c] border border-[#14140f] rounded-full transition-all shrink-0 ml-1 select-none"
               title="البحث الذكي بالذكاء الاصطناعي"
             >
               <Sparkles className="w-3.5 h-3.5 text-[#14140f]" />
@@ -491,12 +491,64 @@ export default function UnifiedDirectoryHome() {
               </kbd>
             </div>
           </div>
+        </div>
 
+        {/* ========================================================= */}
+        {/* 3. UNIFIED MODE SWITCHER (Responsive Segmented Toggle)    */}
+        {/* ========================================================= */}
+        <div className="w-full max-w-sm sm:max-w-md mx-auto mb-4 sm:mb-6">
+          <div className="grid grid-cols-2 p-1 sm:p-1.5 rounded-2xl sm:rounded-[28px] bg-[#f5f5eb] border border-[#d2d2c8] shadow-sm">
+            {/* Tab 1: Tools */}
+            <button
+              onClick={() => setActiveTab('tools')}
+              className={`flex items-center justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 px-2 rounded-xl sm:rounded-[24px] text-xs sm:text-base font-medium transition-all select-none cursor-pointer ${
+                activeTab === 'tools'
+                  ? 'bg-[#beff50] text-[#14140f] shadow-sm border border-[#14140f]/15'
+                  : 'text-[#6e6e64] hover:text-[#14140f]'
+              }`}
+            >
+              <Cpu className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+              <span className="sm:hidden">الأدوات</span>
+              <span className="hidden sm:inline">الأدوات التقنية</span>
+              <span className={`text-[10px] sm:text-xs px-1.5 sm:px-2.5 py-0.5 rounded-full shrink-0 ${
+                activeTab === 'tools'
+                  ? 'bg-[#14140f] text-[#ffffff] font-medium'
+                  : 'bg-[#ffffff] text-[#6e6e64] border border-[#d2d2c8]'
+              }`}>
+                +{actualTotalTools}
+              </span>
+            </button>
+
+            {/* Tab 2: Courses */}
+            <button
+              onClick={() => setActiveTab('courses')}
+              className={`flex items-center justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 px-2 rounded-xl sm:rounded-[24px] text-xs sm:text-base font-medium transition-all select-none cursor-pointer ${
+                activeTab === 'courses'
+                  ? 'bg-[#beff50] text-[#14140f] shadow-sm border border-[#14140f]/15'
+                  : 'text-[#6e6e64] hover:text-[#14140f]'
+              }`}
+            >
+              <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+              <span className="sm:hidden">الكورسات</span>
+              <span className="hidden sm:inline">مسارات التعلّم</span>
+              <span className={`text-[10px] sm:text-xs px-1.5 sm:px-2.5 py-0.5 rounded-full shrink-0 ${
+                activeTab === 'courses'
+                  ? 'bg-[#14140f] text-[#ffffff] font-medium'
+                  : 'bg-[#ffffff] text-[#6e6e64] border border-[#d2d2c8]'
+              }`}>
+                {courses.length > 0 ? `+${courses.length}` : '+6'}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Quick Discovery Row: Trending Searches & Quick Comparisons */}
+        <div className="max-w-3xl mx-auto mb-5 sm:mb-8 space-y-2">
           {/* Trending Searches Row */}
-          <div className="flex items-center gap-2 mt-3 text-xs text-[#6e6e64] overflow-x-auto pb-1 scrollbar-none">
-            <span className="flex items-center gap-1 font-medium shrink-0 text-[#14140f]">
+          <div className="flex items-center gap-2 text-xs text-[#6e6e64] overflow-x-auto pb-1 scrollbar-none">
+            <span className="flex items-center gap-1 font-medium shrink-0 text-[#14140f] text-[11px] sm:text-xs">
               <TrendingUp className="w-3.5 h-3.5" />
-              شائع:
+              <span>شائع:</span>
             </span>
             <div className="flex items-center gap-1.5 shrink-0">
               {TRENDING_TAGS.map((tag) => (
@@ -506,7 +558,7 @@ export default function UnifiedDirectoryHome() {
                     setActiveTab('tools');
                     setSearchQuery(tag);
                   }}
-                  className="px-3 py-1 rounded-full bg-[#f5f5eb] hover:bg-[#beff50] text-[#14140f] border border-[#d2d2c8] hover:border-[#14140f] transition-colors text-xs font-normal"
+                  className="px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-[#f5f5eb] hover:bg-[#beff50] text-[#14140f] border border-[#d2d2c8] hover:border-[#14140f] transition-colors text-[11px] sm:text-xs font-normal"
                 >
                   {tag}
                 </button>
@@ -515,10 +567,10 @@ export default function UnifiedDirectoryHome() {
           </div>
 
           {/* Quick Comparisons Row */}
-          <div className="flex items-center gap-2 mt-2 text-xs text-[#6e6e64] overflow-x-auto pb-1 scrollbar-none">
-            <span className="flex items-center gap-1 font-medium shrink-0 text-[#14140f]">
+          <div className="flex items-center gap-2 text-xs text-[#6e6e64] overflow-x-auto pb-1 scrollbar-none">
+            <span className="flex items-center gap-1 font-medium shrink-0 text-[#14140f] text-[11px] sm:text-xs">
               <ArrowLeftRight className="w-3.5 h-3.5 text-[#14140f]" />
-              مقارنات مباشرة:
+              <span>مقارنات سريعة:</span>
             </span>
             <div className="flex items-center gap-1.5 shrink-0">
               {[
@@ -530,10 +582,10 @@ export default function UnifiedDirectoryHome() {
                 <button
                   key={idx}
                   onClick={() => handleLaunchQuickCompare(pair.name1, pair.name2)}
-                  className="px-3 py-1 rounded-full bg-[#ffffff] hover:bg-[#beff50] text-[#14140f] border border-[#d2d2c8] hover:border-[#14140f] transition-all text-xs font-normal flex items-center gap-1.5 cursor-pointer shadow-none select-none"
+                  className="px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-[#ffffff] hover:bg-[#beff50] text-[#14140f] border border-[#d2d2c8] hover:border-[#14140f] transition-all text-[11px] sm:text-xs font-normal flex items-center gap-1 cursor-pointer shadow-none select-none shrink-0"
                 >
                   <span className="font-medium">{pair.name1}</span>
-                  <span className="text-[#6e6e64] text-[10px]">vs</span>
+                  <span className="text-[#6e6e64] text-[9px] sm:text-[10px]">vs</span>
                   <span className="font-medium">{pair.name2}</span>
                 </button>
               ))}
@@ -542,56 +594,9 @@ export default function UnifiedDirectoryHome() {
         </div>
 
         {/* ========================================================= */}
-        {/* 3. UNIFIED MODE SWITCHER (Tabs) directly below search bar */}
-        {/* ========================================================= */}
-        <div className="flex justify-center mb-8">
-          <div className="inline-flex items-center p-1.5 rounded-[28px] bg-[#f5f5eb] border border-[#d2d2c8]">
-            {/* Tab 1: Tools */}
-            <button
-              onClick={() => setActiveTab('tools')}
-              className={`flex items-center gap-2 px-6 sm:px-8 py-2.5 rounded-[28px] text-sm sm:text-base transition-all select-none ${
-                activeTab === 'tools'
-                  ? 'bg-[#beff50] text-[#14140f] font-medium border border-[#14140f]/10'
-                  : 'text-[#6e6e64] hover:text-[#14140f] font-normal'
-              }`}
-            >
-              <Cpu className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span>الأدوات التقنية</span>
-              <span className={`text-xs px-2.5 py-0.5 rounded-full ${
-                activeTab === 'tools'
-                  ? 'bg-[#14140f] text-[#ffffff] font-medium'
-                  : 'bg-[#ffffff] text-[#6e6e64] border border-[#d2d2c8] font-normal'
-              }`}>
-                +{actualTotalTools}
-              </span>
-            </button>
-
-            {/* Tab 2: Courses */}
-            <button
-              onClick={() => setActiveTab('courses')}
-              className={`flex items-center gap-2 px-6 sm:px-8 py-2.5 rounded-[28px] text-sm sm:text-base transition-all select-none ${
-                activeTab === 'courses'
-                  ? 'bg-[#beff50] text-[#14140f] font-medium border border-[#14140f]/10'
-                  : 'text-[#6e6e64] hover:text-[#14140f] font-normal'
-              }`}
-            >
-              <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span>مسارات التعلّم والكورسات</span>
-              <span className={`text-xs px-2.5 py-0.5 rounded-full ${
-                activeTab === 'courses'
-                  ? 'bg-[#14140f] text-[#ffffff] font-medium'
-                  : 'bg-[#ffffff] text-[#6e6e64] border border-[#d2d2c8] font-normal'
-              }`}>
-                {courses.length > 0 ? `+${courses.length}` : '+6'}
-              </span>
-            </button>
-          </div>
-        </div>
-
-        {/* ========================================================= */}
         {/* 4. QUICK FILTER PILLS & STATUS COUNTER                     */}
         {/* ========================================================= */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
           {/* Pills Slider */}
           <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto scrollbar-none">
             {activeTab === 'tools' ? (
