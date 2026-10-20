@@ -382,61 +382,62 @@ export default function UnifiedDirectoryHome() {
   return (
     <div className="min-h-screen bg-[#ffffff] text-[#14140f] pb-24 overflow-x-hidden selection:bg-[#beff50] selection:text-[#14140f]" dir="rtl">
       
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-36">
+      <div className="relative z-10 max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 pt-20 sm:pt-28 lg:pt-36">
         
         {/* ========================================================= */}
         {/* 1. HERO SECTION: Perk Editorial Layout                   */}
         {/* ========================================================= */}
-        <section className="text-center space-y-6 max-w-4xl mx-auto mb-10 pt-2">
+        <section className="text-center space-y-4 sm:space-y-6 max-w-4xl mx-auto mb-8 sm:mb-10 pt-1 sm:pt-2">
           
           {/* Eyebrow status pill */}
-          <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full text-xs font-medium uppercase tracking-[0.1em] bg-[#f5f5eb] text-[#14140f] border border-[#d2d2c8]">
-            <span className="w-2 h-2 rounded-full bg-[#beff50] border border-[#14140f]" />
-            <span>دليل ومحرك بحث الأدوات التقنية والكورسات الأول عربياً</span>
+          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-medium uppercase tracking-[0.05em] sm:tracking-[0.1em] bg-[#f5f5eb] text-[#14140f] border border-[#d2d2c8]">
+            <span className="w-2 h-2 rounded-full bg-[#beff50] border border-[#14140f] shrink-0" />
+            <span className="hidden sm:inline">دليل ومحرك بحث الأدوات التقنية والكورسات الأول عربياً</span>
+            <span className="sm:hidden">أكبر دليل ومحرك بحث للأدوات التقنية</span>
           </div>
 
           {/* Main Display Headline */}
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-medium tracking-[-0.03em] leading-[1.08] text-[#14140f]">
-            TOLZY — أكبر محرك بحث ودليل للأدوات التقنية والكورسات
+          <h1 className="text-2xl sm:text-5xl lg:text-7xl font-bold tracking-tight sm:tracking-[-0.03em] leading-tight sm:leading-[1.08] text-[#14140f]">
+            TOLZY — محرك بحث ودليل الأدوات التقنية
           </h1>
 
           {/* Subtitle */}
-          <p className="text-base sm:text-lg text-[#6e6e64] max-w-2xl mx-auto font-normal leading-relaxed">
-            محرك بحث فوري لاكتشاف ومقارنة أكثر من {actualTotalTools} أداة ذكاء اصطناعي و{courses.length > 0 ? courses.length : 6} مسارات تقنية باحترافية وبدون أي إعلانات أو تأخير.
+          <p className="text-xs sm:text-base text-[#6e6e64] max-w-2xl mx-auto font-normal leading-relaxed px-2">
+            اكتشف وقارن بين أكثر من {actualTotalTools} أداة ذكاء اصطناعي و{courses.length > 0 ? courses.length : 6} مسارات تقنية معتمدة بسرعة فائقة وبدون أي إعلانات.
           </p>
 
-          {/* Value Metric Strip (Parchment Cards, 28px radius, ash border, no elevation) */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-3xl mx-auto pt-2">
-            <div className="p-5 rounded-[28px] bg-[#f5f5eb] border border-[#d2d2c8] text-center shadow-none">
-              <div className="flex items-center justify-center gap-1.5 text-[#14140f] font-medium text-2xl sm:text-3xl font-mono">
-                <Cpu className="w-5 h-5 text-[#14140f]" />
+          {/* Value Metric Strip (Parchment Cards, responsive, no elevation) */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 max-w-3xl mx-auto pt-1 sm:pt-2">
+            <div className="p-3 sm:p-5 rounded-2xl sm:rounded-[28px] bg-[#f5f5eb] border border-[#d2d2c8] text-center shadow-none">
+              <div className="flex items-center justify-center gap-1.5 text-[#14140f] font-bold text-lg sm:text-2xl md:text-3xl font-mono">
+                <Cpu className="w-4 h-4 sm:w-5 sm:h-5 text-[#14140f]" />
                 <span>+{actualTotalTools}</span>
               </div>
-              <div className="text-xs font-normal text-[#6e6e64] mt-1 uppercase tracking-[0.05em]">أداة ذكاء اصطناعي</div>
+              <div className="text-[10px] sm:text-xs font-normal text-[#6e6e64] mt-0.5 sm:mt-1 uppercase tracking-[0.05em]">أداة ذكاء اصطناعي</div>
             </div>
 
-            <div className="p-5 rounded-[28px] bg-[#f5f5eb] border border-[#d2d2c8] text-center shadow-none">
-              <div className="flex items-center justify-center gap-1.5 text-[#14140f] font-medium text-2xl sm:text-3xl font-mono">
-                <GraduationCap className="w-5 h-5 text-[#14140f]" />
+            <div className="p-3 sm:p-5 rounded-2xl sm:rounded-[28px] bg-[#f5f5eb] border border-[#d2d2c8] text-center shadow-none">
+              <div className="flex items-center justify-center gap-1.5 text-[#14140f] font-bold text-lg sm:text-2xl md:text-3xl font-mono">
+                <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-[#14140f]" />
                 <span>+{courses.length > 0 ? courses.length : 6}</span>
               </div>
-              <div className="text-xs font-normal text-[#6e6e64] mt-1 uppercase tracking-[0.05em]">مسار وكورس تقني</div>
+              <div className="text-[10px] sm:text-xs font-normal text-[#6e6e64] mt-0.5 sm:mt-1 uppercase tracking-[0.05em]">مسار تعليمي</div>
             </div>
 
-            <div className="p-5 rounded-[28px] bg-[#f5f5eb] border border-[#d2d2c8] text-center shadow-none">
-              <div className="flex items-center justify-center gap-1.5 text-[#14140f] font-medium text-2xl sm:text-3xl font-mono">
-                <Zap className="w-5 h-5 text-[#14140f]" />
+            <div className="p-3 sm:p-5 rounded-2xl sm:rounded-[28px] bg-[#f5f5eb] border border-[#d2d2c8] text-center shadow-none">
+              <div className="flex items-center justify-center gap-1.5 text-[#14140f] font-bold text-lg sm:text-2xl md:text-3xl font-mono">
+                <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-[#14140f]" />
                 <span>0ms</span>
               </div>
-              <div className="text-xs font-normal text-[#6e6e64] mt-1 uppercase tracking-[0.05em]">بحث فوري فائق السرعة</div>
+              <div className="text-[10px] sm:text-xs font-normal text-[#6e6e64] mt-0.5 sm:mt-1 uppercase tracking-[0.05em]">بحث فوري فائق</div>
             </div>
 
-            <div className="p-5 rounded-[28px] bg-[#f5f5eb] border border-[#d2d2c8] text-center shadow-none">
-              <div className="flex items-center justify-center gap-1.5 text-[#14140f] font-medium text-2xl sm:text-3xl font-mono">
-                <Globe className="w-5 h-5 text-[#14140f]" />
+            <div className="p-3 sm:p-5 rounded-2xl sm:rounded-[28px] bg-[#f5f5eb] border border-[#d2d2c8] text-center shadow-none">
+              <div className="flex items-center justify-center gap-1.5 text-[#14140f] font-bold text-lg sm:text-2xl md:text-3xl font-mono">
+                <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-[#14140f]" />
                 <span>100%</span>
               </div>
-              <div className="text-xs font-normal text-[#6e6e64] mt-1 uppercase tracking-[0.05em]">محتوى عربي منسق</div>
+              <div className="text-[10px] sm:text-xs font-normal text-[#6e6e64] mt-0.5 sm:mt-1 uppercase tracking-[0.05em]">محتوى عربي منسق</div>
             </div>
           </div>
         </section>
@@ -444,10 +445,10 @@ export default function UnifiedDirectoryHome() {
         {/* ========================================================= */}
         {/* 2. INSTANT SEARCH BAR with Cmd+K / Ctrl+K badge           */}
         {/* ========================================================= */}
-        <div className="max-w-3xl mx-auto mb-8">
-          <div className="flex items-center bg-[#ffffff] border border-[#d2d2c8] focus-within:border-[#14140f] rounded-[28px] p-2 transition-colors">
-            <div className="p-2 sm:p-3 text-[#6e6e64]">
-              <Search className="w-5 h-5 sm:w-6 sm:h-6" />
+        <div className="max-w-3xl mx-auto mb-6 sm:mb-8">
+          <div className="flex items-center bg-[#ffffff] border border-[#d2d2c8] focus-within:border-[#14140f] rounded-2xl sm:rounded-[28px] p-1.5 sm:p-2 transition-colors">
+            <div className="p-1.5 sm:p-3 text-[#6e6e64]">
+              <Search className="w-4 h-4 sm:w-6 sm:h-6" />
             </div>
 
             <input
@@ -667,11 +668,11 @@ export default function UnifiedDirectoryHome() {
               setSelectedTool(spotlightTool);
               setIsDrawerOpen(true);
             }}
-            className="mb-8 p-6 sm:p-8 rounded-[28px] bg-[#beff50] border border-[#14140f] shadow-none cursor-pointer relative overflow-hidden group transition-all"
+            className="mb-6 sm:mb-8 p-4 sm:p-8 rounded-2xl sm:rounded-[28px] bg-[#beff50] border border-[#14140f] shadow-none cursor-pointer relative overflow-hidden group transition-all"
           >
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
-              <div className="flex items-center gap-4 sm:gap-6">
-                <div className="p-2 sm:p-2.5 rounded-[18px] bg-[#ffffff] border border-[#14140f]/20 shadow-none">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6 relative z-10">
+              <div className="flex items-center gap-3.5 sm:gap-6">
+                <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-[18px] bg-[#ffffff] border border-[#14140f]/20 shadow-none shrink-0">
                   <ToolImage
                     name={spotlightTool.name}
                     categoryName={Array.isArray(spotlightTool.category) ? spotlightTool.category[0] : spotlightTool.category}
@@ -679,9 +680,9 @@ export default function UnifiedDirectoryHome() {
                   />
                 </div>
 
-                <div className="text-right space-y-1.5">
+                <div className="text-right space-y-1 sm:space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <span className="px-3 py-0.5 rounded-full text-[11px] font-medium uppercase tracking-[0.1em] bg-[#14140f] text-[#ffffff]">
+                    <span className="px-2.5 sm:px-3 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium uppercase tracking-[0.05em] sm:tracking-[0.1em] bg-[#14140f] text-[#ffffff]">
                       ⭐ أداة اليوم المختارة
                     </span>
                     {spotlightTool.rating && spotlightTool.rating > 0 ? (
@@ -696,7 +697,7 @@ export default function UnifiedDirectoryHome() {
                     )}
                   </div>
 
-                  <h3 className="text-2xl sm:text-3xl font-medium tracking-tight text-[#14140f]">
+                  <h3 className="text-xl sm:text-3xl font-bold sm:font-medium tracking-tight text-[#14140f]">
                     {spotlightTool.name}
                   </h3>
 
@@ -707,16 +708,17 @@ export default function UnifiedDirectoryHome() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+              <div className="flex items-center gap-2 sm:gap-3 w-full md:w-auto justify-end pt-1 sm:pt-0">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedTool(spotlightTool);
                     setIsDrawerOpen(true);
                   }}
-                  className="px-5 py-2.5 rounded-[28px] border border-[#14140f] bg-[#ffffff] text-[#14140f] hover:bg-[#f5f5eb] font-medium text-xs sm:text-sm transition-colors shadow-none"
+                  className="flex-1 md:flex-initial px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-[28px] border border-[#14140f] bg-[#ffffff] text-[#14140f] hover:bg-[#f5f5eb] font-medium text-xs sm:text-sm transition-colors shadow-none text-center"
                 >
-                  عرض المراجعة والتفاصيل
+                  <span className="hidden sm:inline">عرض المراجعة والتفاصيل</span>
+                  <span className="sm:hidden">التفاصيل</span>
                 </button>
 
                 <a
@@ -724,10 +726,10 @@ export default function UnifiedDirectoryHome() {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-[28px] bg-[#14140f] hover:bg-[#30302a] text-[#ffffff] font-medium text-xs sm:text-sm transition-colors shadow-none"
+                  className="flex-1 md:flex-initial inline-flex items-center justify-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl sm:rounded-[28px] bg-[#14140f] hover:bg-[#30302a] text-[#ffffff] font-medium text-xs sm:text-sm transition-colors shadow-none text-center"
                 >
-                  <span>زيارة الموقع الرسمي</span>
-                  <ArrowUpRight className="w-4 h-4" />
+                  <span>زيارة الموقع</span>
+                  <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </a>
               </div>
             </div>
@@ -741,7 +743,7 @@ export default function UnifiedDirectoryHome() {
           /* ---------------- TOOLS BENTO GRID ---------------- */
           filteredTools.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
                 {displayedTools.map((tool, index) => {
                   const isSaved = user && tool.savedBy?.includes(user.uid);
                   const isCompared = isInCompare(tool.id);
@@ -766,7 +768,7 @@ export default function UnifiedDirectoryHome() {
                         setSelectedTool(tool);
                         setIsDrawerOpen(true);
                       }}
-                      className="group relative bg-[#f5f5eb] border border-[#d2d2c8] hover:border-[#14140f] rounded-[28px] p-6 transition-colors shadow-none cursor-pointer flex flex-col justify-between overflow-hidden text-right select-none"
+                      className="group relative bg-[#f5f5eb] border border-[#d2d2c8] hover:border-[#14140f] rounded-2xl sm:rounded-[28px] p-4 sm:p-6 transition-colors shadow-none cursor-pointer flex flex-col justify-between overflow-hidden text-right select-none"
                     >
                       {/* Top Row: Logo, Name, Rating & Bookmark / Compare */}
                       <div>

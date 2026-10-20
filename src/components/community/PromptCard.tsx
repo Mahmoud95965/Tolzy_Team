@@ -300,9 +300,9 @@ const PromptCard: React.FC<PromptCardProps> = ({
       dir="rtl"
     >
       {/* ─── Header: Author Info + Type Badge + Menu ─── */}
-      <div className="p-4 sm:p-5 pb-3 flex items-start justify-between gap-3">
+      <div className="p-3.5 sm:p-5 pb-2.5 sm:pb-3 flex items-start justify-between gap-3">
         {/* Author */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-3">
           <Link
             href={authorProfilePath}
             className="shrink-0 hover:opacity-90 transition-opacity"
@@ -311,13 +311,13 @@ const PromptCard: React.FC<PromptCardProps> = ({
               <img
                 src={prompt.author_avatar}
                 alt={prompt.author_name}
-                className="w-10 h-10 rounded-xl object-cover ring-1 ring-neutral-200 dark:ring-neutral-700"
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover ring-1 ring-neutral-200 dark:ring-neutral-700"
               />
             ) : (
               <div
-                className={`w-10 h-10 rounded-xl ${getAvatarColor(
+                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${getAvatarColor(
                   prompt.author_name
-                )} flex items-center justify-center text-white font-bold text-sm shadow-sm`}
+                )} flex items-center justify-center text-white font-bold text-xs sm:text-sm shadow-sm`}
               >
                 {prompt.author_name?.[0]?.toUpperCase() || 'U'}
               </div>
@@ -325,28 +325,28 @@ const PromptCard: React.FC<PromptCardProps> = ({
           </Link>
 
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <Link
                 href={authorProfilePath}
-                className="font-bold text-neutral-900 dark:text-white text-sm hover:underline"
+                className="font-bold text-neutral-900 dark:text-white text-xs sm:text-sm hover:underline truncate max-w-[150px] sm:max-w-none"
               >
                 {prompt.author_name}
               </Link>
               {prompt.author_username && (
-                <span className="text-xs text-neutral-400 font-mono hidden sm:inline">
+                <span className="text-[11px] sm:text-xs text-neutral-400 font-mono hidden sm:inline">
                   @{prompt.author_username}
                 </span>
               )}
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-neutral-400 mt-0.5">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-neutral-400 mt-0.5">
               <span className="flex items-center gap-1">
                 <Clock className="w-3 h-3 text-neutral-400" />
                 <span>{timeAgo(prompt.created_at)}</span>
               </span>
               <span>•</span>
               <span
-                className="text-[11px] font-bold px-2 py-0.5 rounded-md inline-flex items-center gap-1"
+                className="text-[10px] sm:text-[11px] font-bold px-1.5 sm:px-2 py-0.5 rounded-md inline-flex items-center gap-1"
                 style={{
                   backgroundColor: `${typeConfig.color}15`,
                   color: typeConfig.color,
@@ -491,17 +491,17 @@ const PromptCard: React.FC<PromptCardProps> = ({
                 {copiedCode ? (
                   <>
                     <Check className="w-3 h-3 text-emerald-400" />
-                    <span className="text-emerald-400">تم النسخ</span>
+                    <span className="text-emerald-400 hidden xs:inline">تم النسخ</span>
                   </>
                 ) : (
                   <>
                     <Copy className="w-3 h-3" />
-                    <span>نسخ</span>
+                    <span className="hidden xs:inline">نسخ</span>
                   </>
                 )}
               </button>
             </div>
-            <pre className="p-3.5 overflow-x-auto text-neutral-200 text-xs leading-relaxed max-h-72">
+            <pre className="p-3 sm:p-3.5 overflow-x-auto text-neutral-200 text-xs leading-relaxed max-h-72">
               <code>{prompt.code_snippet}</code>
             </pre>
           </div>
@@ -510,7 +510,7 @@ const PromptCard: React.FC<PromptCardProps> = ({
 
       {/* ─── Tags ─── */}
       {prompt.tags && prompt.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 px-4 sm:px-5 pb-3">
+        <div className="flex flex-wrap gap-1.5 px-3.5 sm:px-5 pb-2.5 sm:pb-3">
           {prompt.tags.map((tag: any, idx) => {
             const tagSlug = typeof tag === 'string' ? tag : tag?.slug || tag?.id || `tag-${idx}`;
             const tagLabel = typeof tag === 'string' ? tag : tag?.label_ar || tag?.slug || tagSlug;
@@ -520,7 +520,7 @@ const PromptCard: React.FC<PromptCardProps> = ({
                 key={tagSlug || `tag-${idx}`}
                 type="button"
                 onClick={() => onTagClick?.(tagSlug)}
-                className="px-2.5 py-0.5 text-[11px] font-bold rounded-lg transition-transform hover:scale-105 active:scale-95"
+                className="px-2 sm:px-2.5 py-0.5 text-[10px] sm:text-[11px] font-bold rounded-lg transition-transform hover:scale-105 active:scale-95"
                 style={{
                   backgroundColor: `${tagColor}15`,
                   color: tagColor,
@@ -534,12 +534,12 @@ const PromptCard: React.FC<PromptCardProps> = ({
       )}
 
       {/* ─── Bottom Action Bar ─── */}
-      <div className="px-3 sm:px-4 py-2 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between text-xs font-bold text-neutral-500">
+      <div className="px-2.5 sm:px-4 py-1.5 sm:py-2 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between text-xs font-bold text-neutral-500">
         {/* Like Button */}
         <button
           type="button"
           onClick={() => onVote(prompt.id, 'up')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all ${
+          className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl transition-all ${
             liked
               ? 'text-rose-600 bg-rose-50 dark:bg-rose-950/30'
               : 'hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white'
@@ -550,7 +550,7 @@ const PromptCard: React.FC<PromptCardProps> = ({
               liked ? 'fill-current scale-110 text-rose-500' : ''
             }`}
           />
-          <span className="font-mono">{formatCount(prompt.upvotes_count || 0)}</span>
+          <span className="font-mono text-[11px] sm:text-xs">{formatCount(prompt.upvotes_count || 0)}</span>
           <span className="hidden sm:inline">إعجاب</span>
         </button>
 
@@ -558,14 +558,14 @@ const PromptCard: React.FC<PromptCardProps> = ({
         <button
           type="button"
           onClick={() => onComment(prompt.id)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all ${
+          className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl transition-all ${
             isCommentsOpen
               ? 'text-blue-600 bg-blue-50 dark:bg-blue-950/30'
               : 'hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white'
           }`}
         >
           <MessageSquare className="w-4 h-4" />
-          <span className="font-mono">{formatCount(prompt.comments_count || 0)}</span>
+          <span className="font-mono text-[11px] sm:text-xs">{formatCount(prompt.comments_count || 0)}</span>
           <span className="hidden sm:inline">تعليقات</span>
         </button>
 
@@ -573,7 +573,7 @@ const PromptCard: React.FC<PromptCardProps> = ({
         <button
           type="button"
           onClick={() => onShare(prompt.id)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white transition-all"
+          className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white transition-all"
         >
           <Share2 className="w-4 h-4" />
           <span className="hidden sm:inline">مشاركة</span>

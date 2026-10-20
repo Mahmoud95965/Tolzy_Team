@@ -125,19 +125,19 @@ const ToolsPage: React.FC = () => {
   return (
     <PageLayout>
       <div className="relative min-h-screen bg-[#ffffff] text-[#14140f] text-right font-sans">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-20 md:pt-36 md:pb-28">
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 pt-20 pb-16 sm:pt-28 sm:pb-20 md:pt-36 md:pb-28">
           {/* Header Section */}
-          <div className="text-center mb-10 space-y-4 max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#f5f5eb] border border-[#d2d2c8] text-[#14140f] text-xs font-medium uppercase tracking-[0.1em]">
+          <div className="text-center mb-6 sm:mb-10 space-y-3 sm:space-y-4 max-w-3xl mx-auto">
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-[#f5f5eb] border border-[#d2d2c8] text-[#14140f] text-[10px] sm:text-xs font-medium uppercase tracking-[0.05em] sm:tracking-[0.1em]">
               <span className="w-2 h-2 rounded-full bg-[#beff50] border border-[#14140f]" />
               <span>دليل موثق لأدوات الذكاء الاصطناعي (+{totalToolsCount || 1024} أداة)</span>
             </div>
 
-            <h1 className="text-3xl sm:text-5xl font-medium text-[#14140f] tracking-[-0.03em]">
+            <h1 className="text-2xl sm:text-5xl font-bold sm:font-medium text-[#14140f] tracking-tight sm:tracking-[-0.03em]">
               استكشف أفضل أدوات الذكاء الاصطناعي
             </h1>
 
-            <p className="text-sm sm:text-base text-[#6e6e64] font-normal leading-relaxed">
+            <p className="text-xs sm:text-base text-[#6e6e64] font-normal leading-relaxed px-2">
               ابحث، صنف، وقارن بين مئات البرمجيات والأدوات التقنية لتسريع إنتاجيتك وتطوير مشاريعك
             </p>
           </div>

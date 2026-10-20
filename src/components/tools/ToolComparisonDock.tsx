@@ -19,26 +19,27 @@ export default function ToolComparisonDock() {
         exit={{ y: 80, opacity: 0 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         aria-label="شريط مقارنة الأدوات"
-        className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-40 w-[95%] max-w-2xl"
+        className="fixed bottom-16 sm:bottom-6 left-1/2 -translate-x-1/2 z-40 w-[95%] max-w-2xl"
       >
-        <div className="bg-[#14140f] text-[#f5f5eb] border border-[#30302a] rounded-[28px] p-2.5 sm:p-3 shadow-[0_20px_50px_rgba(0,0,0,0.4)] flex items-center justify-between gap-3 backdrop-blur-md">
+        <div className="bg-[#14140f] text-[#f5f5eb] border border-[#30302a] rounded-2xl sm:rounded-[28px] p-2 sm:p-3 shadow-[0_20px_50px_rgba(0,0,0,0.4)] flex items-center justify-between gap-2 sm:gap-3 backdrop-blur-md">
           {/* Left / Action side */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               onClick={openModal}
-              className="px-5 py-2.5 rounded-[28px] bg-[#beff50] hover:bg-[#abf03c] text-[#14140f] text-xs sm:text-sm font-medium transition-colors flex items-center gap-2 shadow-none whitespace-nowrap cursor-pointer select-none"
+              className="px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-[28px] bg-[#beff50] hover:bg-[#abf03c] text-[#14140f] text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2 shadow-none whitespace-nowrap cursor-pointer select-none"
             >
-              <ArrowLeftRight className="w-4 h-4" />
-              <span>قارن الآن ({compareList.length})</span>
+              <ArrowLeftRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">قارن الآن ({compareList.length})</span>
+              <span className="xs:hidden">قارن ({compareList.length})</span>
             </button>
 
             <button
               onClick={clearCompare}
-              className="p-2 rounded-full text-[#6e6e64] hover:text-[#f5f5eb] hover:bg-[#30302a] transition-colors"
+              className="p-1.5 sm:p-2 rounded-full text-[#6e6e64] hover:text-[#f5f5eb] hover:bg-[#30302a] transition-colors"
               title="إفراغ المقارنة"
               aria-label="إفراغ قائمة المقارنة"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
           </div>
 

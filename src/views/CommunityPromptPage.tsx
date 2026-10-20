@@ -582,20 +582,20 @@ const CommunityPromptPage: React.FC = () => {
 
   return (
     <PageLayout>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-6" dir="rtl">
+      <div className="max-w-6xl mx-auto px-3.5 sm:px-6 lg:px-8 py-5 sm:py-10 space-y-4 sm:space-y-6" dir="rtl">
         
         {/* ─── Hero Section: Community Header ─── */}
-        <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-6 sm:p-8 shadow-sm">
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-4 sm:p-8 shadow-sm">
           <div className="absolute top-0 right-0 -mr-20 -mt-20 w-72 h-72 bg-blue-500/10 dark:bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-72 h-72 bg-purple-500/10 dark:bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="space-y-2 max-w-xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-900/40">
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
+            <div className="space-y-1.5 sm:space-y-2 max-w-xl">
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-900/40">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>مجتمع TOLZY التقني العربي</span>
+                <span>مجتمع TOLZY التقني</span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black text-neutral-900 dark:text-white">
+              <h1 className="text-xl sm:text-3xl font-black text-neutral-900 dark:text-white">
                 شارك أفكارك، برومبتاتك، وخبراتك البرمجية
               </h1>
               <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">
@@ -611,7 +611,7 @@ const CommunityPromptPage: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="ابحث في المنشورات، الأكواد، أو المبدعين..."
-                className="w-full pl-8 pr-10 py-2.5 rounded-2xl bg-neutral-100 dark:bg-neutral-800/80 border border-transparent focus:border-blue-500 text-xs text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none transition-all"
+                className="w-full pl-8 pr-10 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-neutral-100 dark:bg-neutral-800/80 border border-transparent focus:border-blue-500 text-xs text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none transition-all"
               />
               {searchQuery && (
                 <button
@@ -630,10 +630,10 @@ const CommunityPromptPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           
           {/* Main Feed Column (2 Cols) */}
-          <div className="lg:col-span-2 space-y-5">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-5">
             
             {/* ─── Quick Post Composer ─── */}
-            <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
+            <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-3.5 sm:p-5 shadow-sm space-y-3 sm:space-y-4">
               <div className="relative">
                 <div className="flex items-start gap-3">
                   <div className="w-9 h-9 rounded-xl bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
@@ -746,14 +746,14 @@ const CommunityPromptPage: React.FC = () => {
                 <form onSubmit={handlePublishPost} className="space-y-3 pt-2 border-t border-neutral-100 dark:border-neutral-800 animate-in fade-in duration-150">
                   
                   {/* Type Picker Chips */}
-                  <div className="flex flex-wrap items-center gap-1.5">
+                  <div className="flex flex-wrap items-center gap-1 sm:gap-1.5">
                     <span className="text-[11px] font-bold text-neutral-400 ml-1">نوع المشاركة:</span>
                     {POST_TYPES.map((t) => (
                       <button
                         key={t.type}
                         type="button"
                         onClick={() => setComposerType(t.type)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                        className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all ${
                           composerType === t.type
                             ? 'bg-blue-600 text-white shadow-sm'
                             : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'

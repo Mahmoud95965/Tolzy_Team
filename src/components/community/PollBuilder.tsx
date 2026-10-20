@@ -129,8 +129,9 @@ export const PollBuilder: React.FC<PollBuilderProps> = ({
             <h4 className="font-bold text-xs sm:text-sm text-amber-950 dark:text-amber-200">
               تصويت أو مقارنة أدوات (Poll)
             </h4>
-            <p className="text-[11px] text-amber-700/80 dark:text-amber-400">
-              أضف خيارات تصويت مع إمكانية ربط كل خيار بأداة من الدليل (Tool A vs Tool B)
+            <p className="text-[10px] sm:text-[11px] text-amber-700/80 dark:text-amber-400">
+              <span className="hidden sm:inline">أضف خيارات تصويت مع إمكانية ربط كل خيار بأداة من الدليل (Tool A vs Tool B)</span>
+              <span className="sm:hidden">أضف خيارات تصويت ومقارنة بين الأدوات</span>
             </p>
           </div>
         </div>

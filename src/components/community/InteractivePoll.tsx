@@ -98,7 +98,7 @@ export const InteractivePoll: React.FC<InteractivePollProps> = ({
 
   return (
     <div
-      className="my-3.5 p-4 rounded-2xl bg-gradient-to-br from-amber-50/40 via-white to-amber-50/20 dark:from-neutral-900/90 dark:via-neutral-900 dark:to-neutral-950 border border-amber-200/80 dark:border-neutral-800 shadow-xs space-y-3"
+      className="my-2.5 sm:my-3.5 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-50/40 via-white to-amber-50/20 dark:from-neutral-900/90 dark:via-neutral-900 dark:to-neutral-950 border border-amber-200/80 dark:border-neutral-800 shadow-xs space-y-2.5 sm:space-y-3"
       dir="rtl"
     >
       {/* Poll Header */}
@@ -138,7 +138,7 @@ export const InteractivePoll: React.FC<InteractivePollProps> = ({
               type="button"
               disabled={hasVoted || isSubmitting}
               onClick={() => handleVote(option.id)}
-              className={`relative w-full overflow-hidden p-3 rounded-xl border text-right transition-all cursor-pointer ${
+              className={`relative w-full overflow-hidden p-2.5 sm:p-3 rounded-lg sm:rounded-xl border text-right transition-all cursor-pointer ${
                 hasVoted
                   ? isSelected
                     ? 'border-amber-500 bg-amber-50/50 dark:bg-amber-950/30 ring-1 ring-amber-500/30'

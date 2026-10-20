@@ -96,7 +96,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
   return (
     <div 
       onClick={handleCardClick}
-      className="group relative bg-[#f5f5eb] border border-[#d2d2c8] hover:border-[#14140f] rounded-[28px] p-5 transition-colors shadow-none cursor-pointer flex flex-col justify-between overflow-hidden text-right select-none"
+      className="group relative bg-[#f5f5eb] border border-[#d2d2c8] hover:border-[#14140f] rounded-2xl sm:rounded-[28px] p-3.5 sm:p-5 transition-colors shadow-none cursor-pointer flex flex-col justify-between overflow-hidden text-right select-none"
     >
       {/* Top Section: Icon, name, stars, bookmark */}
       <div className="flex items-start justify-between gap-3">

@@ -45,30 +45,33 @@ export const TechStackBentoGrid: React.FC<TechStackBentoGridProps> = ({
   return (
     <div className="my-3 space-y-3" dir="rtl">
       {/* Bento Header */}
-      <div className="flex items-center justify-between px-1">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-2xs">
+      <div className="flex items-center justify-between gap-2 px-1">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-2xs shrink-0">
             <Layers className="w-3.5 h-3.5" />
           </div>
-          <span className="text-xs font-black text-neutral-900 dark:text-white">
-            حزمة الأدوات المقترحة ({tools.length} أدوات)
+          <span className="text-xs font-black text-neutral-900 dark:text-white truncate">
+            <span className="sm:hidden">حزمة أدوات ({tools.length})</span>
+            <span className="hidden sm:inline">حزمة الأدوات المقترحة ({tools.length} أدوات)</span>
           </span>
         </div>
 
         <button
           type="button"
           onClick={handleCopyBundle}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200/60 dark:border-indigo-800/60 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 transition-all cursor-pointer shadow-2xs"
+          className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200/60 dark:border-indigo-800/60 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 transition-all cursor-pointer shadow-2xs shrink-0"
         >
           {copied ? (
             <>
               <Check className="w-3.5 h-3.5 text-emerald-500" />
-              <span>تم نسخ الروابط!</span>
+              <span className="hidden sm:inline">تم نسخ الروابط!</span>
+              <span className="sm:hidden">تم النسخ</span>
             </>
           ) : (
             <>
               <Copy className="w-3.5 h-3.5" />
-              <span>نسخ روابط الحزمة</span>
+              <span className="hidden sm:inline">نسخ الروابط</span>
+              <span className="sm:hidden">نسخ</span>
             </>
           )}
         </button>

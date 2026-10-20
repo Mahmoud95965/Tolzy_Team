@@ -376,90 +376,91 @@ export default function CreatorTechProfileView({ identifier }: CreatorTechProfil
             <div className="space-y-6">
 
               {/* ─── Profile Header Card (Bento & Glassmorphism) ─── */}
-              <div className="relative overflow-hidden rounded-3xl bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border border-neutral-200/80 dark:border-neutral-800/80 shadow-xl p-6 sm:p-8">
+              <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border border-neutral-200/80 dark:border-neutral-800/80 shadow-xl p-4 sm:p-8">
                 {/* Ambient Decorative Glow */}
                 <div className="absolute top-0 right-0 left-0 h-32 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-pink-600/10 dark:from-blue-500/15 dark:via-purple-500/15 dark:to-pink-500/15 pointer-events-none" />
 
-                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
                   {/* Avatar + Main Info */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3.5 sm:gap-5">
                     {/* Avatar */}
                     <div className="relative shrink-0">
                       {profile?.photoURL && profile.photoURL.startsWith('http') ? (
                         <img
                           src={profile.photoURL}
                           alt={profile.displayName || 'صورة الحساب'}
-                          className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl sm:rounded-3xl object-cover ring-4 ring-white/60 dark:ring-neutral-800/60 shadow-lg"
+                          className="w-16 h-16 sm:w-28 sm:h-28 rounded-2xl sm:rounded-3xl object-cover ring-4 ring-white/60 dark:ring-neutral-800/60 shadow-lg"
                         />
                       ) : (
                         <div
-                          className={`w-24 h-24 sm:w-28 sm:h-28 rounded-2xl sm:rounded-3xl ${getAvatarColor(
+                          className={`w-16 h-16 sm:w-28 sm:h-28 rounded-2xl sm:rounded-3xl ${getAvatarColor(
                             profile?.displayName || 'م'
-                          )} flex items-center justify-center text-white font-black text-3xl sm:text-4xl shadow-lg ring-4 ring-white/60 dark:ring-neutral-800/60`}
+                          )} flex items-center justify-center text-white font-black text-2xl sm:text-4xl shadow-lg ring-4 ring-white/60 dark:ring-neutral-800/60`}
                         >
                           {profile?.displayName?.[0]?.toUpperCase() || 'U'}
                         </div>
                       )}
                       {profile?.role === 'admin' ? (
                         <div
-                          className="absolute -bottom-2 -left-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-1.5 rounded-xl shadow-md border-2 border-white dark:border-neutral-900"
+                          className="absolute -bottom-1 -left-1 sm:-bottom-2 sm:-left-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-1 sm:p-1.5 rounded-lg sm:rounded-xl shadow-md border-2 border-white dark:border-neutral-900"
                           title="مدير النظام"
                         >
-                          <Shield className="w-4 h-4" />
+                          <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </div>
                       ) : (
                         <div
-                          className="absolute -bottom-2 -left-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white p-1.5 rounded-xl shadow-md border-2 border-white dark:border-neutral-900"
+                          className="absolute -bottom-1 -left-1 sm:-bottom-2 sm:-left-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white p-1 sm:p-1.5 rounded-lg sm:rounded-xl shadow-md border-2 border-white dark:border-neutral-900"
                           title="مبدع معتمد"
                         >
-                          <Sparkles className="w-4 h-4" />
+                          <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </div>
                       )}
                     </div>
 
                     {/* Text Details */}
                     <div>
-                      <div className="flex flex-wrap items-center gap-2.5">
-                        <h1 className="text-2xl sm:text-3xl font-black text-neutral-900 dark:text-white tracking-tight">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+                        <h1 className="text-xl sm:text-3xl font-black text-neutral-900 dark:text-white tracking-tight">
                           {profile?.displayName || 'مستخدم TOLZY'}
                         </h1>
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-lg text-[11px] sm:text-xs font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60">
+                          <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                           <span>{profile?.badge || (profile?.role === 'admin' ? 'مدير' : 'مبدع')}</span>
                         </span>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-3 mt-1.5 text-sm text-neutral-500 dark:text-neutral-400 font-mono">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-1 sm:mt-1.5 text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 font-mono">
                         <span>@{profile?.username || identifier}</span>
                         <span>•</span>
                         <span className="flex items-center gap-1 font-sans">
-                          <Calendar className="w-3.5 h-3.5" />
+                          <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                           <span>انضم {formattedJoinDate}</span>
                         </span>
                       </div>
 
-                      <p className="mt-3 text-sm sm:text-base text-neutral-600 dark:text-neutral-300 leading-relaxed max-w-xl">
+                      <p className="mt-2 sm:mt-3 text-xs sm:text-base text-neutral-600 dark:text-neutral-300 leading-relaxed max-w-xl">
                         {profile?.bio || 'مبدع ومشارك شغوف في استكشاف وتطوير أدوات الذكاء الاصطناعي على منصة TOLZY.'}
                       </p>
                     </div>
                   </div>
 
                   {/* Profile Actions */}
-                  <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0">
+                  <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 pt-1 sm:pt-0">
                     <button
                       type="button"
                       onClick={handleShareProfile}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 text-neutral-800 dark:text-white text-sm font-bold shadow-xs hover:bg-neutral-50 dark:hover:bg-neutral-750 transition-all active:scale-95"
+                      className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 text-neutral-800 dark:text-white text-xs sm:text-sm font-bold shadow-xs hover:bg-neutral-50 dark:hover:bg-neutral-750 transition-all active:scale-95"
                     >
                       {copiedLink ? (
                         <>
-                          <Check className="w-4 h-4 text-emerald-500" />
+                          <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" />
                           <span className="text-emerald-600 dark:text-emerald-400">تم النسخ!</span>
                         </>
                       ) : (
                         <>
-                          <Share2 className="w-4 h-4" />
-                          <span>مشاركة الملف</span>
+                          <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          <span className="hidden sm:inline">مشاركة الملف</span>
+                          <span className="sm:hidden">مشاركة</span>
                         </>
                       )}
                     </button>
@@ -467,9 +468,10 @@ export default function CreatorTechProfileView({ identifier }: CreatorTechProfil
                     {isOwner && (
                       <Link
                         href="/profile"
-                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-md shadow-blue-500/20 transition-all active:scale-95"
+                        className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-blue-500/20 transition-all active:scale-95"
                       >
-                        <span>تعديل ملفي</span>
+                        <span className="hidden sm:inline">تعديل ملفي</span>
+                        <span className="sm:hidden">تعديل</span>
                       </Link>
                     )}
                   </div>
@@ -477,48 +479,51 @@ export default function CreatorTechProfileView({ identifier }: CreatorTechProfil
               </div>
 
               {/* ─── Impact Stats Bar (3 Bento Counters) ─── */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4">
                 {/* Counter 1: Total Posts */}
-                <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border border-neutral-200/80 dark:border-neutral-800/80 rounded-2xl p-5 shadow-sm hover:border-blue-500/30 transition-all flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-200/50 dark:border-blue-800/50 shadow-inner">
-                    <Layers className="w-6 h-6" />
+                <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border border-neutral-200/80 dark:border-neutral-800/80 rounded-xl sm:rounded-2xl p-2.5 sm:p-5 shadow-sm hover:border-blue-500/30 transition-all flex flex-col sm:flex-row items-center sm:items-center text-center sm:text-right gap-1.5 sm:gap-4">
+                  <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-200/50 dark:border-blue-800/50 shadow-inner">
+                    <Layers className="w-4 h-4 sm:w-6 sm:h-6" />
                   </div>
-                  <div>
-                    <span className="text-2xl font-black text-neutral-900 dark:text-white font-mono block leading-none mb-1">
+                  <div className="min-w-0">
+                    <span className="text-base sm:text-2xl font-black text-neutral-900 dark:text-white font-mono block leading-none mb-0.5 sm:mb-1">
                       {totalPostsCount}
                     </span>
-                    <span className="text-xs font-bold text-neutral-500 dark:text-neutral-400">
-                      إجمالي المنشورات والمشاركات
+                    <span className="text-[10px] sm:text-xs font-bold text-neutral-500 dark:text-neutral-400 block truncate">
+                      <span className="sm:hidden">منشورات</span>
+                      <span className="hidden sm:inline">إجمالي المنشورات والمشاركات</span>
                     </span>
                   </div>
                 </div>
 
                 {/* Counter 2: Total Upvotes / Karma */}
-                <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border border-neutral-200/80 dark:border-neutral-800/80 rounded-2xl p-5 shadow-sm hover:border-rose-500/30 transition-all flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-200/50 dark:border-rose-800/50 shadow-inner">
-                    <Heart className="w-6 h-6 fill-current" />
+                <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border border-neutral-200/80 dark:border-neutral-800/80 rounded-xl sm:rounded-2xl p-2.5 sm:p-5 shadow-sm hover:border-rose-500/30 transition-all flex flex-col sm:flex-row items-center sm:items-center text-center sm:text-right gap-1.5 sm:gap-4">
+                  <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-200/50 dark:border-rose-800/50 shadow-inner">
+                    <Heart className="w-4 h-4 sm:w-6 sm:h-6 fill-current" />
                   </div>
-                  <div>
-                    <span className="text-2xl font-black text-neutral-900 dark:text-white font-mono block leading-none mb-1">
+                  <div className="min-w-0">
+                    <span className="text-base sm:text-2xl font-black text-neutral-900 dark:text-white font-mono block leading-none mb-0.5 sm:mb-1">
                       {totalKarmaCount}
                     </span>
-                    <span className="text-xs font-bold text-neutral-500 dark:text-neutral-400">
-                      نقاط التفاعل والتأييد المجتمعي
+                    <span className="text-[10px] sm:text-xs font-bold text-neutral-500 dark:text-neutral-400 block truncate">
+                      <span className="sm:hidden">إعجابات</span>
+                      <span className="hidden sm:inline">نقاط التفاعل المجتمعي</span>
                     </span>
                   </div>
                 </div>
 
                 {/* Counter 3: Tools Featured */}
-                <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border border-neutral-200/80 dark:border-neutral-800/80 rounded-2xl p-5 shadow-sm hover:border-purple-500/30 transition-all flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 border border-purple-200/50 dark:border-purple-800/50 shadow-inner">
-                    <Wrench className="w-6 h-6" />
+                <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border border-neutral-200/80 dark:border-neutral-800/80 rounded-xl sm:rounded-2xl p-2.5 sm:p-5 shadow-sm hover:border-purple-500/30 transition-all flex flex-col sm:flex-row items-center sm:items-center text-center sm:text-right gap-1.5 sm:gap-4">
+                  <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 border border-purple-200/50 dark:border-purple-800/50 shadow-inner">
+                    <Wrench className="w-4 h-4 sm:w-6 sm:h-6" />
                   </div>
-                  <div>
-                    <span className="text-2xl font-black text-neutral-900 dark:text-white font-mono block leading-none mb-1">
+                  <div className="min-w-0">
+                    <span className="text-base sm:text-2xl font-black text-neutral-900 dark:text-white font-mono block leading-none mb-0.5 sm:mb-1">
                       {featuredToolsCount}
                     </span>
-                    <span className="text-xs font-bold text-neutral-500 dark:text-neutral-400">
-                      أدوات ذكية يُوصي بها
+                    <span className="text-[10px] sm:text-xs font-bold text-neutral-500 dark:text-neutral-400 block truncate">
+                      <span className="sm:hidden">أدوات</span>
+                      <span className="hidden sm:inline">أدوات ذكية يُوصي بها</span>
                     </span>
                   </div>
                 </div>
@@ -582,19 +587,20 @@ export default function CreatorTechProfileView({ identifier }: CreatorTechProfil
 
               {/* ─── Organized Content Tabs ─── */}
               <div className="space-y-4">
-                <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-neutral-200/60 dark:bg-neutral-800/60 backdrop-blur-md w-fit">
+                <div className="flex items-center gap-1.5 sm:gap-2 p-1 sm:p-1.5 rounded-2xl bg-neutral-200/60 dark:bg-neutral-800/60 backdrop-blur-md max-w-full overflow-x-auto no-scrollbar scrollbar-none">
                   <button
                     type="button"
                     onClick={() => setActiveTab('all')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                       activeTab === 'all'
                         ? 'bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-sm'
                         : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
                     }`}
                   >
-                    <Layers className="w-4 h-4" />
-                    <span>جميع المنشورات</span>
-                    <span className="text-xs px-1.5 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 font-mono">
+                    <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span>الكل</span>
+                    <span className="hidden sm:inline">(المنشورات)</span>
+                    <span className="text-[11px] sm:text-xs px-1.5 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 font-mono">
                       {posts.length}
                     </span>
                   </button>
@@ -602,15 +608,15 @@ export default function CreatorTechProfileView({ identifier }: CreatorTechProfil
                   <button
                     type="button"
                     onClick={() => setActiveTab('stacks')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                       activeTab === 'stacks'
                         ? 'bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-sm'
                         : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
                     }`}
                   >
-                    <Box className="w-4 h-4 text-indigo-500" />
-                    <span>حزم الأدوات (Tech Stacks)</span>
-                    <span className="text-xs px-1.5 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 font-mono">
+                    <Box className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-500" />
+                    <span>حزم الأدوات</span>
+                    <span className="text-[11px] sm:text-xs px-1.5 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 font-mono">
                       {stackPosts.length}
                     </span>
                   </button>
@@ -618,15 +624,16 @@ export default function CreatorTechProfileView({ identifier }: CreatorTechProfil
                   <button
                     type="button"
                     onClick={() => setActiveTab('polls')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                       activeTab === 'polls'
                         ? 'bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-sm'
                         : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
                     }`}
                   >
-                    <Flame className="w-4 h-4 text-amber-500" />
-                    <span>الاستطلاعات والمقارنات</span>
-                    <span className="text-xs px-1.5 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 font-mono">
+                    <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
+                    <span>الاستطلاعات</span>
+                    <span className="hidden sm:inline">والمقارنات</span>
+                    <span className="text-[11px] sm:text-xs px-1.5 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 font-mono">
                       {pollPosts.length}
                     </span>
                   </button>

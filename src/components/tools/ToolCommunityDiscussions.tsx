@@ -178,15 +178,15 @@ export const ToolCommunityDiscussions: React.FC<ToolCommunityDiscussionsProps> =
   const createPostUrl = `/community?mention=${encodeURIComponent(tool.name)}&toolId=${encodeURIComponent(tool.id)}`;
 
   return (
-    <section className="mt-16 border-t border-[#d2d2c8] dark:border-neutral-800 pt-12" dir="rtl">
+    <section className="mt-10 sm:mt-16 border-t border-[#d2d2c8] dark:border-neutral-800 pt-8 sm:pt-12" dir="rtl">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60 mb-2">
             <MessageSquare className="w-3.5 h-3.5" />
             <span>مجتمع ومناقشات TOLZY</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black text-[#14140f] dark:text-white tracking-tight">
+          <h2 className="text-xl sm:text-3xl font-black text-[#14140f] dark:text-white tracking-tight">
             نقاشات وتجارب المجتمع حول {tool.name}
           </h2>
           <p className="text-xs sm:text-sm text-[#6e6e64] dark:text-neutral-400 mt-1">
@@ -196,43 +196,45 @@ export const ToolCommunityDiscussions: React.FC<ToolCommunityDiscussionsProps> =
 
         <Link
           href={createPostUrl}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm transition-all shadow-sm hover:shadow-md shrink-0"
+          className="inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm transition-all shadow-sm hover:shadow-md shrink-0 self-start sm:self-auto"
         >
           <PlusCircle className="w-4 h-4" />
-          <span>شارك تجربتك مع {tool.name}</span>
+          <span className="hidden sm:inline">شارك تجربتك مع {tool.name}</span>
+          <span className="sm:hidden">شارك تجربتك</span>
         </Link>
       </div>
 
       {/* Content */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-16 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl">
-          <Loader2 className="w-7 h-7 animate-spin text-blue-600 mb-2" />
+        <div className="flex flex-col items-center justify-center py-12 sm:py-16 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl sm:rounded-3xl">
+          <Loader2 className="w-6 h-6 sm:w-7 sm:h-7 animate-spin text-blue-600 mb-2" />
           <span className="text-xs text-neutral-400">جاري تحميل نقاشات وتجارب المجتمع...</span>
         </div>
       ) : posts.length === 0 ? (
         /* Empty State Card */
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-white to-neutral-50 dark:from-neutral-900 dark:to-neutral-950 border border-neutral-200 dark:border-neutral-800 p-8 sm:p-12 text-center shadow-xs">
-          <div className="max-w-md mx-auto space-y-4">
-            <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200/60 dark:border-blue-900/60 flex items-center justify-center mx-auto text-blue-600 dark:text-blue-400 shadow-sm">
-              <Sparkles className="w-8 h-8" />
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-b from-white to-neutral-50 dark:from-neutral-900 dark:to-neutral-950 border border-neutral-200 dark:border-neutral-800 p-6 sm:p-12 text-center shadow-xs">
+          <div className="max-w-md mx-auto space-y-3 sm:space-y-4">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200/60 dark:border-blue-900/60 flex items-center justify-center mx-auto text-blue-600 dark:text-blue-400 shadow-sm">
+              <Sparkles className="w-6 h-6 sm:w-8 sm:h-8" />
             </div>
 
-            <div className="space-y-1.5">
-              <h3 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-white">
+            <div className="space-y-1 sm:space-y-1.5">
+              <h3 className="text-base sm:text-xl font-bold text-neutral-900 dark:text-white">
                 لا توجد نقاشات أو تجارب منشورة حول {tool.name} بعد
               </h3>
               <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">
-                هل جربت هذه الأداة؟ ساعد زملاءك في مجتمع TOLZY بنشر رأيك، برومبت فعال، أو حيلة ذكية استخدمتها!
+                هل جربت هذه الأداة؟ ساعد زملاءك في مجتمع TOLZY بنشر رأيك أو حيلة ذكية استخدمتها!
               </p>
             </div>
 
-            <div className="pt-2">
+            <div className="pt-1 sm:pt-2">
               <Link
                 href={createPostUrl}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm transition-all shadow-md hover:shadow-lg hover:scale-102 active:scale-98"
+                className="inline-flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm transition-all shadow-md hover:shadow-lg hover:scale-102 active:scale-98"
               >
-                <span>كن أول من يشارك تجربته مع هذه الأداة في المجتمع</span>
-                <ArrowLeft className="w-4 h-4" />
+                <span className="hidden sm:inline">كن أول من يشارك تجربته مع هذه الأداة في المجتمع</span>
+                <span className="sm:hidden">شارك تجربتك مع الأداة الآن</span>
+                <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </Link>
             </div>
           </div>

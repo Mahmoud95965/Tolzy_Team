@@ -255,9 +255,10 @@ const Navbar: React.FC = () => {
                 <Link
                   href={getCentralAuthUrl()}
                   prefetch={false}
-                  className="px-5 py-2.5 bg-[#beff50] hover:bg-[#abf03c] text-[#14140f] text-sm font-medium rounded-[28px] transition-colors flex items-center gap-2"
+                  className="px-3 sm:px-5 py-1.5 sm:py-2.5 bg-[#beff50] hover:bg-[#abf03c] text-[#14140f] text-xs sm:text-sm font-medium rounded-full transition-colors flex items-center gap-1.5 sm:gap-2 shrink-0"
                 >
-                  <span>تسجيل الدخول</span>
+                  <span className="hidden xs:inline">تسجيل الدخول</span>
+                  <span className="xs:hidden">دخول</span>
                 </Link>
               )}
             </div>
