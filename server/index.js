@@ -16,7 +16,6 @@ const __dirname = path.dirname(__filename);
 // Actually, since I can't see upload.js, I will just import fetch-course correctly.
 
 import fetchCourseRoute from './routes/fetch-course.js';
-import copilotRoutes from './routes/copilot.js';
 import supabaseUploadRoutes from './routes/supabase-upload.js';
 
 const app = express();
@@ -41,7 +40,6 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Assuming uploadRoutes is just a require, passing it might fail if it uses module.exports.
 // For now, let's keep it simple and focus on fetch-course.
 app.use('/api/fetch-course', fetchCourseRoute);
-app.use('/api/copilot', copilotRoutes);
 app.use('/api/storage', supabaseUploadRoutes);
 
 app.get('/', (req, res) => {

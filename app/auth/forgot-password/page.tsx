@@ -3,7 +3,17 @@
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Mail, KeyRound, ArrowRight, Loader2, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { 
+  Mail, 
+  KeyRound, 
+  ArrowRight, 
+  ArrowLeft,
+  Loader2, 
+  ShieldCheck, 
+  CheckCircle2,
+  Check,
+  RotateCcw
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function ForgotPasswordPage() {
@@ -35,10 +45,9 @@ export default function ForgotPasswordPage() {
             
             if (!res.ok) throw new Error(data.error || 'فشل إرسال الرمز');
             
-            toast.success('تم إرسال رمز التحقق إلى بريدك');
+            toast.success('تم إرسال رمز التحقق إلى بريدك الإلكتروني');
             setStep(2);
             
-            // Auto focus first OTP input
             setTimeout(() => {
                 otpRefs.current[0]?.focus();
             }, 100);
@@ -66,8 +75,8 @@ export default function ForgotPasswordPage() {
             
             if (!res.ok) throw new Error(data.error || 'الرمز غير صحيح');
             
-            toast.success('تم التأكد من الرمز بنجاح!');
-            setStep(3); // Move to password reset step
+            toast.success('تم التحقق من الرمز بنجاح!');
+            setStep(3);
         } catch (error: any) {
             toast.error(error.message);
         } finally {
@@ -92,11 +101,10 @@ export default function ForgotPasswordPage() {
             
             if (!res.ok) throw new Error(data.error || 'فشل إرسال رمز التأكيد');
             
-            toast.success('تم إرسال رمز التأكيد إلى بريدك');
-            setStep(4); // Move to confirmation OTP step
+            toast.success('تم إرسال رمز التأكيد الإضافي إلى بريدك');
+            setStep(4);
             setConfirmationOtp(['', '', '', '', '', '']);
             
-            // Auto focus first OTP input
             setTimeout(() => {
                 confirmOtpRefs.current[0]?.focus();
             }, 100);
@@ -124,10 +132,10 @@ export default function ForgotPasswordPage() {
             
             if (!res.ok) throw new Error(data.error || 'الرمز غير صحيح');
             
-            toast.success('تم تحديث كلمة المرور بنجاح! يمكنك الدخول الآن.');
+            toast.success('تم تحديث كلمة المرور بنجاح! جاري تحويلك لتسجيل الدخول.');
             setTimeout(() => {
-                router.push('/auth?mode=login');
-            }, 1500);
+                router.push('/auth');
+            }, 1200);
         } catch (error: any) {
             toast.error(error.message);
         } finally {
@@ -186,15 +194,12 @@ export default function ForgotPasswordPage() {
         newOtp[index] = value;
         setOtp(newOtp);
 
-        // Move to next input
         if (value !== '' && index < 5) {
             otpRefs.current[index + 1]?.focus();
         }
 
-        // Auto submit if all filled
         if (value !== '' && index === 5 && newOtp.every(v => v !== '')) {
             setTimeout(() => {
-                // To avoid calling while the state is just updating
                 document.getElementById('verifyCodeBtn')?.click();
             }, 100);
         }
@@ -227,53 +232,101 @@ export default function ForgotPasswordPage() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-[#050505] flex items-center justify-center p-4 dir-rtl" dir="rtl">
-            <div className="max-w-md w-full bg-white dark:bg-[#111] rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-white/5 p-8 relative">
-                
-                {/* Background Decor */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
+        <div className="min-h-screen bg-[#f5f5eb] text-[#14140f] flex flex-col justify-between selection:bg-[#beff50] selection:text-[#14140f] antialiased" dir="rtl">
+            
+            {/* Top Navigation */}
+            <header className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
+                <Link href="/" className="inline-flex items-center gap-3 group">
+                    <div className="w-10 h-10 rounded-[14px] bg-[#ffffff] border border-[#d2d2c8] flex items-center justify-center group-hover:border-[#14140f] transition-colors p-1.5">
+                        <img src="/tolzy-logo.svg" alt="TOLZY" className="w-full h-full object-contain" />
+                    </div>
+                    <span className="text-xl font-medium tracking-[-0.03em] text-[#14140f]">
+                        TOLZY
+                    </span>
+                </Link>
 
-                <div className="relative z-10">
-                    <Link href="/auth" className="inline-flex items-center text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors mb-8">
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                        العودة لتسجيل الدخول
-                    </Link>
+                <Link 
+                    href="/auth" 
+                    className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.05em] px-4 py-2 rounded-full bg-[#ffffff] border border-[#d2d2c8] text-[#14140f] hover:border-[#14140f] transition-colors"
+                >
+                    <span>العودة لتسجيل الدخول</span>
+                    <ArrowLeft className="w-3.5 h-3.5 rtl:rotate-180" />
+                </Link>
+            </header>
 
-                    <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-2">استعادة الحساب</h1>
-                    <p className="text-slate-500 dark:text-slate-400 font-medium mb-8">
-                        {step === 1 && 'أدخل بريدك الإلكتروني ليتم إرسال رمز أمان مكون من 6 أرقام.'}
-                        {step === 2 && 'أدخل الرمز المكون من 6 أرقام الذي أرسلناه للتو إلى بريدك.'}
-                        {step === 3 && 'ممتاز! الآن قم بتعيين كلمة مرور جديدة وقوية لحسابك.'}
-                        {step === 4 && 'تم إرسال رمز تأكيد إضافي إلى بريدك الإلكتروني. أدخله لتأكيد تغيير كلمة المرور.'}
-                    </p>
+            {/* Main Recovery Form */}
+            <main className="w-full max-w-xl mx-auto px-4 sm:px-6 py-6 flex-1 flex items-center justify-center">
+                <div className="w-full bg-[#ffffff] border border-[#d2d2c8] rounded-[28px] p-6 sm:p-10 space-y-7">
+                    
+                    {/* Status Pill & Title */}
+                    <div className="space-y-3 text-center">
+                        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-medium uppercase tracking-[0.1em] bg-[#f5f5eb] text-[#14140f] border border-[#d2d2c8]">
+                            <span className="w-2 h-2 rounded-full bg-[#beff50] border border-[#14140f]" />
+                            <span>استعادة الحساب والأمان</span>
+                        </div>
+
+                        <h1 className="text-3xl sm:text-4xl font-medium tracking-[-0.03em] text-[#14140f]">
+                            إعادة تعيين كلمة المرور
+                        </h1>
+
+                        <p className="text-sm text-[#6e6e64] max-w-md mx-auto font-normal leading-relaxed">
+                            {step === 1 && 'أدخل بريدك الإلكتروني المسجل لنرسل لك رمز أمان مكوّن من 6 أرقام.'}
+                            {step === 2 && 'أدخل رمز التحقق المكوّن من 6 أرقام الذي وصلك على البريد الإلكتروني.'}
+                            {step === 3 && 'قم بتعيين كلمة مرور جديدة قوية لحسابك لا تقل عن 6 أحرف.'}
+                            {step === 4 && 'تم إرسال رمز تأكيد نهائي لتأكيد الحساب ومنع أي تغييرات غير مصرح بها.'}
+                        </p>
+                    </div>
+
+                    {/* Step Visual Indicator (Perk Style Stepper) */}
+                    <div className="flex items-center justify-center gap-2">
+                        {[1, 2, 3, 4].map((s) => (
+                            <div 
+                                key={s} 
+                                className={`flex items-center justify-center text-xs font-mono font-medium rounded-full transition-all ${
+                                    step === s
+                                        ? 'w-8 h-8 bg-[#beff50] border border-[#14140f] text-[#14140f]'
+                                        : step > s
+                                            ? 'w-8 h-8 bg-[#14140f] text-[#ffffff] border border-[#14140f]'
+                                            : 'w-8 h-8 bg-[#f5f5eb] text-[#6e6e64] border border-[#d2d2c8]'
+                                }`}
+                            >
+                                {step > s ? '✓' : s}
+                            </div>
+                        ))}
+                    </div>
 
                     {/* Step 1: Request OTP */}
                     {step === 1 && (
-                        <form onSubmit={handleSendOTP} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">البريد الإلكتروني</label>
-                                <div className="relative border-b border-transparent focus-within:border-indigo-500 transition-colors">
+                        <form onSubmit={handleSendOTP} className="space-y-5 animate-in fade-in duration-300">
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-medium text-[#14140f] px-1 block">
+                                    البريد الإلكتروني المسجل
+                                </label>
+                                <div className="relative">
                                     <input
                                         type="email"
                                         required
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="w-full bg-slate-50 dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 rounded-2xl py-4 px-4 pl-12 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm font-medium"
                                         placeholder="name@example.com"
+                                        dir="ltr"
+                                        className="w-full bg-[#ffffff] border border-[#d2d2c8] focus:border-[#14140f] rounded-[28px] py-3.5 pr-4 pl-11 text-[#14140f] placeholder-[#6e6e64] text-sm font-normal outline-none transition-colors"
                                     />
-                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                    <Mail className="w-4 h-4 text-[#6e6e64] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                                 </div>
                             </div>
 
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-lg flex items-center justify-center transition-all shadow-xl shadow-indigo-600/20 active:scale-95 disabled:opacity-70 group"
+                                className="w-full py-4 rounded-[28px] bg-[#beff50] hover:bg-[#aef538] text-[#14140f] border border-[#14140f] font-medium text-sm sm:text-base flex items-center justify-center gap-2 transition-transform active:scale-[0.99] disabled:opacity-50"
                             >
-                                {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : (
+                                {isLoading ? (
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                ) : (
                                     <>
-                                        إرسال الرمز إليّ
-                                        <ArrowRight className="w-5 h-5 mr-2 rtl:rotate-180 group-hover:-translate-x-1 transition-transform" />
+                                        <span>إرسال رمز التحقق</span>
+                                        <ArrowRight className="w-4 h-4 rtl:rotate-180" />
                                     </>
                                 )}
                             </button>
@@ -282,20 +335,23 @@ export default function ForgotPasswordPage() {
 
                     {/* Step 2: Verify OTP Only */}
                     {step === 2 && (
-                        <form onSubmit={handleVerifyOtpOnly} className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-                            <div dir="ltr">
-                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 text-right">رمز التحقق (OTP)</label>
-                                <div className="flex justify-between gap-2" onPaste={handlePaste}>
+                        <form onSubmit={handleVerifyOtpOnly} className="space-y-6 animate-in fade-in duration-300">
+                            <div dir="ltr" className="space-y-2">
+                                <label className="text-xs font-medium text-[#14140f] block text-right px-1">
+                                    رمز التحقق (OTP)
+                                </label>
+                                <div className="flex gap-2 justify-between" onPaste={handlePaste}>
                                     {otp.map((digit, index) => (
                                         <input
                                             key={index}
                                             ref={(el) => { otpRefs.current[index] = el; }}
                                             type="text"
+                                            inputMode="numeric"
                                             maxLength={1}
                                             value={digit}
                                             onChange={(e) => handleOtpChange(index, e.target.value)}
                                             onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                                            className={`w-12 h-14 sm:w-14 sm:h-16 flex items-center justify-center text-center text-2xl font-black bg-slate-50 dark:bg-[#0a0a0a] border ${digit ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-slate-200 dark:border-white/10'} rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-sm`}
+                                            className="w-12 h-14 sm:w-13 sm:h-16 text-center text-2xl font-mono font-medium rounded-2xl bg-[#f5f5eb] border border-[#d2d2c8] text-[#14140f] focus:outline-none focus:border-[#14140f] focus:bg-[#ffffff] transition-all"
                                         />
                                     ))}
                                 </div>
@@ -305,73 +361,91 @@ export default function ForgotPasswordPage() {
                                 id="verifyCodeBtn"
                                 type="submit"
                                 disabled={isLoading || otp.join('').length < 6}
-                                className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black text-lg flex items-center justify-center transition-all shadow-xl hover:shadow-indigo-500/20 active:scale-95 disabled:opacity-50"
+                                className="w-full py-4 rounded-[28px] bg-[#beff50] hover:bg-[#aef538] text-[#14140f] border border-[#14140f] font-medium text-sm sm:text-base flex items-center justify-center gap-2 transition-transform active:scale-[0.99] disabled:opacity-50"
                             >
-                                {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'تحقق من الرمز'}
+                                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'تحقق من الرمز'}
                             </button>
                             
-                            <p className="text-center text-sm font-medium text-slate-500">
-                                لم يصلك الرمز؟ <button type="button" onClick={handleSendOTP} className="text-indigo-600 font-bold hover:underline">إعادة الإرسال</button>
-                            </p>
+                            <div className="text-center text-xs text-[#6e6e64]">
+                                لم يصلك الرمز؟{' '}
+                                <button 
+                                    type="button" 
+                                    onClick={handleSendOTP} 
+                                    className="text-[#14140f] font-medium underline underline-offset-2 hover:text-black"
+                                >
+                                    إعادة الإرسال
+                                </button>
+                            </div>
                         </form>
                     )}
 
                     {/* Step 3: Enter New Password */}
                     {step === 3 && (
-                        <form onSubmit={handleResetPassword} className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">كلمة المرور الجديدة</label>
+                        <form onSubmit={handleResetPassword} className="space-y-5 animate-in fade-in duration-300">
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-medium text-[#14140f] px-1 block">
+                                    كلمة المرور الجديدة
+                                </label>
                                 <div className="relative">
                                     <input
                                         type="password"
                                         required
                                         value={newPassword}
                                         onChange={(e) => setNewPassword(e.target.value)}
-                                        className="w-full bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-500/30 rounded-2xl py-4 px-4 pl-12 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-left font-black tracking-widest text-lg"
                                         placeholder="••••••••"
                                         dir="ltr"
+                                        className="w-full bg-[#ffffff] border border-[#d2d2c8] focus:border-[#14140f] rounded-[28px] py-3.5 pr-4 pl-11 text-[#14140f] placeholder-[#6e6e64] text-sm font-normal outline-none transition-colors"
                                     />
-                                    <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
+                                    <KeyRound className="w-4 h-4 text-[#6e6e64] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                                 </div>
-                                <p className="text-xs font-medium text-slate-500 mt-2 flex items-center gap-1">
-                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> استخدم 6 أحرف أو أرقام على الأقل.
+                                <p className="text-[11px] text-[#6e6e64] px-1 pt-1 flex items-center gap-1 font-normal">
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-[#14140f]" /> يجب أن تكون كلمة المرور 6 أحرف أو أرقام على الأقل.
                                 </p>
                             </div>
 
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-lg flex items-center justify-center transition-all shadow-xl shadow-emerald-500/30 active:scale-95 disabled:opacity-70"
+                                className="w-full py-4 rounded-[28px] bg-[#beff50] hover:bg-[#aef538] text-[#14140f] border border-[#14140f] font-medium text-sm sm:text-base flex items-center justify-center gap-2 transition-transform active:scale-[0.99] disabled:opacity-50"
                             >
-                                {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'حفظ كلمة المرور والدخول'}
+                                {isLoading ? (
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                ) : (
+                                    'متابعة وتأكيد التغيير'
+                                )}
                             </button>
                         </form>
                     )}
 
                     {/* Step 4: Verify Confirmation OTP */}
                     {step === 4 && (
-                        <form onSubmit={handleVerifyConfirmationOtp} className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-                            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-500/30 flex gap-3">
-                                <ShieldCheck className="w-6 h-6 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
-                                <div className="text-sm">
-                                    <p className="font-bold text-blue-900 dark:text-blue-300">خطوة أمان إضافية</p>
-                                    <p className="text-blue-700 dark:text-blue-400 text-xs mt-1">نحن نطلب رمز تأكيد إضافي لحماية حسابك</p>
+                        <form onSubmit={handleVerifyConfirmationOtp} className="space-y-6 animate-in fade-in duration-300">
+                            <div className="p-4 rounded-[20px] bg-[#f5f5eb] border border-[#d2d2c8] flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-[#beff50] border border-[#14140f] flex items-center justify-center text-[#14140f] shrink-0">
+                                    <ShieldCheck className="w-4 h-4" />
+                                </div>
+                                <div className="text-xs">
+                                    <p className="font-medium text-[#14140f]">خطوة تأكيد أمني إضافية</p>
+                                    <p className="text-[#6e6e64] mt-0.5">أدخل الرمز الإضافي لتأكيد ملكيتك للحساب وتفعيل كلمة المرور الجديدة.</p>
                                 </div>
                             </div>
 
-                            <div dir="ltr">
-                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 text-right">رمز التأكيد</label>
-                                <div className="flex justify-between gap-2" onPaste={handleConfirmationOtpPaste}>
+                            <div dir="ltr" className="space-y-2">
+                                <label className="text-xs font-medium text-[#14140f] block text-right px-1">
+                                    رمز التأكيد
+                                </label>
+                                <div className="flex gap-2 justify-between" onPaste={handleConfirmationOtpPaste}>
                                     {confirmationOtp.map((digit, index) => (
                                         <input
                                             key={index}
                                             ref={(el) => { confirmOtpRefs.current[index] = el; }}
                                             type="text"
+                                            inputMode="numeric"
                                             maxLength={1}
                                             value={digit}
                                             onChange={(e) => handleConfirmationOtpChange(index, e.target.value)}
                                             onKeyDown={(e) => handleConfirmationOtpKeyDown(index, e)}
-                                            className={`w-12 h-14 sm:w-14 sm:h-16 flex items-center justify-center text-center text-2xl font-black bg-blue-50 dark:bg-blue-900/20 border ${digit ? 'border-blue-500 ring-1 ring-blue-500' : 'border-slate-200 dark:border-white/10'} rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm`}
+                                            className="w-12 h-14 sm:w-13 sm:h-16 text-center text-2xl font-mono font-medium rounded-2xl bg-[#f5f5eb] border border-[#d2d2c8] text-[#14140f] focus:outline-none focus:border-[#14140f] focus:bg-[#ffffff] transition-all"
                                         />
                                     ))}
                                 </div>
@@ -381,34 +455,52 @@ export default function ForgotPasswordPage() {
                                 id="verifyConfirmBtn"
                                 type="submit"
                                 disabled={isLoading || confirmationOtp.join('').length < 6}
-                                className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-lg flex items-center justify-center transition-all shadow-xl shadow-blue-600/20 active:scale-95 disabled:opacity-50"
+                                className="w-full py-4 rounded-[28px] bg-[#beff50] hover:bg-[#aef538] text-[#14140f] border border-[#14140f] font-medium text-sm sm:text-base flex items-center justify-center gap-2 transition-transform active:scale-[0.99] disabled:opacity-50"
                             >
-                                {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'تأكيد تغيير كلمة المرور'}
+                                {isLoading ? (
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                ) : (
+                                    'تأكيد كلمة المرور والدخول'
+                                )}
                             </button>
                             
-                            <p className="text-center text-sm font-medium text-slate-500">
-                                لم يصلك الرمز؟ <button type="button" onClick={() => {
-                                    setIsLoading(true);
-                                    fetch('/api/auth/reset/send-confirmation-otp', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ email, newPassword })
-                                    }).then(async (res) => {
-                                        const data = await res.json();
-                                        if (res.ok) {
-                                            toast.success('تم إعادة الإرسال');
-                                            setConfirmationOtp(['', '', '', '', '', '']);
-                                            setTimeout(() => confirmOtpRefs.current[0]?.focus(), 100);
-                                        } else {
-                                            toast.error(data.error);
-                                        }
-                                    }).finally(() => setIsLoading(false));
-                                }} className="text-blue-600 font-bold hover:underline">إعادة الإرسال</button>
-                            </p>
+                            <div className="text-center text-xs text-[#6e6e64]">
+                                لم يصلك الرمز؟{' '}
+                                <button 
+                                    type="button" 
+                                    onClick={() => {
+                                        setIsLoading(true);
+                                        fetch('/api/auth/reset/send-confirmation-otp', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ email, newPassword })
+                                        }).then(async (res) => {
+                                            const data = await res.json();
+                                            if (res.ok) {
+                                                toast.success('تم إعادة إرسال الرمز بنجاح');
+                                                setConfirmationOtp(['', '', '', '', '', '']);
+                                                setTimeout(() => confirmOtpRefs.current[0]?.focus(), 100);
+                                            } else {
+                                                toast.error(data.error);
+                                            }
+                                        }).finally(() => setIsLoading(false));
+                                    }} 
+                                    className="text-[#14140f] font-medium underline underline-offset-2 hover:text-black"
+                                >
+                                    إعادة الإرسال
+                                </button>
+                            </div>
                         </form>
                     )}
+
                 </div>
-            </div>
+            </main>
+
+            {/* Simple Footer */}
+            <footer className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-xs text-[#6e6e64] font-normal border-t border-[#d2d2c8]/60 mt-8">
+                <p>© {new Date().getFullYear()} TOLZY — دليل ومحرك بحث الأدوات التقنية والكورسات.</p>
+            </footer>
+
         </div>
     );
 }

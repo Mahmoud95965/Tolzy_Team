@@ -232,6 +232,138 @@ const nextConfig: NextConfig = {
                 destination: '/admin',
                 permanent: true,
             },
+            // 100% Free Open Directory Redirects (301 Permanent)
+            {
+                source: '/pricing',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/pricing/:path*',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/checkout',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/checkout/:path*',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/billing',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/billing/:path*',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/tokens',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/tokens/:path*',
+                destination: '/',
+                permanent: true,
+            },
+            // Legacy & deprecated services redirected permanently (301) to retain 100% SEO equity
+            {
+                source: '/prompts',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/prompts/:path*',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/path',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/path/:path*',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/paths',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/paths/:path*',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/edu',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/edu/:path*',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/chat',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/chat/:path*',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/axiom',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/axiom/:path*',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/omnilearn',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/omnilearn/:path*',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/learn/omnilearn',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/learn/omnilearn/:path*',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/copilot',
+                destination: '/',
+                permanent: true,
+            },
+            {
+                source: '/copilot/:path*',
+                destination: '/',
+                permanent: true,
+            },
         ];
     },
 

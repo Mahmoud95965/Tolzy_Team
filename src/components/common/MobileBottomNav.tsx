@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Users, Bell, User, MoreHorizontal, X, GraduationCap, Zap, Wand2, Bot } from 'lucide-react';
+import { Home, Users, Bell, User, MoreHorizontal, X, Zap, BrainCircuit, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { getCentralAuthUrl } from '../../utils/authRedirect';
@@ -37,16 +37,15 @@ const MobileBottomNav: React.FC = () => {
 
   const navItems: NavItem[] = [
     { href: '/', icon: Home, label: 'الرئيسية' },
+    { href: '/tools', icon: Zap, label: 'الأدوات' },
     { href: '/community', icon: Users, label: 'المجتمع' },
     { href: '/notifications', icon: Bell, label: 'الإشعارات', badge: unreadCount },
     { href: user ? '/profile' : getCentralAuthUrl(pathname !== '/' && pathname !== '/auth' ? pathname : undefined), icon: User, label: user ? 'حسابي' : 'دخول' },
   ];
 
   const moreItems = [
-    { href: '/axiom', icon: Bot, label: 'مساعد AXIOM الذكي', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-    { href: '/learn', icon: GraduationCap, label: 'Tolzy Learn', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
-    { href: '/tools', icon: Zap, label: 'دليل الأدوات', color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20' },
-    { href: '/build', icon: Wand2, label: 'صانع المشاريع بـ AI', color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-900/20' },
+    { href: '/tools', icon: Zap, label: 'دليل الأدوات', color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20', external: false, badge: undefined },
+    { href: 'https://flow.tolzy.me', icon: BrainCircuit, label: 'TOLZY Flow', color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-900/20', external: true, badge: 'AI Office Suite' },
   ];
 
   return (
@@ -74,37 +73,61 @@ const MobileBottomNav: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="fixed bottom-[72px] left-4 right-4 z-50 md:hidden bg-white dark:bg-slate-900 rounded-2xl shadow-2xl shadow-black/20 border border-slate-100 dark:border-white/5 p-3 space-y-1.5"
+            className="fixed bottom-[72px] left-4 right-4 z-50 md:hidden bg-[#ffffff] rounded-[28px] shadow-none border border-[#d2d2c8] p-3 space-y-1.5"
           >
-            <div className="flex items-center justify-between px-2 pb-2 border-b border-slate-100 dark:border-white/5 mb-1">
+            <div className="flex items-center justify-between px-2 pb-2 border-b border-[#d2d2c8] mb-1">
               <button
                 onClick={() => setIsMoreOpen(false)}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+                className="p-1 rounded-full text-[#6e6e64] hover:text-[#14140f] transition-colors"
               >
                 <X size={18} />
               </button>
-              <span className="text-sm font-black text-slate-800 dark:text-white">المزيد</span>
+              <span className="text-sm font-medium text-[#14140f]">المزيد</span>
             </div>
             {moreItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname?.startsWith(item.href);
+
+              if (item.external) {
+                return (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setIsMoreOpen(false)}
+                    className="flex items-center gap-3 px-3 py-3 rounded-[18px] transition-colors hover:bg-[#f5f5eb] text-[#14140f]"
+                  >
+                    <div className="w-9 h-9 rounded-full bg-[#f5f5eb] border border-[#d2d2c8] flex items-center justify-center">
+                      <Icon size={18} className="text-[#14140f]" />
+                    </div>
+                    <span className="font-medium text-sm">{item.label}</span>
+                    {item.badge && (
+                      <span className="mr-auto text-[10px] font-medium px-2.5 py-0.5 rounded-full bg-[#beff50] text-[#14140f] border border-[#14140f]/10">
+                        {item.badge}
+                      </span>
+                    )}
+                  </a>
+                );
+              }
+
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsMoreOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all active:scale-[0.98] ${
+                  className={`flex items-center gap-3 px-3 py-3 rounded-[18px] transition-colors ${
                     isActive
-                      ? `${item.bg} ${item.color} font-black`
-                      : 'hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300'
+                      ? 'bg-[#f5f5eb] text-[#14140f] font-medium'
+                      : 'hover:bg-[#f5f5eb] text-[#14140f]'
                   }`}
                 >
-                  <div className={`w-9 h-9 rounded-xl ${item.bg} flex items-center justify-center`}>
-                    <Icon size={18} className={item.color} />
+                  <div className="w-9 h-9 rounded-full bg-[#f5f5eb] border border-[#d2d2c8] flex items-center justify-center">
+                    <Icon size={18} className="text-[#14140f]" />
                   </div>
-                  <span className="font-bold text-sm">{item.label}</span>
+                  <span className="font-medium text-sm">{item.label}</span>
                   {isActive && (
-                    <div className="mr-auto w-2 h-2 rounded-full bg-blue-500" />
+                    <div className="mr-auto w-2 h-2 rounded-full bg-[#beff50] border border-[#14140f]" />
                   )}
                 </Link>
               );
@@ -117,9 +140,9 @@ const MobileBottomNav: React.FC = () => {
       <nav
         className="
           fixed bottom-0 left-0 right-0 z-50
-          bg-white/95 dark:bg-[#050505]/95 backdrop-blur-xl
-          border-t border-slate-100 dark:border-white/5
-          shadow-[0_-4px_24px_0_rgba(0,0,0,0.06)]
+          bg-[#ffffff]
+          border-t border-[#d2d2c8]
+          shadow-none
           flex items-center justify-around
           px-2 py-1
           md:hidden
@@ -146,12 +169,12 @@ const MobileBottomNav: React.FC = () => {
                     transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                   >
                     <Icon
-                      size={22}
-                      strokeWidth={isActive ? 2.5 : 1.8}
+                      size={20}
+                      strokeWidth={isActive ? 2.2 : 1.6}
                       className={`transition-colors duration-200 ${
                         isActive
-                          ? 'text-blue-600 dark:text-blue-400'
-                          : 'text-gray-500 dark:text-gray-400'
+                          ? 'text-[#14140f]'
+                          : 'text-[#6e6e64]'
                       }`}
                     />
                   </motion.div>
@@ -161,15 +184,15 @@ const MobileBottomNav: React.FC = () => {
                     <motion.span
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-md"
+                      className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 bg-[#14140f] text-[#ffffff] text-[9px] font-medium rounded-full flex items-center justify-center"
                     >
                       {item.badge > 99 ? '99+' : item.badge}
                     </motion.span>
                   )}
                 </div>
 
-                <span className={`text-[9px] font-bold transition-colors duration-200 ${
-                  isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'
+                <span className={`text-[10px] font-medium transition-colors duration-200 ${
+                  isActive ? 'text-[#14140f]' : 'text-[#6e6e64]'
                 }`}>
                   {item.label}
                 </span>
@@ -177,7 +200,7 @@ const MobileBottomNav: React.FC = () => {
                 {isActive && (
                   <motion.div
                     layoutId="activeNavDot"
-                    className="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-blue-600 dark:bg-blue-400"
+                    className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#beff50] border border-[#14140f]"
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
@@ -196,15 +219,15 @@ const MobileBottomNav: React.FC = () => {
           >
             <motion.div animate={isMoreOpen ? { rotate: 90 } : { rotate: 0 }} transition={{ type: 'spring', stiffness: 300 }}>
               <MoreHorizontal
-                size={22}
-                strokeWidth={1.8}
+                size={20}
+                strokeWidth={1.6}
                 className={`transition-colors duration-200 ${
-                  isMoreOpen ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'
+                  isMoreOpen ? 'text-[#14140f]' : 'text-[#6e6e64]'
                 }`}
               />
             </motion.div>
-            <span className={`text-[9px] font-bold transition-colors duration-200 ${
-              isMoreOpen ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'
+            <span className={`text-[10px] font-medium transition-colors duration-200 ${
+              isMoreOpen ? 'text-[#14140f]' : 'text-[#6e6e64]'
             }`}>
               المزيد
             </span>

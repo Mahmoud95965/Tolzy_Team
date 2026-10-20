@@ -29,50 +29,95 @@ html[dir="rtl"] {
   text-align: right;
 }
 
+:root {
+  /* Perk Design System Colors */
+  --color-electric-lime: #beff50;
+  --color-off-black-ink: #14140f;
+  --color-off-white-canvas: #f5f5eb;
+  --color-pure-white: #ffffff;
+  --color-ash: #d2d2c8;
+  --color-graphite: #6e6e64;
+  --color-deep-charcoal: #30302a;
+  --color-stone: #919183;
+  --color-smoke: #b9b9b7;
+
+  /* Typography Scale */
+  --text-eyebrow: 10px;
+  --leading-eyebrow: 1.4;
+  --tracking-eyebrow: 1px;
+  --text-caption: 12px;
+  --leading-caption: 1.33;
+  --tracking-caption: 1.2px;
+  --text-body-sm: 14px;
+  --leading-body-sm: 1.29;
+  --text-body: 16px;
+  --leading-body: 1.5;
+  --text-subheading: 22px;
+  --leading-subheading: 1.18;
+  --text-heading: 28px;
+  --leading-heading: 1.14;
+  --tracking-heading: -0.56px;
+  --text-heading-lg: 60px;
+  --leading-heading-lg: 1;
+  --tracking-heading-lg: -1.8px;
+  --text-display: 90px;
+  --leading-display: 0.89;
+  --tracking-display: -2.7px;
+
+  /* Border Radius */
+  --radius-tags: 9999px;
+  --radius-cards: 28px;
+  --radius-inner: 18px;
+  --radius-pills: 9999px;
+  --radius-inputs: 8px;
+  --radius-buttons: 28px;
+
+  /* Surfaces */
+  --surface-page-canvas: #ffffff;
+  --surface-off-white-card: #f5f5eb;
+  --surface-lime-accent-surface: #beff50;
+  --surface-dark-island: #30302a;
+}
+
 /* Global Font Settings */
 html {
   font-size: 16px;
   scroll-behavior: smooth;
+  background-color: #ffffff;
+  color: #14140f;
 }
 
 body {
-  font-family: var(--font-almarai), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  font-weight: 500;
+  font-family: var(--font-almarai), 'OTSono', system-ui, -apple-system, sans-serif;
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: #ffffff;
+  color: #14140f;
 }
 
-.dark body {
-  background-color: #0f172a;
-  color: #f8fafc;
+/* Selection */
+::selection {
+  background-color: #beff50;
+  color: #14140f;
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #f5f5eb;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 5px;
+  background: #d2d2c8;
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: #334155;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #919183;
 }
 
 /* Glassmorphism Utilities */
@@ -193,7 +238,7 @@ body {
 
 @layer base {
   body {
-    @apply bg-slate-50 dark:bg-[#050505] text-slate-900 dark:text-slate-100 antialiased font-sans transition-colors duration-300;
+    @apply bg-[#ffffff] text-[#14140f] antialiased font-sans;
     direction: rtl;
     /* Enforce global RTL */
   }

@@ -1,0 +1,313 @@
+import { SceneMeta, SubtitlePhrase, CompareTool, CommunityPost, TechStackItem, PollData, CreatorProfileData } from './types';
+
+export const SCENES: SceneMeta[] = [
+  {
+    id: 1,
+    key: 'hook',
+    title: 'المقدمة (الهوك)',
+    englishTitle: 'The Hook',
+    start: 0,
+    end: 7.0,
+    duration: 7.0,
+    themeColor: '#fea619',
+  },
+  {
+    id: 2,
+    key: 'comparison',
+    title: 'المقارنة الفورية',
+    englishTitle: 'Instant Comparison',
+    start: 7.0,
+    end: 17.0,
+    duration: 10.0,
+    themeColor: '#beff50',
+  },
+  {
+    id: 3,
+    key: 'mention',
+    title: 'منشن الأداة التفاعلي',
+    englishTitle: 'Smart @Tool Mention',
+    start: 17.0,
+    end: 28.0,
+    duration: 11.0,
+    themeColor: '#38bdf8',
+  },
+  {
+    id: 4,
+    key: 'stacks_poll',
+    title: 'حزم الأدوات والتصويت',
+    englishTitle: 'Tech Stacks & Live Poll',
+    start: 28.0,
+    end: 34.0,
+    duration: 6.0,
+    themeColor: '#a855f7',
+  },
+  {
+    id: 5,
+    key: 'outro',
+    title: 'الملف الشخصي والدعوة',
+    englishTitle: 'Creator Profile & CTA',
+    start: 34.0,
+    end: 37.1,
+    duration: 3.1,
+    themeColor: '#fea619',
+  },
+];
+
+export const TOTAL_DURATION = 37.1;
+
+export const SUBTITLE_PHRASES: SubtitlePhrase[] = [
+  {
+    id: 'p1',
+    phrase: 'عشان تختار أداة ذكاء اصطناعي صحيحة',
+    start: 0.0,
+    end: 3.6,
+    words: [
+      { id: 'w1', text: 'عشان', start: 0.0, end: 0.6 },
+      { id: 'w2', text: 'تختار', start: 0.6, end: 1.2 },
+      { id: 'w3', text: 'أداة', start: 1.2, end: 1.7 },
+      { id: 'w4', text: 'ذكاء', start: 1.7, end: 2.2 },
+      { id: 'w5', text: 'اصطناعي', start: 2.2, end: 2.9, highlightColor: '#fea619' },
+      { id: 'w6', text: 'صحيحة', start: 2.9, end: 3.6 },
+    ],
+  },
+  {
+    id: 'p2',
+    phrase: 'من بين أكثر من 1000 أداة، تعال أقولك على 3 ميزات خيال في تولزي',
+    start: 3.6,
+    end: 7.0,
+    words: [
+      { id: 'w7', text: 'من', start: 3.6, end: 3.9 },
+      { id: 'w8', text: 'بين', start: 3.9, end: 4.2 },
+      { id: 'w9', text: 'أكثر', start: 4.2, end: 4.6 },
+      { id: 'w10', text: 'من', start: 4.6, end: 4.8 },
+      { id: 'w11', text: '1000 أداة', start: 4.8, end: 5.4, highlightColor: '#beff50' },
+      { id: 'w12', text: 'تعال أقولك', start: 5.4, end: 6.0 },
+      { id: 'w13', text: '3 ميزات خيال', start: 6.0, end: 6.5, highlightColor: '#fea619' },
+      { id: 'w14', text: 'في تولزي ⚡', start: 6.5, end: 7.0, highlightColor: '#beff50' },
+    ],
+  },
+  {
+    id: 'p3',
+    phrase: 'أولاً: المقارنة الفورية. دلوقتي بضغطة زر',
+    start: 7.0,
+    end: 10.5,
+    words: [
+      { id: 'w15', text: 'أولاً:', start: 7.0, end: 7.6, highlightColor: '#beff50' },
+      { id: 'w16', text: 'المقارنة', start: 7.6, end: 8.3 },
+      { id: 'w17', text: 'الفورية ⚡', start: 8.3, end: 9.0, highlightColor: '#beff50' },
+      { id: 'w18', text: 'دلوقتي', start: 9.0, end: 9.6 },
+      { id: 'w19', text: 'بضغطة زر 👆', start: 9.6, end: 10.5, highlightColor: '#fea619' },
+    ],
+  },
+  {
+    id: 'p4',
+    phrase: 'تقدر تقارن بين 3 أدوات وجهاً لوجه',
+    start: 10.5,
+    end: 14.0,
+    words: [
+      { id: 'w20', text: 'تقدر', start: 10.5, end: 11.0 },
+      { id: 'w21', text: 'تقارن', start: 11.0, end: 11.6 },
+      { id: 'w22', text: 'بين', start: 11.6, end: 12.0 },
+      { id: 'w23', text: 'ثلاث أدوات', start: 12.0, end: 12.8, highlightColor: '#beff50' },
+      { id: 'w24', text: 'وجهاً لوجه ⚔️', start: 12.8, end: 14.0, highlightColor: '#38bdf8' },
+    ],
+  },
+  {
+    id: 'p5',
+    phrase: 'السعر، المميزات، والعيوب',
+    start: 14.0,
+    end: 17.0,
+    words: [
+      { id: 'w25', text: 'السعر 💰', start: 14.0, end: 14.9, highlightColor: '#fea619' },
+      { id: 'w26', text: 'المميزات ✨', start: 14.9, end: 15.9, highlightColor: '#beff50' },
+      { id: 'w27', text: 'والعيوب ⚠️', start: 15.9, end: 17.0, highlightColor: '#f43f5e' },
+    ],
+  },
+  {
+    id: 'p6',
+    phrase: 'ثانياً: المنتدى بقى أذكى. اكتب @',
+    start: 17.0,
+    end: 20.3,
+    words: [
+      { id: 'w28', text: 'ثانياً:', start: 17.0, end: 17.7, highlightColor: '#38bdf8' },
+      { id: 'w29', text: 'المنتدى', start: 17.7, end: 18.4 },
+      { id: 'w30', text: 'بقى أذكى 🧠', start: 18.4, end: 19.3, highlightColor: '#38bdf8' },
+      { id: 'w31', text: 'اكتب @', start: 19.3, end: 20.3, highlightColor: '#beff50' },
+    ],
+  },
+  {
+    id: 'p7',
+    phrase: 'وأشر لأي أداة، فهتتحول تلقائياً لبطاقة تفاعلية',
+    start: 20.3,
+    end: 24.5,
+    words: [
+      { id: 'w32', text: 'وأشر لأي أداة', start: 20.3, end: 21.6 },
+      { id: 'w33', text: 'فهتتحول تلقائياً', start: 21.6, end: 23.0, highlightColor: '#fea619' },
+      { id: 'w34', text: 'لبطاقة تفاعلية 📇', start: 23.0, end: 24.5, highlightColor: '#beff50' },
+    ],
+  },
+  {
+    id: 'p8',
+    phrase: 'جوة بوستك، والنقاش هيظهر في صفحة الأداة نفسها',
+    start: 24.5,
+    end: 28.0,
+    words: [
+      { id: 'w35', text: 'جوة بوستك', start: 24.5, end: 25.5 },
+      { id: 'w36', text: 'والنقاش هيظهر', start: 25.5, end: 26.8, highlightColor: '#38bdf8' },
+      { id: 'w37', text: 'في صفحة الأداة نفسها 🔗', start: 26.8, end: 28.0, highlightColor: '#beff50' },
+    ],
+  },
+  {
+    id: 'p9',
+    phrase: 'ثالثاً: شارك حزمة أدواتك Tech Stack مع غيرك',
+    start: 28.0,
+    end: 31.5,
+    words: [
+      { id: 'w38', text: 'ثالثاً:', start: 28.0, end: 28.7, highlightColor: '#a855f7' },
+      { id: 'w39', text: 'شارك حزمة أدواتك', start: 28.7, end: 30.0 },
+      { id: 'w40', text: 'Tech Stack 💻', start: 30.0, end: 31.5, highlightColor: '#a855f7' },
+    ],
+  },
+  {
+    id: 'p10',
+    phrase: 'أو اعمل تصويت حي بين الأدوات',
+    start: 31.5,
+    end: 34.0,
+    words: [
+      { id: 'w41', text: 'أو اعمل', start: 31.5, end: 32.2 },
+      { id: 'w42', text: 'تصويت حي 📊', start: 32.2, end: 33.1, highlightColor: '#beff50' },
+      { id: 'w43', text: 'بين الأدوات ⚡', start: 33.1, end: 34.0, highlightColor: '#fea619' },
+    ],
+  },
+  {
+    id: 'p11',
+    phrase: 'ادخل جربهم دلوقتي مجاناً على tolzy.me 🚀',
+    start: 34.0,
+    end: 37.1,
+    words: [
+      { id: 'w44', text: 'ادخل جربهم دلوقتي', start: 34.0, end: 35.1 },
+      { id: 'w45', text: 'مجاناً 🎁', start: 35.1, end: 35.9, highlightColor: '#beff50' },
+      { id: 'w46', text: 'على tolzy.me 🚀', start: 35.9, end: 37.1, highlightColor: '#fea619' },
+    ],
+  },
+];
+
+export const COMPARISON_TOOLS: CompareTool[] = [
+  {
+    id: 'cursor',
+    name: 'Cursor AI',
+    tagline: 'بيئة تطوير برمجية مدعومة بالذكاء الاصطناعي',
+    logo: '⚡',
+    badge: 'المرتبة #1 عالمياً 🔥',
+    price: 'Freemium (20$/شهر)',
+    arabicSupport: 'كامل ومتقن 100%',
+    topFeature: 'Cascade Agent & Tab Autocomplete',
+    pros: ['فهم عميق لكل ملفات المشروع', 'تصحيح تلقائي للأخطاء (Auto-Debug)', 'محرر VS Code مخصص وسريع'],
+    cons: ['استهلاك عالي للـ Fast Requests', 'النسخة المجانية محدودة يومياً'],
+    rating: 4.9,
+    votes: 1840,
+    accentColor: '#beff50',
+  },
+  {
+    id: 'windsurf',
+    name: 'Windsurf Editor',
+    tagline: 'أول بيئة تطوير وكيلية (Agentic IDE)',
+    logo: '🌊',
+    badge: 'الأسرع نمواً 🚀',
+    price: 'Freemium (15$/شهر)',
+    arabicSupport: 'ممتاز 95%',
+    topFeature: 'Cascade Flows & Codebase indexing',
+    pros: ['تزامن فوري بين الملفات وتوليد متعدد', 'واجهة عربية مريحة للمطورين', 'أداء خفيف واستجابة فائقة'],
+    cons: ['تحديثات مستمرة قد تغير الواجهة', 'إضافات أقل مقارنة بـ Cursor'],
+    rating: 4.8,
+    votes: 920,
+    accentColor: '#06b6d4',
+  },
+  {
+    id: 'copilot',
+    name: 'GitHub Copilot',
+    tagline: 'المساعد البرمجي الرسمي المدمج من GitHub',
+    logo: '🐙',
+    badge: 'الأكثر انتشاراً 🌐',
+    price: 'مدفوع (10$/شهر)',
+    arabicSupport: 'جيد 80%',
+    topFeature: 'تكامل أصلي مع مستودعات GitHub',
+    pros: ['دعم لكل محررات الأكواد الشهيرة', 'اقتراحات لحظية للأكواد والتعليقات', 'تكامل مباشر مع Pull Requests'],
+    cons: ['لا يقدم بيئة عمل متكاملة خاصة به', 'أقل قدرة على بناء أنظمة كاملة تلقائياً'],
+    rating: 4.7,
+    votes: 3540,
+    accentColor: '#8b5cf6',
+  },
+];
+
+export const COMMUNITY_POST_DATA: CommunityPost = {
+  id: 'post-902',
+  author: {
+    name: 'م. أحمد النجار',
+    handle: '@ahmed_dev',
+    avatar: '👨‍💻',
+    badge: 'Senior AI Engineer',
+  },
+  content: 'جربت اليوم أداة @Cursor AI في إعادة هيكلة مشروع ضخم، النتيجة أسرع بـ 5 أضعاف عن السابق!',
+  timeAgo: 'منذ دقيقتين',
+  mentionedTool: COMPARISON_TOOLS[0],
+  likes: 84,
+  replies: 19,
+};
+
+export const TECH_STACK_DATA: TechStackItem = {
+  id: 'stack-01',
+  name: 'حزمة المطور الذكي (Full-Stack AI)',
+  author: 'كريم عادل',
+  authorAvatar: '⚡',
+  description: 'أفضل تركيبة أدوات لبناء تطبيقات الويب الحديثة في 2026 بأعلى إنتاجية',
+  copiesCount: 1842,
+  tools: [
+    { name: 'Cursor AI', category: 'Smart IDE', color: '#beff50', icon: '⚡' },
+    { name: 'v0.dev', category: 'UI Builder', color: '#38bdf8', icon: '🎨' },
+    { name: 'Supabase', category: 'Backend & DB', color: '#10b981', icon: '⚡' },
+    { name: 'Claude 3.5', category: 'Reasoning AI', color: '#f59e0b', icon: '🧠' },
+  ],
+};
+
+export const LIVE_POLL_DATA: PollData = {
+  id: 'poll-01',
+  question: 'ما هو أقوى مساعد برمجي ذكي في 2026؟ ⚔️',
+  totalVotes: 1428,
+  options: [
+    {
+      id: 'opt-cursor',
+      text: 'Cursor AI (Cascade)',
+      percentage: 68,
+      votes: 971,
+      color: '#beff50',
+      icon: '⚡',
+    },
+    {
+      id: 'opt-windsurf',
+      text: 'Windsurf (Flows)',
+      percentage: 32,
+      votes: 457,
+      color: '#06b6d4',
+      icon: '🌊',
+    },
+  ],
+};
+
+export const CREATOR_PROFILE_DATA: CreatorProfileData = {
+  name: 'م. أحمد النجار',
+  handle: '@ahmed_dev',
+  role: 'Senior AI Engineer & Tech Lead',
+  avatar: '👨‍💻',
+  bio: 'أشارك أسبوعياً تجارب حقيقية وحزم أدوات ذكاء اصطناعي تفيد المطورين وصناع المحتوى العرب.',
+  stats: [
+    { label: 'مساهمة بالمنتدى', value: '142+', icon: '💬' },
+    { label: 'حزم منشورة', value: '8 حزم', icon: '📦' },
+    { label: 'التصنيف بالمجتمع', value: 'Top 1% 🔥', icon: '🏆' },
+  ],
+  favoriteTools: [
+    { name: 'Cursor AI', role: 'IDE & Coding', color: '#beff50' },
+    { name: 'Midjourney', role: 'Visuals & UI Art', color: '#ec4899' },
+    { name: 'ElevenLabs', role: 'Voice Generation', color: '#38bdf8' },
+  ],
+};

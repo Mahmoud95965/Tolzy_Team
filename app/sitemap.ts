@@ -1,12 +1,14 @@
 import { MetadataRoute } from 'next';
 import { getAllToolsFromFirebase, getAllCoursesFromFirebase } from '@/lib/firebase-admin';
+import { getFallbackTools } from '@/src/data/fallbackTools';
+import { getFallbackCourses } from '@/src/data/fallbackCourses';
 
-export const dynamic = 'force-static';
+export const revalidate = 3600; // Revalidate dynamic sitemap every hour
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = 'https://tolzy.me';
 
-    // Static pages with SEO priorities
+    // Static canonical pages with SEO priorities (removed deprecated / redirected paths like /axiom and /build)
     const staticPages: MetadataRoute.Sitemap = [
         {
             url: baseUrl,
@@ -23,20 +25,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         {
             url: `${baseUrl}/learn`,
             lastModified: new Date(),
-            changeFrequency: 'weekly',
+            changeFrequency: 'daily',
             priority: 0.9,
-        },
-        {
-            url: `${baseUrl}/build`,
-            lastModified: new Date(),
-            changeFrequency: 'weekly',
-            priority: 0.85,
-        },
-        {
-            url: `${baseUrl}/axiom`,
-            lastModified: new Date(),
-            changeFrequency: 'weekly',
-            priority: 0.8,
         },
         {
             url: `${baseUrl}/community`,
@@ -53,7 +43,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         {
             url: `${baseUrl}/contact`,
             lastModified: new Date(),
-            changeFrequency: 'yearly',
+            changeFrequency: 'monthly',
             priority: 0.5,
         },
         {
@@ -63,13 +53,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             priority: 0.5,
         },
         {
-            url: `${baseUrl}/pricing`,
-            lastModified: new Date(),
-            changeFrequency: 'monthly',
-            priority: 0.6,
-        },
-        {
-            url: `${baseUrl}/privacy-policy`,
+            url: `${baseUrl}/privacy`,
             lastModified: new Date(),
             changeFrequency: 'yearly',
             priority: 0.3,
@@ -82,19 +66,61 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         },
     ];
 
-    // Dynamic tool pages - CRITICAL FOR SEO!
     try {
-        const tools = await getAllToolsFromFirebase();
+        // Dynamic tool pages
+        let tools: any[] = [];
+        try {
+            tools = await getAllToolsFromFirebase();
+        } catch (e) {
+            console.warn('[sitemap] Could not fetch tools from Firebase Admin:', e);
+        }
+
+        if (!tools || tools.length === 0) {
+            tools = getFallbackTools();
+        }
 
         const toolPages: MetadataRoute.Sitemap = tools.map((tool: any) => ({
             url: `${baseUrl}/tools/${tool.id}`,
-            lastModified: tool.submittedAt ? new Date(tool.submittedAt) : new Date(),
+            lastModified: tool.submittedAt || tool.updatedAt ? new Date(tool.submittedAt || tool.updatedAt) : new Date(),
             changeFrequency: 'weekly',
             priority: 0.8,
         }));
 
-        // Dynamic course pages
-        const courses = await getAllCoursesFromFirebase();
+        // Dynamic course pages (Firebase + Supabase + Fallback)
+        let courses: any[] = [];
+        try {
+            courses = await getAllCoursesFromFirebase();
+        } catch (e) {
+            console.warn('[sitemap] Could not fetch courses from Firebase Admin:', e);
+        }
+
+        // If no courses from Firebase, try Supabase
+        if (!courses || courses.length === 0) {
+            try {
+                const { createClient } = await import('@supabase/supabase-js');
+                const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://zdhjnbsjkglumsakpmoj.supabase.co';
+                const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder';
+                const supabase = createClient(supabaseUrl, supabaseKey);
+                const { data } = await supabase.from('courses').select('id, updated_at');
+                if (data && data.length > 0) {
+                    courses = data.map((c: any) => ({
+                        id: c.id,
+                        updatedAt: c.updated_at
+                    }));
+                }
+            } catch (e) {
+                // Ignore and use fallback
+            }
+        }
+
+        // If still empty, use fallback courses
+        if (!courses || courses.length === 0) {
+            courses = getFallbackCourses().map(c => ({
+                id: c.id,
+                updatedAt: c.updatedAt || new Date().toISOString()
+            }));
+        }
+
         const coursePages: MetadataRoute.Sitemap = courses.map((course: any) => ({
             url: `${baseUrl}/learn/course/${course.id}`,
             lastModified: course.updatedAt ? new Date(course.updatedAt) : new Date(),
@@ -102,7 +128,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             priority: 0.85,
         }));
 
-        // Category pages - Important for SEO!
+        // Category pages - 32 Standard Categories for High-Volume SEO Ranking
         const categories = [
             'Writing', 'Design', 'Programming', 'Research', 'Productivity',
             'Language Learning', 'Studying', 'Teaching', 'Test Prep', 'Education',
@@ -118,8 +144,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             changeFrequency: 'weekly',
             priority: 0.8,
         }));
-
-        console.log(`✅ Generated sitemap with ${staticPages.length} static pages, ${toolPages.length} tools, ${coursePages.length} courses, and ${categoryPages.length} categories`);
 
         return [...staticPages, ...toolPages, ...coursePages, ...categoryPages];
     } catch (error) {

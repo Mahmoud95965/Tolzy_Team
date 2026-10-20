@@ -14,7 +14,7 @@ import {
   Search,
   Bell,
   User,
-  Wand2
+  BrainCircuit
 } from 'lucide-react';
 import { useAuth } from '@/src/context/AuthContext';
 
@@ -37,17 +37,17 @@ const AppSidebar: React.FC = () => {
         </div>
 
         <nav className="space-y-3">
-          {/* Prominent T O L Z Y AI CTA */}
+          {/* Prominent TOLZY Flow CTA */}
           <a
-            href="https://ai.tolzy.me"
+            href="https://flow.tolzy.me"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between gap-3 px-4 py-3.5 transition-all rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black shadow-lg shadow-violet-500/30 group hover:scale-[1.02] active:scale-95 mb-4"
+            className="flex items-center justify-between gap-3 px-4 py-3.5 transition-all rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-black shadow-lg shadow-indigo-500/30 group hover:scale-[1.02] active:scale-95 mb-4"
           >
-            <div className="flex bg-white/20 text-white text-[10px] px-2 py-0.5 rounded uppercase tracking-wider animate-pulse">New</div>
+            <div className="flex bg-white/20 text-white text-[10px] px-2 py-0.5 rounded uppercase tracking-wider">AI Office Suite</div>
             <div className="flex items-center gap-2">
-              <span>T O L Z Y AI</span>
-              <Wand2 size={20} className="text-violet-200 group-hover:rotate-12 transition-transform" />
+              <span>TOLZY Flow</span>
+              <BrainCircuit size={20} className="text-indigo-200 group-hover:rotate-12 transition-transform" />
             </div>
           </a>
 
@@ -73,16 +73,16 @@ const AppSidebar: React.FC = () => {
 
       {/* Mobile Top Tabs */}
       <nav className="lg:hidden sticky top-20 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-100 dark:border-white/5 p-3 flex gap-3 overflow-x-auto snap-x scrollbar-hide text-right flex-row-reverse shadow-sm">
-        {/* Mobile T O L Z Y AI CTA */}
+        {/* Mobile TOLZY Flow CTA */}
         <a 
-          href="https://ai.tolzy.me"
+          href="https://flow.tolzy.me"
           target="_blank"
           rel="noopener noreferrer"
-          className="snap-center shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 rounded-full transition-all bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-black shadow-md shadow-violet-500/20 active:scale-95"
+          className="snap-center shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 rounded-full transition-all bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-black shadow-md shadow-indigo-500/20 active:scale-95"
         >
-          <span className="text-sm border-r border-white/20 pr-2 mr-1">NEW</span>
-          <span className="text-sm whitespace-nowrap">T O L Z Y AI</span>
-          <Wand2 size={16} className="text-violet-200" />
+          <span className="text-xs border-r border-white/20 pr-2 mr-1">AI Office Suite</span>
+          <span className="text-sm whitespace-nowrap">TOLZY Flow</span>
+          <BrainCircuit size={16} className="text-indigo-200" />
         </a>
 
         {navItems.map((item) => {

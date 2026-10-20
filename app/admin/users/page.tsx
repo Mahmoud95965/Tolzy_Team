@@ -56,24 +56,10 @@ export default function UsersManagementPage() {
 
     useEffect(() => {
         fetchUsers();
-        fetchPaymentRequests();
     }, []);
 
     const fetchPaymentRequests = async () => {
-        try {
-            const authHeader = await getAdminAuthHeader();
-            const res = await fetch('/api/admin/payment-requests', {
-                headers: authHeader,
-            });
-            const data = await res.json();
-            if (data.requests) {
-                setPaymentRequests(data.requests);
-            }
-        } catch (error) {
-            console.error('Failed to fetch payment requests:', error);
-        } finally {
-            setLoadingRequests(false);
-        }
+        setLoadingRequests(false);
     };
 
     const handleApprovePaymentRequest = async (reqItem: PaymentRequest) => {
@@ -452,8 +438,8 @@ export default function UsersManagementPage() {
                     </div>
                 </div>
 
-                {/* 🔔 Pending Subscription Requests Section */}
-                {paymentRequests.filter(r => r.status === 'pending').length > 0 && (
+                {/* 🔔 Pending Subscription Requests Section (Disabled) */}
+                {false && (
                     <div className="mb-8 p-5 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border-2 border-amber-300 dark:border-amber-700/50 shadow-sm animate-in fade-in">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2.5 text-amber-900 dark:text-amber-300 font-bold text-base">

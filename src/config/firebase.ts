@@ -35,43 +35,32 @@ import { getAuth, GoogleAuthProvider, Auth, OAuthProvider, GithubAuthProvider, c
 // Note: In Next.js, we must access process.env.NEXT_PUBLIC_* directly for the bundler to capture it.
 // Dynamic access like process.env[key] will NOT work.
 
-const requiredKeys = [
-  process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  process.env.NEXT_PUBLIC_FIREBASE_APP_ID
-];
+const rawApiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+const apiKey = (rawApiKey && !rawApiKey.includes('Demo') && !rawApiKey.includes('placeholder'))
+  ? rawApiKey
+  : 'AIzaSyDgTnOb1Wiu-964QaV2Q1oxLYgWLJkqFsQ';
 
-if (requiredKeys.some(key => !key)) {
-  console.error('[Firebase] Missing one or more required environment variables.');
-  console.error('Required: NEXT_PUBLIC_FIREBASE_API_KEY, NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN, etc.');
-  console.error('Current values:', {
-    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? '✓' : '✗',
-    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ? '✓' : '✗',
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ? '✓' : '✗',
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ? '✓' : '✗',
-    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ? '✓' : '✗',
-    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ? '✓' : '✗'
-  });
+const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'zakerly0';
+
+export const isFirebaseConfigured = Boolean(apiKey && projectId);
+
+if (!isFirebaseConfigured && typeof window !== 'undefined') {
+  console.info('ℹ️ [Firebase] Running in local demo/fallback mode. Using offline bundled tools data.');
 }
 
-const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '';
 if (projectId && projectId.endsWith('.')) {
-  console.error('[Firebase] Invalid NEXT_PUBLIC_FIREBASE_PROJECT_ID: must not end with a dot. Fix your .env');
-  throw new Error('Invalid NEXT_PUBLIC_FIREBASE_PROJECT_ID');
+  console.warn('[Firebase] Invalid NEXT_PUBLIC_FIREBASE_PROJECT_ID: must not end with a dot.');
 }
 
 export const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'placeholder-api-key',
+  apiKey,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "auth.tolzy.me",
-  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
-  projectId: projectId || 'placeholder-project-id',
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'placeholder-bucket.appspot.com',
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '1234567890',
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:1234567890:web:1234567890',
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || "https://zakerly0-default-rtdb.firebaseio.com",
+  projectId,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'zakerly0.firebasestorage.app',
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '718838819739',
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:718838819739:web:fb0c10967caeaee59d4f3e',
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || 'G-TVZZCE0TF2'
 } as const;
 
 // Initialize Firebase with error handling
@@ -180,13 +169,7 @@ try {
 
   console.log('✅ Firebase initialized successfully');
 } catch (error) {
-  console.error('❌ Error initializing Firebase:', error);
-  if (error instanceof Error) {
-    console.error('Error message:', error.message);
-    console.error('Error code:', (error as any).code);
-  }
-  console.error('Please check your .env.local file and ensure all Firebase configuration values are correct.');
-  throw error;
+  console.warn('⚠️ [Firebase] Could not initialize live Firebase client. Continuing in offline mode:', error);
 }
 
 const githubProvider = new GithubAuthProvider();

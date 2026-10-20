@@ -21,11 +21,37 @@ function getSupabaseClient() {
   return createClient(supabaseUrl, supabaseKey);
 }
 
+// Map custom/extended post_types to allowed Postgres check constraint values ('prompt', 'resource', 'idea', 'question', 'code')
+function sanitizeDbPostType(type: string): string {
+  if (type === 'poll') return 'question';
+  if (type === 'stack') return 'resource';
+  if (type === 'workflow') return 'prompt';
+  const allowed = ['prompt', 'resource', 'idea', 'question', 'code'];
+  return allowed.includes(type) ? type : 'prompt';
+}
+
 // POST — Create new prompt
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { post_type, title, prompt_text, ai_output, ai_model, description, code_snippet, code_language, link_url, tag_slugs, author_uid, author_name, author_avatar } = body;
+    const {
+      post_type,
+      title,
+      prompt_text,
+      ai_output,
+      ai_model,
+      description,
+      code_snippet,
+      code_language,
+      link_url,
+      tag_slugs,
+      mentioned_tools,
+      stack_tools,
+      poll,
+      author_uid,
+      author_name,
+      author_avatar,
+    } = body;
 
     if (!prompt_text || !author_uid || !author_name) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -40,40 +66,111 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
     }
 
-    // Create post (try with post_type, fallback without it if column missing)
+    // Extract mentioned tools if not provided in array
+    const MENTION_REGEX = /@\[([^\]]+)\]\(([^)]+)\)/g;
+    const extractedSlugs: string[] = [];
+    let match;
+    while ((match = MENTION_REGEX.exec(prompt_text)) !== null) {
+      if (match[2]) extractedSlugs.push(match[2]);
+    }
+
+    // If it's a tech stack, also include stack tool IDs into mentioned_tools for unified discovery
+    if (Array.isArray(stack_tools)) {
+      stack_tools.forEach((st: any) => {
+        if (st.tool_id) extractedSlugs.push(st.tool_id);
+      });
+    }
+
+    const finalMentionedTools = Array.from(new Set([...(mentioned_tools || []), ...extractedSlugs]));
+
+    // Embed metadata inside description as resilient backup
+    let encodedDesc = description || prompt_text;
+    if (post_type) {
+      encodedDesc += `\n\n<!-- TOLZY_ORIGINAL_POST_TYPE: ${post_type} -->`;
+    }
+    if (Array.isArray(stack_tools) && stack_tools.length > 0) {
+      encodedDesc += `\n\n<!-- TOLZY_STACK_DATA: ${encodeURIComponent(JSON.stringify(stack_tools))} -->`;
+    }
+    if (poll && Array.isArray(poll.options) && poll.options.length > 0) {
+      encodedDesc += `\n\n<!-- TOLZY_POLL_DATA: ${encodeURIComponent(JSON.stringify(poll))} -->`;
+    }
+
+    // Create post (try with full schema, fallback if columns missing)
     let insertPayload: any = {
-      post_type: post_type || 'prompt',
+      post_type: sanitizeDbPostType(post_type || 'prompt'),
       status: 'published',
       title: title || '',
       prompt_text,
       ai_output: ai_output || null,
       ai_model: ai_model || null,
-      description: description || null,
+      description: encodedDesc,
       code_snippet: code_snippet || null,
       code_language: code_language || null,
       link_url: link_url || null,
       author_uid,
       author_name,
       author_avatar: author_avatar || null,
+      mentioned_tools: finalMentionedTools,
+      stack_tools: stack_tools || null,
+      poll: poll || null,
     };
 
-    let { data: prompt, error: insertError } = await supabase
-      .from('community_prompts')
-      .insert(insertPayload)
-      .select()
-      .single();
+    // Resilient insert: Try full payload, automatically strip any columns not present in Supabase schema cache
+    let prompt: any = null;
+    let insertError: any = null;
 
-    // Fallback: retry without post_type if column does not exist
-    if (insertError && insertError.message && insertError.message.includes('post_type')) {
-      console.warn('[community/prompts] post_type column missing, retrying without it');
-      const { post_type: _, ...payloadWithoutPostType } = insertPayload;
-      const retry = await supabase
+    for (let attempt = 0; attempt < 6; attempt++) {
+      const res = await supabase
         .from('community_prompts')
-        .insert(payloadWithoutPostType)
+        .insert(insertPayload)
         .select()
         .single();
-      prompt = retry.data;
-      insertError = retry.error;
+
+      if (!res.error && res.data) {
+        prompt = res.data;
+        insertError = null;
+        break;
+      }
+
+      insertError = res.error;
+      const errorMsg = insertError?.message || '';
+
+      // Pattern 1: PostgREST PGRST204 "Could not find the 'xyz' column of 'community_prompts' in the schema cache"
+      const match = errorMsg.match(/Could not find the '([^']+)' column/i);
+      if (match && match[1]) {
+        const missingCol = match[1];
+        console.warn(`[community/prompts] Column '${missingCol}' missing in schema cache, stripping and retrying`);
+        delete insertPayload[missingCol];
+        continue;
+      }
+
+      // Pattern 2: Explicit known extra columns fallback
+      if (errorMsg.includes('poll')) {
+        delete insertPayload.poll;
+        continue;
+      }
+      if (errorMsg.includes('stack_tools')) {
+        delete insertPayload.stack_tools;
+        continue;
+      }
+      if (errorMsg.includes('mentioned_tools')) {
+        delete insertPayload.mentioned_tools;
+        continue;
+      }
+      if (errorMsg.includes('post_type')) {
+        delete insertPayload.post_type;
+        continue;
+      }
+
+      // If error is unrelated to missing columns, break and return it
+      break;
+    }
+
+    if (prompt) {
+      prompt.post_type = post_type || prompt.post_type || 'prompt';
+      if (!prompt.mentioned_tools) prompt.mentioned_tools = finalMentionedTools;
+      if (!prompt.stack_tools && stack_tools) prompt.stack_tools = stack_tools;
+      if (!prompt.poll && poll) prompt.poll = poll;
     }
 
     if (insertError) {

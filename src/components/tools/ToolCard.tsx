@@ -73,16 +73,16 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
     window.dispatchEvent(new CustomEvent('open-tool-drawer', { detail: tool }));
   };
 
-  // Get concise pros/cons (exactly 2)
+  // Get concise pros/cons (only real data, no fake fallbacks)
   const displayPros = (tool.pros && tool.pros.length > 0)
     ? tool.pros.slice(0, 2)
     : (tool.features && tool.features.length > 0)
       ? tool.features.slice(0, 2)
-      : ['سرعة الأداء', 'دعم الذكاء الاصطناعي'];
+      : [];
 
   const displayCons = (tool.cons && tool.cons.length > 0)
     ? tool.cons.slice(0, 2)
-    : ['يحتاج تسجيل', 'قد يكون مدفوعاً'];
+    : [];
 
   const pricingLabels: Record<string, string> = {
     Free: 'مجاني',
@@ -96,60 +96,65 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
   return (
     <div 
       onClick={handleCardClick}
-      className="group relative bg-white dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/80 dark:border-white/5 hover:border-indigo-500/50 rounded-2xl p-4 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1 cursor-pointer flex flex-col justify-between overflow-hidden h-[185px] text-right select-none"
+      className="group relative bg-[#f5f5eb] border border-[#d2d2c8] hover:border-[#14140f] rounded-[28px] p-5 transition-colors shadow-none cursor-pointer flex flex-col justify-between overflow-hidden text-right select-none"
     >
-      {/* Top Section: Glass square icon, name, stars, bookmark */}
+      {/* Top Section: Icon, name, stars, bookmark */}
       <div className="flex items-start justify-between gap-3">
         {/* Save button */}
         <button
           onClick={handleSave}
-          className={`flex-shrink-0 p-2 rounded-lg border transition-all duration-200 ${
+          className={`flex-shrink-0 p-2 rounded-full border transition-colors ${
             isSaved
-              ? 'bg-amber-500/10 border-amber-500/20 text-amber-500'
-              : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/5 text-slate-400 hover:text-indigo-500 hover:border-indigo-500/30'
+              ? 'bg-[#beff50] border-[#14140f] text-[#14140f]'
+              : 'bg-[#ffffff] border-[#d2d2c8] text-[#6e6e64] hover:text-[#14140f] hover:border-[#14140f]'
           }`}
           aria-label={isSaved ? 'إلغاء حفظ الأداة' : 'حفظ الأداة'}
         >
-          <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
+          <Bookmark className={`w-3.5 h-3.5 ${isSaved ? 'fill-current' : ''}`} />
         </button>
 
         {/* Text Details & Title */}
         <div className="flex-1 min-w-0 pr-1 space-y-1">
           <div className="flex items-center gap-1.5 justify-end">
-            <h3 className="text-[14px] font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1 truncate">
+            <h3 className="text-sm font-medium text-[#14140f] group-hover:underline line-clamp-1 truncate">
               {tool.name}
             </h3>
             {tool.isFeatured && (
-              <Award className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400 flex-shrink-0" />
+              <Award className="w-3.5 h-3.5 text-[#14140f] flex-shrink-0" />
             )}
           </div>
 
-          {/* Rating stars & counts */}
+          {/* Rating stars & counts: Strict Real Numbers */}
           <div className="flex items-center gap-1 justify-end">
-            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
-              ({tool.reviewCount})
-            </span>
-            <span className="text-[10px] font-black text-amber-500 dark:text-amber-400">
-              {tool.rating.toFixed(1)}
-            </span>
-            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 flex-shrink-0" />
+            {tool.rating && tool.rating > 0 ? (
+              <>
+                {tool.reviewCount && tool.reviewCount > 0 ? (
+                  <span className="text-[10px] font-normal text-[#6e6e64]">
+                    ({tool.reviewCount})
+                  </span>
+                ) : null}
+                <span className="text-[10px] font-medium text-[#14140f]">
+                  {tool.rating.toFixed(1)}
+                </span>
+                <Star className="w-3 h-3 text-[#14140f] fill-[#14140f] flex-shrink-0" />
+              </>
+            ) : (
+              <span className="text-[10px] text-[#6e6e64] bg-[#ffffff] border border-[#d2d2c8] px-2 py-0.5 rounded-full">
+                جديد
+              </span>
+            )}
           </div>
 
           {/* Pricing capsule */}
-          <div className="flex justify-end pt-1">
-            <span className={`px-2 py-0.5 rounded-md text-[9px] font-black tracking-wide uppercase
-              ${tool.pricing === 'Free' 
-                ? 'bg-green-500/10 border border-green-500/20 text-green-400' 
-                : 'bg-indigo-500/10 border border-indigo-500/20 text-indigo-400'
-              }`}
-            >
+          <div className="flex justify-end pt-0.5">
+            <span className="px-2.5 py-0.5 rounded-full text-[9px] font-medium uppercase border bg-[#ffffff] text-[#14140f] border-[#d2d2c8]">
               {pricingLabel}
             </span>
           </div>
         </div>
 
-        {/* Small Glass Square Icon */}
-        <div className="flex-shrink-0 p-0.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 backdrop-blur-md group-hover:border-indigo-500/30 transition-all duration-300">
+        {/* Tool Image */}
+        <div className="flex-shrink-0 p-1 rounded-[18px] bg-[#ffffff] border border-[#d2d2c8]">
           <ToolImage
             name={tool.name}
             categoryName={primaryCategory}
@@ -159,34 +164,40 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
         </div>
       </div>
 
-      {/* Badges Grid (Pros & Cons Capsules) */}
-      <div className="border-t border-slate-100 dark:border-white/5 pt-2.5 space-y-1.5">
-        {/* Pros badges */}
-        <div className="flex flex-wrap gap-1.5 justify-end">
-          {displayPros.map((pro, index) => (
-            <span 
-              key={`pro-${index}`} 
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-500/5 border border-emerald-500/10 text-emerald-400 text-[10px] font-bold max-w-[130px] truncate"
-            >
-              <span className="truncate">{pro}</span>
-              <CheckCircle2 className="w-2.5 h-2.5 flex-shrink-0 text-emerald-400" />
-            </span>
-          ))}
-        </div>
+      {/* Badges Grid (Pros & Cons Capsules, rendered only if real data exists) */}
+      {(displayPros.length > 0 || displayCons.length > 0) && (
+        <div className="border-t border-[#d2d2c8] pt-2.5 space-y-1.5 mt-3">
+          {/* Pros badges */}
+          {displayPros.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 justify-end">
+              {displayPros.map((pro, index) => (
+                <span 
+                  key={`pro-${index}`} 
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#ffffff] border border-[#d2d2c8] text-[#14140f] text-[10px] font-normal max-w-[130px] truncate"
+                >
+                  <span className="truncate">{pro}</span>
+                  <CheckCircle2 className="w-2.5 h-2.5 flex-shrink-0 text-[#14140f]" />
+                </span>
+              ))}
+            </div>
+          )}
 
-        {/* Cons badges */}
-        <div className="flex flex-wrap gap-1.5 justify-end">
-          {displayCons.map((con, index) => (
-            <span 
-              key={`con-${index}`} 
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-rose-500/5 border border-rose-500/10 text-rose-400 text-[10px] font-bold max-w-[130px] truncate"
-            >
-              <span className="truncate">{con}</span>
-              <XCircle className="w-2.5 h-2.5 flex-shrink-0 text-rose-400" />
-            </span>
-          ))}
+          {/* Cons badges */}
+          {displayCons.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 justify-end">
+              {displayCons.map((con, index) => (
+                <span 
+                  key={`con-${index}`} 
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#ffffff] border border-[#d2d2c8] text-[#6e6e64] text-[10px] font-normal max-w-[130px] truncate"
+                >
+                  <span className="truncate">{con}</span>
+                  <XCircle className="w-2.5 h-2.5 flex-shrink-0 text-[#6e6e64]" />
+                </span>
+              ))}
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </div>
   );
 };

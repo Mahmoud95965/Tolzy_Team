@@ -139,7 +139,7 @@ const CreatorsSection: React.FC<CreatorsSectionProps> = ({ onBack }) => {
           >
             <div className="flex items-center gap-3">
               {/* Avatar */}
-              <Link href={`/profile?username=${creator.username}`} className="shrink-0">
+              <Link href={`/community/user/${encodeURIComponent(creator.username || creator.displayName || 'user')}`} className="shrink-0">
                 {creator.photoURL ? (
                   <img
                     alt={creator.displayName}
@@ -155,7 +155,7 @@ const CreatorsSection: React.FC<CreatorsSectionProps> = ({ onBack }) => {
 
               {/* Info */}
               <div className="flex flex-col">
-                <Link href={`/profile?username=${creator.username}`}>
+                <Link href={`/community/user/${encodeURIComponent(creator.username || creator.displayName || 'user')}`}>
                   <span className="font-bold text-[17px] text-gray-900 dark:text-white hover:underline cursor-pointer">
                     {creator.displayName}
                   </span>
@@ -169,7 +169,7 @@ const CreatorsSection: React.FC<CreatorsSectionProps> = ({ onBack }) => {
                 {/* View profile button */}
                 <div className="mt-2">
                   <Link
-                    href={`/profile?username=${creator.username}`}
+                    href={`/community/user/${encodeURIComponent(creator.username || creator.displayName || 'user')}`}
                     className="block w-full bg-[#005cff] text-white font-semibold py-1.5 px-6 rounded-md text-[15px] text-center hover:bg-[#004bb5] transition-colors"
                   >
                     عرض الملف

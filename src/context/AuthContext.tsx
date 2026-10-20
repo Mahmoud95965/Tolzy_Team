@@ -174,28 +174,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 console.warn('⚠️ [AuthContext] Firestore user fetch failed:', fsErr);
               }
 
-              const userPlanFromBase = baseData.plan || baseData.subscriptionPlan || baseData.subscription_plan || baseData.tier || (baseData.isMax ? 'max' : baseData.isPro ? 'pro' : 'free');
-              let truePlan = userPlanFromBase || 'free';
-              
-              try {
-                const res = await fetch(`/api/user/plan?uid=${encodeURIComponent(firebaseUser.uid)}`, {
-                  cache: 'no-store'
-                });
-                if (res.ok) {
-                  const result = await res.json();
-                  if (result?.plan && result.plan !== 'free') {
-                    truePlan = result.plan;
-                  } else if (userPlanFromBase && userPlanFromBase !== 'free') {
-                    truePlan = userPlanFromBase;
-                  } else {
-                    truePlan = result?.plan || 'free';
-                  }
-                }
-              } catch (e) {
-                console.error("Error fetching plan from backend:", e);
-              }
-
-              const finalNormalizedPlan = normalizePlan(truePlan);
+              const userPlanFromBase = baseData.plan || baseData.subscriptionPlan || 'free';
+              const finalNormalizedPlan = normalizePlan(userPlanFromBase);
 
               setUserProfile({
                 uid: firebaseUser.uid,
@@ -207,14 +187,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               });
 
               // Admin Check
-              if (firebaseUser.email === 'mahmoud.m.moussa5310@gmail.com') {
-                const adminDocRef = doc(db, 'admins', firebaseUser.uid);
-                setDoc(adminDocRef, {
-                  role: 'admin',
-                  email: firebaseUser.email,
-                  createdAt: new Date().toISOString()
-                }, { merge: true }).catch(console.error);
-
+              if (firebaseUser.email?.toLowerCase() === 'mahmoud.m.moussa5310@gmail.com') {
                 setIsAdmin(true);
                 if (typeof document !== 'undefined') {
                   document.cookie = "tolzy_admin_session=mahmoud_secure_session; path=/; max-age=86400; Secure; SameSite=Strict";
@@ -252,55 +225,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  // Refresh plan on window focus
-  useEffect(() => {
-    if (!user?.uid) return;
-
-    let lastRefresh = 0;
-    let cancelled = false;
-    
-    const refreshPlan = async () => {
-      const now = Date.now();
-      if (now - lastRefresh < 60000) {
-        return;
-      }
-      lastRefresh = now;
-      
-      try {
-        const res = await fetch(`/api/user/plan?uid=${encodeURIComponent(user.uid)}`, {
-          cache: 'no-store'
-        });
-        if (!res.ok) return;
-        const result = await res.json();
-        const latestPlan = normalizePlan(result?.plan);
-
-        if (!cancelled) {
-          setUserProfile((prev) => {
-            if (!prev || prev.uid !== user.uid) return prev;
-            if (prev.plan === latestPlan) return prev;
-            return { ...prev, plan: latestPlan };
-          });
-        }
-      } catch (e) {
-        console.error('❌ Plan refresh error:', e);
-      }
-    };
-
-    const onWindowFocus = () => {
-      refreshPlan();
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('focus', onWindowFocus);
-    }
-
-    return () => {
-      cancelled = true;
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('focus', onWindowFocus);
-      }
-    };
-  }, [user?.uid]);
 
   const signInWithGoogle = async () => {
     try {

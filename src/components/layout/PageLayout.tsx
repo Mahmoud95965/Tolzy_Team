@@ -17,14 +17,14 @@ interface PageLayoutProps {
 
 const PageLayout: React.FC<PageLayoutProps> = ({ 
   children, 
-  showCopilot = true, 
+  showCopilot = false, 
   showSidebar = false,
   navbarOffset = true,
   hideNavbar = false,
   hideFooter = false
 }) => {
   return (
-    <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200 overflow-x-hidden w-full">
+    <div className="flex flex-col min-h-screen bg-[#ffffff] text-[#14140f] overflow-x-hidden w-full selection:bg-[#beff50] selection:text-[#14140f]">
       {!hideNavbar && (
         <div className="fixed top-0 left-0 right-0 z-50">
           <Navbar />

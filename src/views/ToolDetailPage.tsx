@@ -9,6 +9,7 @@ import PageLayout from '../components/layout/PageLayout';
 import ToolsGrid from '../components/tools/ToolsGrid';
 import ShareToolModal from '../components/tools/ShareToolModal';
 import ToolImage from '../components/common/ToolImage';
+import ToolCommunityDiscussions from '../components/tools/ToolCommunityDiscussions';
 import { Tool } from '../types/tool';
 import {
   Star,
@@ -309,28 +310,25 @@ const ToolDetailPageNew: React.FC<ToolDetailPageProps> = ({ initialTool }) => {
     <PageLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Top Navigation */}
-        <nav className="mb-8 animate-fade-in flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-          <Link href="/" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">الرئيسية</Link>
-          <ChevronRight className="w-4 h-4 rtl:rotate-180" />
-          <Link href="/tools" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">الأدوات</Link>
-          <ChevronRight className="w-4 h-4 rtl:rotate-180" />
-          <span className="text-gray-900 dark:text-white font-medium line-clamp-1">{tool.name}</span>
+        <nav className="mb-8 flex items-center gap-2 text-xs uppercase tracking-[0.05em] text-[#6e6e64]">
+          <Link href="/" className="hover:text-[#14140f] transition-colors">الرئيسية</Link>
+          <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" />
+          <Link href="/tools" className="hover:text-[#14140f] transition-colors">الأدوات</Link>
+          <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" />
+          <span className="text-[#14140f] font-medium line-clamp-1">{tool.name}</span>
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
 
           {/* Main Content (8 cols) */}
-          <div className="lg:col-span-8 space-y-10">
+          <div className="lg:col-span-8 space-y-8">
 
             {/* Hero Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 md:p-10 shadow-xl border border-gray-100 dark:border-gray-700 relative overflow-hidden animate-fade-in-up group">
-              {/* Background gradient blob */}
-              <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-50/50 dark:bg-indigo-900/10 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none group-hover:bg-indigo-100/50 dark:group-hover:bg-indigo-900/20 transition-colors duration-700"></div>
-
+            <div className="bg-[#f5f5eb] rounded-[28px] p-6 md:p-10 border border-[#d2d2c8] shadow-none relative overflow-hidden">
               <div className="relative z-10 flex flex-col md:flex-row gap-8 items-start">
                 {/* Logo Section */}
                 <div className="flex-shrink-0 mx-auto md:mx-0">
-                  <div className="p-1 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900 dark:to-purple-900 shadow-lg">
+                  <div className="p-2 rounded-[18px] bg-[#ffffff] border border-[#d2d2c8]">
                     <ToolImage
                       name={tool.name}
                       categoryName={Array.isArray(tool.category) ? tool.category[0] : tool.category}
@@ -343,36 +341,36 @@ const ToolDetailPageNew: React.FC<ToolDetailPageProps> = ({ initialTool }) => {
                 {/* Content Section */}
                 <div className="flex-1 text-center md:text-right space-y-4">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <h1 className="text-3xl md:text-5xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+                    <h1 className="text-3xl md:text-5xl font-medium text-[#14140f] tracking-tight">
                       {tool.name}
                     </h1>
                     <div className="flex items-center justify-center md:justify-end gap-2">
                       {/* Badge Examples */}
                       {tool.isFeatured && (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-xs font-bold border border-amber-200 dark:border-amber-700/50">
+                        <span className="inline-flex items-center gap-1 px-3 py-0.5 bg-[#beff50] text-[#14140f] rounded-full text-[10px] font-medium uppercase tracking-[0.1em]">
                           <Sparkles className="w-3 h-3" /> مميزة
                         </span>
                       )}
                       {tool.pricing === 'Free' && (
-                        <span className="inline-flex items-center px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-bold border border-green-200 dark:border-green-700/50">
+                        <span className="inline-flex items-center px-3 py-0.5 bg-[#ffffff] border border-[#d2d2c8] text-[#14140f] rounded-full text-[10px] font-medium">
                           مجانية
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 leading-relaxed font-light">
+                  <p className="text-base md:text-lg text-[#6e6e64] leading-relaxed font-normal">
                     {tool.description}
                   </p>
 
-                  <div className="pt-4 flex flex-wrap items-center justify-center md:justify-start gap-4">
+                  <div className="pt-2 flex flex-wrap items-center justify-center md:justify-start gap-3">
                     <a
                       href={tool.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-white bg-gray-900 dark:bg-indigo-600 hover:bg-gray-800 dark:hover:bg-indigo-500 font-bold shadow-lg shadow-indigo-500/20 transition-all hover:-translate-y-1"
+                      className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-[28px] text-[#14140f] bg-[#beff50] hover:bg-[#abf03c] font-medium text-sm transition-colors shadow-none"
                     >
-                      <ExternalLink className="w-5 h-5" />
+                      <ExternalLink className="w-4 h-4" />
                       زيارة الموقع
                     </a>
 
@@ -382,53 +380,46 @@ const ToolDetailPageNew: React.FC<ToolDetailPageProps> = ({ initialTool }) => {
                       <button
                         onClick={() => handleVote('helpful')}
                         disabled={isVoting}
-                        className={`group relative inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold border transition-all duration-300 ${userVote === 'helpful'
-                          ? 'bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400'
-                          : 'bg-white border-gray-200 text-gray-600 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-emerald-900/20 dark:hover:border-emerald-800 dark:hover:text-emerald-400'
-                          }`}
+                        className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border text-xs font-normal transition-colors ${
+                          userVote === 'helpful'
+                            ? 'bg-[#beff50] border-[#14140f] text-[#14140f] font-medium'
+                            : 'bg-[#ffffff] border-[#d2d2c8] text-[#14140f] hover:border-[#14140f]'
+                        }`}
                         aria-label="أعجبني"
                       >
-                        <ThumbsUp className={`w-5 h-5 transition-transform duration-300 ${userVote === 'helpful' ? 'scale-110 fill-current' : 'group-hover:scale-110'}`} />
-                        <span className="text-base tabular-nums">{optimisticLikeCount}</span>
-
-                        {/* Animation Effect */}
-                        {userVote === 'helpful' && (
-                          <span className="absolute inset-0 rounded-xl ring-2 ring-emerald-400 animate-ping opacity-20 pointer-events-none"></span>
-                        )}
+                        <ThumbsUp className="w-4 h-4" />
+                        <span className="tabular-nums font-mono">{optimisticLikeCount}</span>
                       </button>
 
                       {/* Dislike Button */}
                       <button
                         onClick={() => handleVote('notHelpful')}
                         disabled={isVoting}
-                        className={`group relative inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold border transition-all duration-300 ${userVote === 'notHelpful'
-                          ? 'bg-rose-50 border-rose-200 text-rose-600 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400'
-                          : 'bg-white border-gray-200 text-gray-600 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-rose-900/20 dark:hover:border-rose-800 dark:hover:text-rose-400'
-                          }`}
+                        className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border text-xs font-normal transition-colors ${
+                          userVote === 'notHelpful'
+                            ? 'bg-[#14140f] border-[#14140f] text-[#ffffff] font-medium'
+                            : 'bg-[#ffffff] border-[#d2d2c8] text-[#6e6e64] hover:text-[#14140f] hover:border-[#14140f]'
+                        }`}
                         aria-label="لم يعجبني"
                       >
-                        <ThumbsDown className={`w-5 h-5 transition-transform duration-300 ${userVote === 'notHelpful' ? 'scale-110 fill-current' : 'group-hover:scale-110'}`} />
-                        <span className="text-base tabular-nums">{optimisticDislikeCount}</span>
-
-                        {/* Animation Effect */}
-                        {userVote === 'notHelpful' && (
-                          <span className="absolute inset-0 rounded-xl ring-2 ring-rose-400 animate-ping opacity-20 pointer-events-none"></span>
-                        )}
+                        <ThumbsDown className="w-4 h-4" />
+                        <span className="tabular-nums font-mono">{optimisticDislikeCount}</span>
                       </button>
                     </div>
 
                     <button
                       onClick={handleSave}
                       disabled={isSaving}
-                      className={`p-3.5 rounded-xl border transition-colors ${tool.savedBy?.includes(user?.uid || '')
-                        ? 'bg-indigo-50 border-indigo-200 text-indigo-600 dark:bg-indigo-900/20 dark:border-indigo-800 dark:text-indigo-400'
-                        : 'bg-white border-gray-200 text-gray-400 hover:text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:hover:text-gray-300'
-                        }`}
+                      className={`p-3 rounded-full border transition-colors ${
+                        tool.savedBy?.includes(user?.uid || '')
+                          ? 'bg-[#beff50]/20 border-[#14140f] text-[#14140f]'
+                          : 'bg-[#ffffff] border-[#d2d2c8] text-[#14140f] hover:border-[#14140f]'
+                      }`}
                       aria-label="Save tool"
                     >
                       {tool.savedBy?.includes(user?.uid || '')
-                        ? <BookmarkMinus className="w-6 h-6" />
-                        : <BookmarkPlus className="w-6 h-6" />
+                        ? <BookmarkMinus className="w-5 h-5" />
+                        : <BookmarkPlus className="w-5 h-5" />
                       }
                     </button>
                   </div>
@@ -438,33 +429,32 @@ const ToolDetailPageNew: React.FC<ToolDetailPageProps> = ({ initialTool }) => {
               {/* Features Tags Row */}
               <div className="mt-8 flex flex-wrap gap-2 justify-center md:justify-start">
                 {tool.features.slice(0, 4).map((f, i) => (
-                  <span key={i} className="px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 text-sm flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> {f}
+                  <span key={i} className="px-3 py-1 rounded-full bg-[#ffffff] border border-[#d2d2c8] text-[#14140f] text-xs font-normal flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#14140f]" /> {f}
                   </span>
                 ))}
                 {Array.isArray(tool.category) ? tool.category.map((cat, idx) => (
-                  <span key={`cat-${idx}`} className="px-3 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 text-sm border border-indigo-100 dark:border-indigo-800">
+                  <span key={`cat-${idx}`} className="px-3 py-1 rounded-full bg-[#ffffff] border border-[#d2d2c8] text-[#14140f] text-xs font-normal">
                     {cat}
                   </span>
                 )) : (
-                  <span className="px-3 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 text-sm border border-indigo-100 dark:border-indigo-800">
+                  <span className="px-3 py-1 rounded-full bg-[#ffffff] border border-[#d2d2c8] text-[#14140f] text-xs font-normal">
                     {tool.category}
                   </span>
-                )
-                }
+                )}
               </div>
             </div>
 
             {/* Content Tabs / Sections */}
-            <div className="space-y-8 animate-fade-in delay-100">
+            <div className="space-y-6">
 
               {/* Description */}
-              <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-100 dark:border-gray-700">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <Newspaper className="w-6 h-6 text-indigo-500" />
-                  نبدة عن الأداة
+              <div className="bg-[#f5f5eb] rounded-[28px] p-8 border border-[#d2d2c8]">
+                <h2 className="text-xl font-medium text-[#14140f] mb-4 flex items-center gap-2">
+                  <Newspaper className="w-5 h-5 text-[#14140f]" />
+                  نبذة عن الأداة
                 </h2>
-                <p className="text-gray-700 dark:text-gray-300 leading-8 text-lg">
+                <p className="text-[#14140f] leading-relaxed text-base font-normal">
                   {tool.longDescription || tool.description}
                 </p>
               </div>
@@ -472,15 +462,15 @@ const ToolDetailPageNew: React.FC<ToolDetailPageProps> = ({ initialTool }) => {
               {/* Pros & Cons Grid */}
               <div className="grid md:grid-cols-2 gap-6">
                 {tool.pros && tool.pros.length > 0 && (
-                  <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-100 dark:border-gray-700 shadow-sm">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                      <span className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg text-green-600"><CheckCircle2 className="w-5 h-5" /></span>
+                  <div className="bg-[#f5f5eb] rounded-[28px] p-8 border border-[#d2d2c8] shadow-none">
+                    <h3 className="text-lg font-medium text-[#14140f] mb-4 flex items-center gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-[#14140f]" />
                       النقاط الإيجابية
                     </h3>
-                    <ul className="space-y-3">
+                    <ul className="space-y-2">
                       {tool.pros.map((p, i) => (
-                        <li key={i} className="flex gap-3 text-gray-700 dark:text-gray-300">
-                          <span className="text-green-500 font-bold">•</span>
+                        <li key={i} className="flex gap-2 text-sm text-[#14140f] font-normal">
+                          <span className="text-[#14140f] font-medium">•</span>
                           {p}
                         </li>
                       ))}
@@ -489,15 +479,15 @@ const ToolDetailPageNew: React.FC<ToolDetailPageProps> = ({ initialTool }) => {
                 )}
 
                 {tool.cons && tool.cons.length > 0 && (
-                  <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-100 dark:border-gray-700 shadow-sm">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                      <span className="p-1.5 bg-red-100 dark:bg-red-900/30 rounded-lg text-red-600"><XCircle className="w-5 h-5" /></span>
+                  <div className="bg-[#f5f5eb] rounded-[28px] p-8 border border-[#d2d2c8] shadow-none">
+                    <h3 className="text-lg font-medium text-[#6e6e64] mb-4 flex items-center gap-2">
+                      <XCircle className="w-5 h-5 text-[#6e6e64]" />
                       نقاط التحسين
                     </h3>
-                    <ul className="space-y-3">
+                    <ul className="space-y-2">
                       {tool.cons.map((c, i) => (
-                        <li key={i} className="flex gap-3 text-gray-700 dark:text-gray-300">
-                          <span className="text-red-500 font-bold">•</span>
+                        <li key={i} className="flex gap-2 text-sm text-[#6e6e64] font-normal">
+                          <span className="text-[#6e6e64] font-medium">•</span>
                           {c}
                         </li>
                       ))}
@@ -514,41 +504,41 @@ const ToolDetailPageNew: React.FC<ToolDetailPageProps> = ({ initialTool }) => {
           <div className="lg:col-span-4 space-y-6">
 
             {/* Info Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm sticky top-24">
-              <h3 className="font-bold text-gray-900 dark:text-white mb-6 text-lg">معلومات سريعة</h3>
+            <div className="bg-[#f5f5eb] rounded-[28px] p-6 border border-[#d2d2c8] shadow-none sticky top-24">
+              <h3 className="font-medium text-[#14140f] mb-6 text-base uppercase tracking-[0.05em]">معلومات سريعة</h3>
 
-              <div className="space-y-5">
-                <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-700">
-                  <span className="text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                    <DollarSign className="w-4 h-4" /> التسعير
+              <div className="space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#d2d2c8]">
+                  <span className="text-[#6e6e64] text-sm flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-[#14140f]" /> التسعير
                   </span>
-                  <span className="font-semibold text-gray-900 dark:text-white">
+                  <span className="font-medium text-[#14140f] text-sm">
                     {tool.pricing === 'Free' ? 'مجاني' :
                       tool.pricing === 'Freemium' ? 'مجاني / مدفوع' :
                         tool.pricing === 'Paid' ? 'مدفوع' : 'اشتراك'}
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-700">
-                  <span className="text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                    <Star className="w-4 h-4" /> التقييم
+                <div className="flex items-center justify-between pb-3 border-b border-[#d2d2c8]">
+                  <span className="text-[#6e6e64] text-sm flex items-center gap-2">
+                    <Star className="w-4 h-4 text-[#14140f]" /> التقييم
                   </span>
-                  <div className="flex items-center gap-1 font-semibold text-gray-900 dark:text-white">
-                    <span className="text-amber-500">{tool.rating.toFixed(1)}</span>
-                    <span className="text-xs text-gray-400">/5</span>
+                  <div className="flex items-center gap-1 font-medium text-[#14140f] text-sm">
+                    <span>{tool.rating.toFixed(1)}</span>
+                    <span className="text-xs text-[#6e6e64]">/5</span>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-700">
-                  <span className="text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                    <Users className="w-4 h-4" /> التفاعل
+                <div className="flex items-center justify-between pb-3 border-b border-[#d2d2c8]">
+                  <span className="text-[#6e6e64] text-sm flex items-center gap-2">
+                    <Users className="w-4 h-4 text-[#14140f]" /> التفاعل
                   </span>
-                  <div className="flex items-center gap-3 font-semibold">
-                    <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                      <ThumbsUp className="w-4 h-4" /> {optimisticLikeCount}
+                  <div className="flex items-center gap-3 font-medium text-sm">
+                    <span className="flex items-center gap-1 text-[#14140f]">
+                      <ThumbsUp className="w-3.5 h-3.5" /> {optimisticLikeCount}
                     </span>
-                    <span className="flex items-center gap-1 text-rose-500 dark:text-rose-400">
-                      <ThumbsDown className="w-4 h-4" /> {optimisticDislikeCount}
+                    <span className="flex items-center gap-1 text-[#6e6e64]">
+                      <ThumbsDown className="w-3.5 h-3.5" /> {optimisticDislikeCount}
                     </span>
                   </div>
                 </div>
@@ -556,7 +546,7 @@ const ToolDetailPageNew: React.FC<ToolDetailPageProps> = ({ initialTool }) => {
                 <div className="pt-2">
                   <button
                     onClick={() => setIsShareModalOpen(true)}
-                    className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors font-medium border border-gray-200 dark:border-gray-600"
+                    className="w-full flex items-center justify-center gap-2 p-3 rounded-[28px] bg-[#ffffff] text-[#14140f] hover:border-[#14140f] transition-colors font-medium text-sm border border-[#d2d2c8]"
                   >
                     <Share2 className="w-4 h-4" /> مشاركة الأداة
                   </button>
@@ -566,11 +556,11 @@ const ToolDetailPageNew: React.FC<ToolDetailPageProps> = ({ initialTool }) => {
 
             {/* Tags Cloud */}
             {tool.tags && tool.tags.length > 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm">
-                <h3 className="font-bold text-gray-900 dark:text-white mb-4 text-sm uppercase tracking-wider text-opacity-70">الوسوم</h3>
+              <div className="bg-[#f5f5eb] rounded-[28px] p-6 border border-[#d2d2c8] shadow-none">
+                <h3 className="font-medium text-[#14140f] mb-4 text-xs uppercase tracking-[0.1em]">الوسوم</h3>
                 <div className="flex flex-wrap gap-2">
                   {tool.tags.map((tag, i) => (
-                    <span key={i} className="px-3 py-1.5 bg-gray-50 dark:bg-gray-900/50 text-gray-600 dark:text-gray-400 text-sm rounded-lg hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-default">
+                    <span key={i} className="px-3 py-1 bg-[#ffffff] border border-[#d2d2c8] text-[#14140f] text-xs font-normal rounded-full cursor-default">
                       #{tag}
                     </span>
                   ))}
@@ -582,14 +572,17 @@ const ToolDetailPageNew: React.FC<ToolDetailPageProps> = ({ initialTool }) => {
 
         </div>
 
+        {/* Community Discussions & Experiences Section */}
+        {tool && <ToolCommunityDiscussions tool={tool} />}
+
         {/* Related Tools */}
         {relatedTools.length > 0 && (
-          <div className="mt-20 border-t border-gray-100 dark:border-gray-800 pt-12">
+          <div className="mt-20 border-t border-[#d2d2c8] pt-12">
             <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+              <h2 className="text-2xl font-medium text-[#14140f] tracking-tight">
                 أدوات ذات صلة
               </h2>
-              <Link href="/tools" className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline">
+              <Link href="/tools" className="text-xs uppercase tracking-[0.1em] font-medium text-[#14140f] hover:underline">
                 عرض المزيد
               </Link>
             </div>

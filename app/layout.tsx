@@ -10,6 +10,10 @@ import { generateSearchActionSchema } from '@/src/utils/seoHelpers';
 import PwaInstallPrompt from '@/src/components/common/PwaInstallPrompt';
 import '@/src/index.css';
 
+import { CompareProvider } from '@/src/context/CompareContext';
+import ToolComparisonDock from '@/src/components/tools/ToolComparisonDock';
+import ToolComparisonModal from '@/src/components/tools/ToolComparisonModal';
+
 // Removed Almarai config to bypass build-time fetch. Using standard <link> in <head> instead.
 
 export const metadata: Metadata = {
@@ -187,11 +191,15 @@ export default function RootLayout({
                 <ThemeProvider>
                     <AuthProvider>
                         <ToolsProvider>
-                            <I18nProvider>
-                                {children}
-                                <PwaInstallPrompt />
-                                <Toaster position="bottom-center" toastOptions={{ duration: 3000 }} />
-                            </I18nProvider>
+                            <CompareProvider>
+                                <I18nProvider>
+                                    {children}
+                                    <ToolComparisonDock />
+                                    <ToolComparisonModal />
+                                    <PwaInstallPrompt />
+                                    <Toaster position="bottom-center" toastOptions={{ duration: 3000 }} />
+                                </I18nProvider>
+                            </CompareProvider>
                         </ToolsProvider>
                     </AuthProvider>
                 </ThemeProvider>

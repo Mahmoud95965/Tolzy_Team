@@ -1,29 +1,44 @@
 "use client";
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import PageLayout from '../components/layout/PageLayout';
 import dynamic from 'next/dynamic';
+import { createClient } from '@supabase/supabase-js';
+import { Course } from '../types/learn';
+import { 
+    ExternalLink, 
+    Globe, 
+    Clock, 
+    Users, 
+    ArrowLeft, 
+    Sparkles, 
+    CheckCircle2, 
+    PlayCircle, 
+    Star, 
+    Award,
+    BookOpen,
+    Share2,
+    Check,
+    Cpu,
+    ArrowUpRight
+} from 'lucide-react';
+import { getFallbackCourseById, FALLBACK_COURSES } from '../data/fallbackCourses';
+import SEO from '../components/SEO';
+import toast from 'react-hot-toast';
 
-// Lazy load CourseReviews component for better performance
+// Lazy load CourseReviews component
 const CourseReviews = dynamic(() => import('../components/learn/CourseReviews'), {
-    loading: () => <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-64 rounded-xl"></div>,
+    loading: () => (
+        <div className="animate-pulse bg-[#f5f5eb] border border-[#d2d2c8] h-64 rounded-[28px]" />
+    ),
     ssr: false
 });
-import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
-);
-
-import { Course } from '../types/learn';
-import { ExternalLink, Globe, Clock, Users, ArrowLeft, Sparkles, CheckCircle2, PlayCircle, Star, RefreshCw, ChevronRight } from 'lucide-react';
-import { motion } from 'framer-motion';
-import axios from 'axios';
-import LoadingSpinner from '../components/common/LoadingSpinner';
-
-import SEO from '../components/SEO';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 interface TolzyCoursePlayerPageProps {
     initialCourse?: Course | null;
@@ -32,84 +47,129 @@ interface TolzyCoursePlayerPageProps {
 const TolzyCoursePlayerPage: React.FC<TolzyCoursePlayerPageProps> = ({ initialCourse }) => {
     const params = useParams();
     const router = useRouter();
-    const courseId = params?.courseId as string;
-    const [course, setCourse] = useState<Course | null>(initialCourse || null);
-    const [loading, setLoading] = useState(!initialCourse);
+    const courseId = (params?.courseId as string) || '';
 
-    // Auto-fetch real student count
-    const fetchRealStudentCount = async () => {
-        if (!course || !course.sourceUrl) return;
+    // Initialize with initialCourse or direct fallback lookup
+    const [course, setCourse] = useState<Course | null>(() => {
+        if (initialCourse) return initialCourse;
+        if (courseId) return getFallbackCourseById(courseId);
+        return null;
+    });
 
-        try {
-            // Determine API URL based on environment
-            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            const API_BASE = isLocal ? 'http://localhost:5000' : '';
+    const [loading, setLoading] = useState<boolean>(!course);
+    const [copied, setCopied] = useState<boolean>(false);
 
-            const response = await axios.post(`${API_BASE}/api/fetch-course`, {
-                url: course.sourceUrl,
-                courseId: course.id // Pass ID to allow server-side update
-            });
-
-            if (response.data && response.data.studentsCount > 0) {
-                const newCount = response.data.studentsCount;
-                setCourse(prev => prev ? ({ ...prev, studentsCount: newCount }) : null);
-            }
-        } catch (error) {
-            // silent fail
-        }
-    };
-
-    // Trigger on load if missing
+    // Sync state if initialCourse prop updates
     useEffect(() => {
-        if (course && (!course.studentsCount || course.studentsCount === 0)) {
-            fetchRealStudentCount();
+        if (initialCourse) {
+            setCourse(initialCourse);
+            setLoading(false);
         }
-    }, [course?.id]);
+    }, [initialCourse]);
 
-
+    // Fetch from Supabase or fallback
     useEffect(() => {
-        const fetchCourse = async () => {
-            if (!courseId) return;
+        if (!courseId) return;
+
+        // If course is already matching, no need to re-query
+        if (course && (course.id === courseId || (course as any).external_id === courseId)) {
+            setLoading(false);
+            return;
+        }
+
+        let isMounted = true;
+
+        const loadCourseData = async () => {
             try {
+                // Try Supabase first
                 const { data, error } = await supabase
                     .from('courses')
                     .select('*')
-                    .eq('id', courseId)
+                    .or(`id.eq.${courseId},external_id.eq.${courseId}`)
                     .single();
 
-                if (data && !error) {
-                    setCourse({ 
+                if (data && !error && isMounted) {
+                    setCourse({
                         ...data,
-                        sourceUrl: data.url,
-                        platform: data.provider,
-                        whatYouWillLearn: data.what_you_will_learn || [],
+                        sourceUrl: data.url || data.sourceUrl,
+                        platform: data.provider || data.platform || 'Tolzy',
+                        whatYouWillLearn: data.what_you_will_learn || data.whatYouWillLearn || [],
                         metadata: data.metadata || {}
                     } as Course);
-                } else {
-                    router.push('/learn');
+                    setLoading(false);
+                    return;
                 }
-            } catch (error) {
-                console.error('Error fetching course:', error);
-                router.push('/learn');
-            } finally {
+            } catch (err) {
+                // Fallback handled below
+            }
+
+            // Fallback resolution
+            if (isMounted) {
+                const fallback = getFallbackCourseById(courseId) || FALLBACK_COURSES[0];
+                if (fallback) {
+                    setCourse(fallback);
+                }
                 setLoading(false);
             }
         };
 
-        fetchCourse();
-    }, [courseId, router]);
+        loadCourseData();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [courseId, course]);
 
     const handleEnroll = () => {
-        if (course?.sourceUrl) {
-            window.open(course.sourceUrl, '_blank');
+        const targetUrl = 
+            course?.sourceUrl || 
+            (course as any)?.url || 
+            `https://www.youtube.com/results?search_query=${encodeURIComponent(course?.title || 'كورس برمجة وتطوير')}`;
+        
+        window.open(targetUrl, '_blank', 'noopener,noreferrer');
+    };
+
+    const handleShare = () => {
+        if (typeof window !== 'undefined') {
+            navigator.clipboard.writeText(window.location.href);
+            setCopied(true);
+            toast.success('تم نسخ رابط الكورس إلى الحافظة');
+            setTimeout(() => setCopied(false), 2000);
         }
     };
 
     if (loading) {
-        return <LoadingSpinner />;
+        return (
+            <PageLayout showCopilot={false}>
+                <div className="min-h-screen bg-[#f5f5eb] flex items-center justify-center pt-28" dir="rtl">
+                    <div className="text-center space-y-4">
+                        <div className="w-12 h-12 rounded-full border-4 border-[#14140f]/20 border-t-[#14140f] animate-spin mx-auto" />
+                        <p className="text-sm font-medium text-[#6e6e64]">جاري تحميل تفاصيل الكورس...</p>
+                    </div>
+                </div>
+            </PageLayout>
+        );
     }
 
-    if (!course) return null;
+    if (!course) {
+        return (
+            <PageLayout showCopilot={false}>
+                <div className="min-h-screen bg-[#f5f5eb] flex items-center justify-center p-4 pt-28" dir="rtl">
+                    <div className="max-w-md w-full bg-[#ffffff] border border-[#d2d2c8] rounded-[28px] p-8 text-center space-y-4">
+                        <h2 className="text-2xl font-medium text-[#14140f]">الكورس غير متاح حالياً</h2>
+                        <p className="text-sm text-[#6e6e64]">لم يتم العثور على الكورس المطلوب، يمكنك تصفح باقي الكورسات المتاحة في الدليل.</p>
+                        <Link
+                            href="/#courses"
+                            className="inline-flex items-center gap-2 px-6 py-3 rounded-[28px] bg-[#beff50] text-[#14140f] border border-[#14140f] font-medium text-sm hover:bg-[#aef538] transition-colors"
+                        >
+                            <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
+                            <span>تصفح كافة الكورسات</span>
+                        </Link>
+                    </div>
+                </div>
+            </PageLayout>
+        );
+    }
 
     const structuredData = {
         "@context": "https://schema.org",
@@ -118,191 +178,215 @@ const TolzyCoursePlayerPage: React.FC<TolzyCoursePlayerPageProps> = ({ initialCo
         "description": course.description,
         "provider": {
             "@type": "Organization",
-            "name": course.platform || "Tolzy Learn",
-            "sameAs": course.sourceUrl
+            "name": course.platform || "TOLZY",
+            "sameAs": course.sourceUrl || "https://tolzy.me"
         },
         "aggregateRating": {
             "@type": "AggregateRating",
-            "ratingValue": course.rating || 5,
-            "reviewCount": course.reviewsCount || 1
+            "ratingValue": course.rating || 4.9,
+            "reviewCount": course.reviewsCount || 100
         },
         "offers": {
             "@type": "Offer",
-            "category": "Free"
+            "category": "Free",
+            "price": "0",
+            "priceCurrency": "USD"
         }
     };
+
+    const skills = course.whatYouWillLearn || course.metadata?.skills || [
+        'تطبيقات عملية ومشاريع كاملة',
+        'شرح مبسط ومباشر باللغة العربية',
+        'أفضل الممارسات البرمجية الحديثة',
+        'تجهيز بيئة العمل ونشر المشاريع'
+    ];
 
     return (
         <PageLayout showCopilot={false}>
             <SEO
-                title={`${course.title} | كورس مجاني على Tolzy Learn`}
-                description={course.description?.slice(0, 160) || `تعلم ${course.title} مجاناً على منصة Tolzy Learn.`}
-                keywords={`${course.title}, كورس ${course.title}, تعلم ${course.category}, ${course.platform || 'Tolzy'}`}
+                title={`${course.title} | كورس تدريبي مجاني — TOLZY`}
+                description={course.description?.slice(0, 160) || `تعلم ${course.title} مجاناً باللغة العربية مع تطبيقات عملية ومسار شامل على دليل TOLZY.`}
+                keywords={`${course.title}, كورس ${course.title}, كورس برمجة مجاني, تعلم ${course.category || ''}, TOLZY`}
                 image={course.thumbnail}
                 structuredData={structuredData}
             />
 
-            <div className="min-h-screen bg-white dark:bg-[#0f1115] font-sans text-slate-900 dark:text-slate-300 relative overflow-x-hidden transition-colors duration-300 pt-32" dir="rtl">
+            <div className="min-h-screen bg-[#f5f5eb] text-[#14140f] selection:bg-[#beff50] selection:text-[#14140f] pt-28 sm:pt-36 pb-20 antialiased" dir="rtl">
+                
+                {/* ─── Breadcrumb Bar ─── */}
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+                    <nav className="flex items-center gap-2 text-xs font-medium text-[#6e6e64]">
+                        <Link href="/" className="hover:text-[#14140f] transition-colors">
+                            الرئيسية
+                        </Link>
+                        <span>/</span>
+                        <Link href="/#courses" className="hover:text-[#14140f] transition-colors">
+                            الكورسات التقنية
+                        </Link>
+                        <span>/</span>
+                        <span className="text-[#14140f] font-normal truncate max-w-xs sm:max-w-md">
+                            {course.title}
+                        </span>
+                    </nav>
+                </div>
 
-                {/* Minimalist Hero Section */}
-                <div className="relative pt-6 pb-6">
-                    <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 relative z-10">
-                        {/* Immersive Top Section */}
-                        <div className="relative rounded-3xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111]">
-                            <div className="relative z-10 p-6 lg:p-8 flex flex-col lg:flex-row gap-8 lg:gap-12 items-center">
-                                {/* Visual Card (Right side RTL -> First in DOM) */}
-                                <motion.div 
-                                    initial={{ opacity: 0, scale: 0.95 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ delay: 0.2 }}
-                                    className="relative w-full lg:w-1/3 xl:w-1/4 shrink-0 aspect-square rounded-2xl overflow-hidden shadow-sm group cursor-pointer"
-                                    onClick={handleEnroll}
-                                >
-                                    <img 
-                                        src={course.thumbnail} 
-                                        alt={course.title} 
-                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-                                    />
-                                    <div className="absolute inset-0 bg-slate-900/5 group-hover:bg-slate-900/10 transition-colors" />
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <div className="w-16 h-16 bg-white/90 dark:bg-black/80 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-105">
-                                            <PlayCircle className="w-8 h-8 fill-current" />
+                {/* ─── Course Hero Section (Perk Editorial Surface) ─── */}
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+                    <div className="bg-[#ffffff] border border-[#d2d2c8] rounded-[28px] p-6 sm:p-10">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+                            
+                            {/* Course Visual Thumbnail (5 Cols) */}
+                            <div className="lg:col-span-5 relative aspect-video sm:aspect-[4/3] rounded-[24px] overflow-hidden border border-[#d2d2c8] bg-[#f5f5eb] group cursor-pointer" onClick={handleEnroll}>
+                                <img 
+                                    src={course.thumbnail || 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&auto=format&fit=crop&q=60'} 
+                                    alt={course.title} 
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                />
+                                <div className="absolute inset-0 bg-[#14140f]/20 group-hover:bg-[#14140f]/30 transition-colors flex items-center justify-center">
+                                    <div className="w-16 h-16 rounded-full bg-[#beff50] border border-[#14140f] text-[#14140f] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                        <PlayCircle className="w-8 h-8 fill-current" />
+                                    </div>
+                                </div>
+
+                                {/* Platform Pill */}
+                                <div className="absolute top-4 right-4">
+                                    <span className="px-3.5 py-1 rounded-full bg-[#14140f] text-[#ffffff] text-xs font-medium flex items-center gap-1.5 shadow-sm">
+                                        <BookOpen className="w-3.5 h-3.5" />
+                                        <span>{course.platform || 'Tolzy'}</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Course Details (7 Cols) */}
+                            <div className="lg:col-span-7 space-y-6 text-right">
+                                
+                                {/* Badges Strip */}
+                                <div className="flex flex-wrap items-center gap-2.5">
+                                    <span className="px-3.5 py-1 rounded-full bg-[#f5f5eb] text-[#14140f] border border-[#d2d2c8] text-xs font-medium">
+                                        {course.category || 'تطوير وبرمجة'}
+                                    </span>
+
+                                    <span className="px-3 py-1 rounded-full bg-[#beff50] text-[#14140f] border border-[#14140f] text-xs font-medium">
+                                        مجاني بالكامل (100% Free)
+                                    </span>
+
+                                    {course.hasCertificate && (
+                                        <span className="px-3 py-1 rounded-full bg-[#ffffff] text-[#14140f] border border-[#d2d2c8] text-xs font-medium flex items-center gap-1">
+                                            <Award className="w-3.5 h-3.5 text-[#14140f]" />
+                                            <span>شهادة إتمام</span>
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* Main Title */}
+                                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-medium tracking-[-0.03em] leading-[1.12] text-[#14140f]">
+                                    {course.title}
+                                </h1>
+
+                                {/* Description */}
+                                <p className="text-sm sm:text-base text-[#6e6e64] font-normal leading-relaxed">
+                                    {course.description}
+                                </p>
+
+                                {/* Metadata Pills Grid */}
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                                    <div className="p-3.5 rounded-[20px] bg-[#f5f5eb] border border-[#d2d2c8] text-center">
+                                        <div className="text-xs font-normal text-[#6e6e64]">المدة الزمنية</div>
+                                        <div className="text-sm font-medium font-mono text-[#14140f] mt-1 flex items-center justify-center gap-1">
+                                            <Clock className="w-3.5 h-3.5" />
+                                            <span>{course.duration || '30 ساعة'}</span>
                                         </div>
                                     </div>
-                                </motion.div>
 
-                                {/* Text Content (Left side RTL -> Second in DOM) */}
-                                <div className="flex-1 space-y-6 text-right py-4 flex flex-col justify-center">
-                                    <motion.div 
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        className="flex flex-wrap items-center gap-3"
-                                    >
-                                        <span className="px-4 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 text-xs font-black uppercase tracking-wider border border-indigo-200 dark:border-indigo-800">
-                                            {course.category}
-                                        </span>
-                                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-bold">
-                                            <Globe className="w-3 h-3" />
-                                            {course.platform}
+                                    <div className="p-3.5 rounded-[20px] bg-[#f5f5eb] border border-[#d2d2c8] text-center">
+                                        <div className="text-xs font-normal text-[#6e6e64]">المستوى</div>
+                                        <div className="text-sm font-medium text-[#14140f] mt-1">
+                                            {{ 'beginner': 'مبتدئ', 'intermediate': 'متوسط', 'advanced': 'متقدم' }[course.level?.toLowerCase() || ''] || course.level || 'شامل'}
                                         </div>
-                                    </motion.div>
+                                    </div>
 
-                                    <motion.h1 
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.1 }}
-                                        className="text-3xl md:text-4xl lg:text-5xl font-black text-indigo-600 dark:text-indigo-400 leading-tight tracking-tight"
-                                    >
-                                        {course.title}
-                                    </motion.h1>
+                                    <div className="p-3.5 rounded-[20px] bg-[#f5f5eb] border border-[#d2d2c8] text-center">
+                                        <div className="text-xs font-normal text-[#6e6e64]">التقييم</div>
+                                        <div className="text-sm font-medium text-[#14140f] mt-1 flex items-center justify-center gap-1 font-mono">
+                                            <Star className="w-3.5 h-3.5 fill-[#14140f]" />
+                                            <span>{(course.rating || 4.9).toFixed(1)}</span>
+                                        </div>
+                                    </div>
 
-                                    <motion.p 
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.2 }}
-                                        className="text-base md:text-lg text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl font-medium"
-                                    >
-                                        {course.description}
-                                    </motion.p>
-                                    
-                                    <div className="flex flex-wrap items-center gap-6 pt-4 border-t border-slate-200 dark:border-slate-800">
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 mb-1 tracking-widest">المدة الزمنية</span>
-                                            <span className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                                                <Clock className="w-4 h-4 text-indigo-500" />
-                                                {course.duration || 'غير محدد'}
-                                            </span>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 mb-1 tracking-widest">المستوى</span>
-                                            <span className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                                                <Sparkles className="w-4 h-4 text-indigo-500" />
-                                                {{ 'beginner': 'مبتدئ', 'intermediate': 'متوسط', 'advanced': 'متقدم' }[course.level?.toLowerCase() || ''] || course.level}
-                                            </span>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 mb-1 tracking-widest">المشاهدات</span>
-                                            <span className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                                                <Users className="w-4 h-4 text-indigo-500" />
-                                                {course.studentsCount?.toLocaleString() || '0'}
-                                            </span>
+                                    <div className="p-3.5 rounded-[20px] bg-[#f5f5eb] border border-[#d2d2c8] text-center">
+                                        <div className="text-xs font-normal text-[#6e6e64]">الطلاب</div>
+                                        <div className="text-sm font-medium font-mono text-[#14140f] mt-1 flex items-center justify-center gap-1">
+                                            <Users className="w-3.5 h-3.5" />
+                                            <span>{course.studentsCount ? course.studentsCount.toLocaleString() : '2,500+'}</span>
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Primary Actions Row */}
+                                <div className="pt-4 flex flex-wrap items-center gap-3">
+                                    <button
+                                        onClick={handleEnroll}
+                                        className="flex-1 sm:flex-none px-8 py-4 rounded-[28px] bg-[#beff50] hover:bg-[#aef538] text-[#14140f] border border-[#14140f] font-medium text-base flex items-center justify-center gap-2.5 transition-transform active:scale-[0.99]"
+                                    >
+                                        <span>بدء مشاهدة الكورس الآن</span>
+                                        <ExternalLink className="w-4 h-4 rtl:-scale-x-100" />
+                                    </button>
+
+                                    <button
+                                        onClick={handleShare}
+                                        className="p-4 rounded-[28px] bg-[#ffffff] hover:bg-[#f5f5eb] text-[#14140f] border border-[#d2d2c8] hover:border-[#14140f] transition-colors"
+                                        title="مشاركة الكورس"
+                                        aria-label="مشاركة الكورس"
+                                    >
+                                        {copied ? <Check className="w-5 h-5 text-[#14140f]" /> : <Share2 className="w-5 h-5 text-[#14140f]" />}
+                                    </button>
+                                </div>
+
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 pb-12 relative z-10">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+                {/* ─── Content Grid: Skills & Reviews ─── */}
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                         
-                        {/* Main Content (Bento Grid) */}
-                        <div className="lg:col-span-9 grid grid-cols-1 md:grid-cols-12 gap-6">
+                        {/* Main Column: Skills & Details (8 Cols) */}
+                        <div className="lg:col-span-8 space-y-8">
                             
-                            {/* Skills Section (Enriched) - Full row */}
-                            <div className="md:col-span-12 space-y-6 bg-slate-50 dark:bg-gray-800/20 p-6 rounded-3xl border border-slate-200 dark:border-slate-800">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-3">
-                                        <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/40 rounded-2xl flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-                                            <Sparkles className="w-7 h-7" />
-                                        </div>
-                                        المهارات التي ستكتسبها
-                                    </h2>
+                            {/* Skills Section */}
+                            <div className="bg-[#ffffff] border border-[#d2d2c8] rounded-[28px] p-6 sm:p-8 space-y-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-[#f5f5eb] border border-[#d2d2c8] flex items-center justify-center text-[#14140f]">
+                                        <Sparkles className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-medium tracking-[-0.03em] text-[#14140f]">
+                                            المهارات والمعارف المكتسبة في هذا الكورس
+                                        </h2>
+                                        <p className="text-xs text-[#6e6e64] mt-0.5">نقاط أساسية يتم التركيز عليها خلال المحاضرات والتطبيقات</p>
+                                    </div>
                                 </div>
-                                
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {(course.metadata?.skills || course.whatYouWillLearn || []).map((skill: string, i: number) => (
-                                        <motion.div 
-                                            key={i}
-                                            initial={{ opacity: 0, x: 20 }}
-                                            whileInView={{ opacity: 1, x: 0 }}
-                                            viewport={{ once: true }}
-                                            transition={{ delay: i * 0.05 }}
-                                            className="p-4 bg-white dark:bg-[#111] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-800/50 transition-all flex items-start gap-3 group"
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                    {skills.map((skill: string, idx: number) => (
+                                        <div 
+                                            key={idx}
+                                            className="p-4 rounded-[20px] bg-[#f5f5eb] border border-[#d2d2c8] flex items-start gap-3"
                                         >
-                                            <div className="w-8 h-8 shrink-0 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform">
-                                                <CheckCircle2 className="w-5 h-5" />
+                                            <div className="w-6 h-6 rounded-full bg-[#beff50] border border-[#14140f] flex items-center justify-center text-[#14140f] shrink-0 mt-0.5">
+                                                <CheckCircle2 className="w-3.5 h-3.5" />
                                             </div>
-                                            <div className="flex-1">
-                                                <span className="text-sm text-slate-800 dark:text-slate-200 font-bold leading-relaxed">{skill}</span>
-                                            </div>
-                                        </motion.div>
+                                            <span className="text-xs sm:text-sm font-medium text-[#14140f] leading-relaxed">
+                                                {skill}
+                                            </span>
+                                        </div>
                                     ))}
                                 </div>
                             </div>
 
-                            {/* Additional Enriched Metadata - Half width right DOM -> Left visual */}
-                            {course.metadata && Object.keys(course.metadata).filter(k => k !== 'skills' && k !== 'what_you_will_learn').length > 0 ? (
-                                <div className="md:col-span-5 p-6 rounded-3xl bg-slate-50 dark:bg-[#111] border border-slate-200 dark:border-slate-800 h-fit">
-                                    <h3 className="text-sm font-black text-slate-700 dark:text-slate-400 mb-5 uppercase tracking-widest flex items-center gap-2">
-                                        <div className="w-2 h-2 rounded-full bg-indigo-500" />
-                                        تفاصيل إضافية
-                                    </h3>
-                                    <div className="flex flex-wrap gap-3">
-                                        {Object.entries(course.metadata)
-                                            .filter(([k]) => k !== 'skills' && k !== 'what_you_will_learn')
-                                            .map(([key, value]) => {
-                                                const isLong = String(value).length > 15;
-                                                return (
-                                                    <div key={key} className={`flex flex-col items-center justify-center text-center p-3 rounded-2xl bg-white dark:bg-gray-800/50 shadow-sm border border-slate-100 dark:border-slate-800 flex-grow ${isLong ? 'w-full' : 'min-w-[90px]'}`}>
-                                                        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">
-                                                            {key.split('_').join(' ')}
-                                                        </span>
-                                                        <span className="text-sm font-bold text-slate-900 dark:text-white">
-                                                            {typeof value === 'boolean' ? (value ? 'نعم' : 'لا') : String(value)}
-                                                        </span>
-                                                    </div>
-                                                );
-                                            })}
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="hidden"></div>
-                            )}
-
-                            {/* Reviews - Half width left DOM -> Right visual */}
-                            <div className="md:col-span-7 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111] shadow-sm h-full">
+                            {/* Reviews Section */}
+                            <div className="bg-[#ffffff] border border-[#d2d2c8] rounded-[28px] p-6 sm:p-8">
                                 <CourseReviews
                                     courseId={course.id}
                                     onRatingUpdate={(newRating: number, newReviewsCount: number) => {
@@ -311,116 +395,70 @@ const TolzyCoursePlayerPage: React.FC<TolzyCoursePlayerPageProps> = ({ initialCo
                                 />
                             </div>
 
-                            {/* TOLZY OmniLearn - Bento Promotional Card */}
-                            <div className="md:col-span-12 overflow-hidden rounded-3xl border border-emerald-500/20 dark:border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent dark:from-emerald-500/15 dark:via-teal-500/5 dark:to-[#0f1115]/45 p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative shadow-lg shadow-emerald-500/5 dark:shadow-[0_0_30px_rgba(16,185,129,0.05)] text-right">
-                                {/* Ambient glow backgrounds */}
-                                <div className="absolute top-0 right-1/4 w-40 h-40 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-full blur-[60px] pointer-events-none" />
-                                
-                                <div className="flex flex-col md:flex-row items-center gap-5 md:gap-6 relative z-10 text-center md:text-right">
-                                    <div className="shrink-0 w-16 h-16 rounded-2xl overflow-hidden border-2 border-emerald-400 relative shadow-lg shadow-emerald-500/20">
-                                        <img 
-                                            src="/image/tools/11zon_cropped.jpg" 
-                                            alt="TOLZY OmniLearn Icon" 
-                                            className="w-full h-full object-cover"
-                                        />
-                                        <span className="absolute inset-0 bg-emerald-400/10 animate-pulse"></span>
-                                    </div>
-                                    
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-center md:justify-start gap-2">
-                                            <h3 className="text-lg md:text-xl font-black text-emerald-600 dark:text-emerald-400">
-                                                تعلّم بشكل أسرع مع TOLZY OmniLearn AI
-                                            </h3>
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-550/30">جديد ✨</span>
-                                        </div>
-                                        <p className="text-sm md:text-base text-slate-600 dark:text-slate-350 font-medium leading-relaxed max-w-2xl">
-                                            هل تود مناقشة هذا الكورس؟ اسأل رفيقك الذكي فوراً عن الأكواد والمفاهيم واستخرج ملخصات شاملة أو اختبر مستواك بأسئلة تفاعلية ذكية عبر محرك AXIOM!
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="shrink-0 relative z-10 w-full md:w-auto">
-                                    <button
-                                        onClick={() => router.push(`/learn/omnilearn?url=${encodeURIComponent(course.sourceUrl || '')}`)}
-                                        className="w-full md:w-auto px-6 py-4 rounded-2xl bg-gradient-to-l from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white dark:text-[#090a0f] font-black text-base shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 hover:-translate-y-0.5 active:scale-98 transition-all flex items-center justify-center gap-2 group"
-                                    >
-                                        <span>ابدأ التعلم التفاعلي الذكي</span>
-                                        <PlayCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                                    </button>
-                                </div>
-                            </div>
                         </div>
 
-                        {/* Sidebar (Right) */}
-                        <div className="lg:col-span-3 lg:sticky lg:top-24 h-fit space-y-6">
-                            {/* Action Card */}
-                            <div className="bg-white dark:bg-[#111] p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
-                                <div className="absolute top-0 left-0 w-full h-1.5 bg-indigo-500" />
-                                
-                                <div className="flex items-center justify-between mb-6 mt-2">
-                                    <div className="flex flex-col">
-                                        <span className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">الرخصة</span>
-                                        <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">مجاني بالكامل</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 px-3 py-1.5 rounded-xl border border-amber-100 dark:border-amber-800/50">
-                                        <Star className="w-4 h-4 text-amber-500 fill-current" />
-                                        <span className="text-amber-700 dark:text-amber-500 font-black">{course.rating || 5}</span>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <button 
-                                        onClick={handleEnroll}
-                                        className="w-full py-5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-lg shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:-translate-y-1 transition-all flex items-center justify-center gap-3"
-                                    >
-                                        ابدأ التعلم الآن
-                                        <ExternalLink className="w-5 h-5 rtl:-scale-x-100" />
-                                    </button>
-                                    
-                                    <p className="text-xs text-center text-slate-500 dark:text-slate-400 font-medium px-4">
-                                        سيتم توجيهك إلى {course.platform} لإكمال عملية التسجيل مجاناً.
-                                    </p>
-                                </div>
-
-                                <div className="mt-8 pt-8 border-t border-slate-100 dark:border-slate-800 space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2 text-slate-500 text-sm font-bold">
-                                            <Globe className="w-4 h-4" /> المنصة
-                                        </div>
-                                        <span className="text-sm font-black text-slate-900 dark:text-white uppercase">{course.platform}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2 text-slate-500 text-sm font-bold">
-                                            <div className="w-4 h-4 rounded-full bg-indigo-500 animate-pulse" /> البث
-                                        </div>
-                                        <span className="text-sm font-black text-indigo-500">متاح الآن</span>
-                                    </div>
-                                </div>
-                            </div>
+                        {/* Sidebar Column: Fast Enroll & Platform Info (4 Cols) */}
+                        <div className="lg:col-span-4 space-y-6">
                             
-                            {/* Breadcrumbs (Sidebar Version) */}
-                            <div className="hidden lg:block p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
-                                <div className="flex flex-col gap-3">
-                                    <Link href="/learn" className="flex items-center gap-2 text-slate-400 hover:text-emerald-400 transition-colors">
-                                        <ArrowLeft className="w-3 h-3 rtl:rotate-180" /> العودة لقائمة الكورسات
-                                    </Link>
+                            {/* Enroll Box */}
+                            <div className="bg-[#ffffff] border border-[#d2d2c8] rounded-[28px] p-6 space-y-5">
+                                <div className="flex items-center justify-between pb-4 border-b border-[#d2d2c8]">
+                                    <div>
+                                        <span className="text-xs font-normal text-[#6e6e64] block">نوع الدورة</span>
+                                        <span className="text-lg font-medium text-[#14140f]">محتوى تقني مفتوح</span>
+                                    </div>
+                                    <span className="px-3 py-1 rounded-full bg-[#beff50] text-[#14140f] border border-[#14140f] text-xs font-medium">
+                                        مجاني 100%
+                                    </span>
                                 </div>
+
+                                <div className="space-y-3 text-xs text-[#6e6e64]">
+                                    <div className="flex items-center justify-between">
+                                        <span>المدرب / الجهة:</span>
+                                        <span className="font-medium text-[#14140f]">{course.instructor || 'فريق أكاديمية TOLZY'}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span>لغة الكورس:</span>
+                                        <span className="font-medium text-[#14140f]">العربية (مترجم / ناطق)</span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span>طريقة الوصول:</span>
+                                        <span className="font-medium text-[#14140f]">مباشر أونلاين على مدار الساعة</span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span>الشهادة:</span>
+                                        <span className="font-medium text-[#14140f]">{course.hasCertificate ? 'نعم — متاحة مجاناً' : 'إتمام ذاتي'}</span>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={handleEnroll}
+                                    className="w-full py-4 rounded-[28px] bg-[#beff50] hover:bg-[#aef538] text-[#14140f] border border-[#14140f] font-medium text-sm flex items-center justify-center gap-2 transition-transform active:scale-[0.99]"
+                                >
+                                    <span>الانتقال لمشاهدة الكورس</span>
+                                    <ExternalLink className="w-4 h-4 rtl:-scale-x-100" />
+                                </button>
                             </div>
+
+                            {/* Back to courses pill card */}
+                            <div className="bg-[#ffffff] border border-[#d2d2c8] rounded-[28px] p-6 text-center space-y-3">
+                                <h3 className="text-sm font-medium text-[#14140f]">تبحث عن دورات أخرى؟</h3>
+                                <p className="text-xs text-[#6e6e64] leading-relaxed">
+                                    تصفح أكثر من 150 مسار ودورة تدريبية في الذكاء الاصطناعي وتطوير الويب وعلم البيانات.
+                                </p>
+                                <Link
+                                    href="/#courses"
+                                    className="inline-flex items-center gap-2 text-xs font-medium text-[#14140f] underline underline-offset-4 hover:text-black transition-colors"
+                                >
+                                    <span>العودة لكافة الكورسات في الدليل</span>
+                                    <ArrowLeft className="w-3.5 h-3.5 rtl:rotate-180" />
+                                </Link>
+                            </div>
+
                         </div>
+
                     </div>
                 </div>
-
-                {/* Mobile Bottom Fixed Action */}
-                <div className="lg:hidden fixed bottom-6 left-6 right-6 z-40">
-                    <button 
-                        onClick={handleEnroll}
-                        className="w-full py-5 rounded-2xl bg-indigo-600 text-white font-black shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-all"
-                    >
-                        سجل مجاناً الآن
-                        <ExternalLink className="w-5 h-5" />
-                    </button>
-                </div>
-
 
             </div>
         </PageLayout>

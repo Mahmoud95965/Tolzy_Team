@@ -1277,15 +1277,17 @@ const CommunityPage: React.FC = () => {
                 )}
               </div>
 
-              <div className="bg-indigo-600 rounded-[32px] p-8 shadow-xl shadow-indigo-500/20 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
-                <p className="text-white/60 text-[10px] font-black uppercase tracking-widest mb-3">Upgrade to Pro</p>
-                <h3 className="text-xl font-black text-white mb-4 leading-tight">احصل على وصول كامل لجميع ميزات الذكاء الاصطناعي</h3>
-                <Link href="/pricing" className="block w-full">
-                  <button className="w-full bg-[#fea619] text-white py-3 rounded-2xl font-black hover:scale-105 transition-transform shadow-lg shadow-black/10">
-                    ترقية الخطة
-                  </button>
-                </Link>
+              <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[32px] p-8 shadow-xl shadow-blue-500/10 relative overflow-hidden group text-right">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-150 transition-transform duration-700 pointer-events-none"></div>
+                <p className="text-white/70 text-[10px] font-black uppercase tracking-widest mb-2">TOLZY Community</p>
+                <h3 className="text-lg font-black text-white mb-2 leading-tight">شارك تجاربك مع مجتمع الذكاء الاصطناعي</h3>
+                <p className="text-white/80 text-xs mb-4 leading-relaxed font-medium">اطرح الأسئلة وشارك أفضل الأوامر والأدوات مع نخبة المطورين والمصممين.</p>
+                <button 
+                  onClick={() => setShowCreateModal(true)} 
+                  className="w-full bg-[#beff50] text-[#14140f] py-3 rounded-2xl font-black hover:scale-105 transition-transform shadow-lg shadow-black/10 text-xs"
+                >
+                  انشر في المجتمع الآن 🚀
+                </button>
               </div>
             </aside>
           </div>

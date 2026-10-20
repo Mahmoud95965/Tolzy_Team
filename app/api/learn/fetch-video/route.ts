@@ -5,7 +5,6 @@ import { YoutubeTranscript } from 'youtube-transcript';
 import { google } from 'googleapis';
 import { supabaseAdmin } from '@/src/utils/supabaseAdmin';
 import crypto from 'crypto';
-import { checkAndConsumeAiQuota } from '@/src/lib/ai-quota';
 
 export const maxDuration = 60;
 
@@ -388,43 +387,9 @@ function chunkTranscript(segments: TranscriptSegment[], targetDurationSeconds = 
     return chunks;
 }
 
-// AI Topic Enrichment using Azure AI axiom-core
+// Topic Extraction (Static Fallback)
 async function generateTopicsWithAI(title: string, description: string): Promise<string[]> {
-    try {
-        const { getAzureAiClient, AZURE_AI_MODEL } = await import('@/src/config/azure-ai');
-        const openai = getAzureAiClient();
-
-        const prompt = `You are an elite educational content taxonomist and tech curator for Tolzy OmniLearn.
-Analyze this video metadata and extract exactly 4 highly specific, attractive, and relevant technical topics/skills covered in the video, in professional Arabic with a fitting emoji for each.
-
-Title: ${title}
-Description: ${description}
-
-Output ONLY a valid JSON object with a "topics" array:
-{"topics": ["برمجة الويب الحديثة 🌐", "هندسة النظم السحابية ☁️", "الذكاء الاصطناعي التوليدي 🤖", "قواعد البيانات وإدارة الـ SQL 🗄️"]}`;
-
-        const response = await openai.chat.completions.create({
-            model: AZURE_AI_MODEL,
-            messages: [{ role: "user", content: prompt }],
-            temperature: 0.1,
-            max_tokens: 1000,
-            response_format: { type: "json_object" }
-        });
-
-        const rawContent = response.choices[0]?.message?.content?.trim() || '{}';
-        let cleanJsonText = rawContent;
-        if (cleanJsonText.includes('{')) {
-            cleanJsonText = cleanJsonText.substring(cleanJsonText.indexOf('{'), cleanJsonText.lastIndexOf('}') + 1);
-        }
-        
-        const parsed = JSON.parse(cleanJsonText);
-        if (Array.isArray(parsed)) return parsed.slice(0, 4);
-        if (parsed.topics && Array.isArray(parsed.topics)) return parsed.topics.slice(0, 4);
-        return ["برمجة 💻", "تطوير ⚙️", "تعليم 🧠"];
-    } catch (e) {
-        console.error('Topics AI Enrichment Error:', e);
-        return ["برمجة 💻", "تطوير ⚙️", "تعليم 🧠"];
-    }
+    return ["برمجة 💻", "تطوير ⚙️", "تعليم 🧠"];
 }
 
 // Check if URL belongs to supported educational resources and is not a blacklisted distraction domain
@@ -490,14 +455,6 @@ export async function POST(req: NextRequest) {
 
         if (!userId) {
             return NextResponse.json({ error: 'يرجى تسجيل الدخول أولاً للتحقق من الصلاحية.' }, { status: 401, headers: corsHeaders() });
-        }
-
-        // --- Unified AI Token Quota Check ---
-        const quota = await checkAndConsumeAiQuota(userId, undefined, 200);
-        if (!quota.allowed) {
-            return NextResponse.json({
-                error: quota.error || 'لقد استهلكت رصيد التوكنات المتاح في باقتك. يرجى الترقية للحصول على رصيد إضافي!'
-            }, { status: 429, headers: corsHeaders() });
         }
 
         if (!url) {

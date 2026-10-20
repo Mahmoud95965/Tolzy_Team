@@ -76,6 +76,7 @@ export async function GET(req: NextRequest) {
     const sort = searchParams.get('sort') || 'trending';
     const tag = searchParams.get('tag') || '';
     const postType = searchParams.get('type') || '';
+    const tool = searchParams.get('tool') || searchParams.get('tool_id') || '';
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 50);
     const authorUid = searchParams.get('author') || '';
@@ -99,6 +100,9 @@ export async function GET(req: NextRequest) {
 
     if (authorUid) query = query.eq('author_uid', authorUid);
     if (postType) query = query.eq('post_type', postType);
+    if (tool) {
+      query = query.or(`prompt_text.ilike.%(${tool})%,prompt_text.ilike.%${tool}%,title.ilike.%${tool}%`);
+    }
 
     let { data: prompts, count, error } = await query;
 
@@ -213,6 +217,43 @@ export async function GET(req: NextRequest) {
 
     const securePrompts = (enrichedPrompts || []).map((p: any) => {
       const u = userMap[p.author_uid];
+
+      // Auto-extract mentioned tools if column in DB was empty
+      const MENTION_REGEX = /@\[([^\]]+)\]\(([^)]+)\)/g;
+      const extractedSlugs: string[] = [];
+      let match;
+      while ((match = MENTION_REGEX.exec(p.prompt_text || '')) !== null) {
+        if (match[2]) extractedSlugs.push(match[2]);
+      }
+      const mentionedTools = Array.isArray(p.mentioned_tools) && p.mentioned_tools.length > 0
+        ? p.mentioned_tools
+        : Array.from(new Set(extractedSlugs));
+
+      // Auto-extract stack_tools and poll from embedded comments if columns in DB were empty
+      let stackTools = p.stack_tools;
+      let pollData = p.poll;
+
+      if (!stackTools) {
+        const stackMatch = (p.description || p.prompt_text || '').match(/<!-- TOLZY_STACK_DATA: (.*?) -->/);
+        if (stackMatch && stackMatch[1]) {
+          try {
+            stackTools = JSON.parse(decodeURIComponent(stackMatch[1]));
+          } catch {}
+        }
+      }
+
+      if (!pollData) {
+        const pollMatch = (p.description || p.prompt_text || '').match(/<!-- TOLZY_POLL_DATA: (.*?) -->/);
+        if (pollMatch && pollMatch[1]) {
+          try {
+            pollData = JSON.parse(decodeURIComponent(pollMatch[1]));
+          } catch {}
+        }
+      }
+
+      const typeMatch = (p.description || '').match(/<!-- TOLZY_ORIGINAL_POST_TYPE: (.*?) -->/);
+      const postType = typeMatch?.[1] || (pollData ? 'poll' : (stackTools && stackTools.length > 0 ? 'stack' : p.post_type));
+
       return {
         id: p.id,
         title: p.title,
@@ -220,7 +261,7 @@ export async function GET(req: NextRequest) {
         code_snippet: p.code_snippet,
         code_language: p.code_language,
         tags: p.tags,
-        post_type: p.post_type,
+        post_type: postType,
         link_url: p.link_url,
         link_title: p.link_title,
         ai_model: p.ai_model,
@@ -235,8 +276,12 @@ export async function GET(req: NextRequest) {
         created_at: p.created_at,
         updated_at: p.updated_at,
         engagement_score: p.engagement_score,
-        // Public author fields only — no uid
-        author_username: u?.username || '',
+        mentioned_tools: mentionedTools,
+        stack_tools: stackTools || null,
+        poll: pollData || null,
+        // Public author fields with author_uid fallback
+        author_uid: p.author_uid || '',
+        author_username: u?.username || p.author_username || p.author_uid || '',
         author_name: u?.displayName || p.author_name || 'مستخدم',
         author_avatar: u?.photoURL || p.author_avatar || null,
       };

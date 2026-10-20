@@ -6,6 +6,7 @@ import Link from 'next/link';
 import PageLayout from '../components/layout/PageLayout';
 import { Search, BookOpen, ChevronLeft, ChevronRight, Code2, Brain, Palette, Database, Shield, Globe, Zap, Star, TrendingUp, Target, Clock, Award, Sparkles } from 'lucide-react';
 import { Course } from '../types/learn';
+import { getFallbackCourses } from '../data/fallbackCourses';
 import SmartCourseCard from '../components/learn/SmartCourseCard';
 import CommandPalette from '../components/learn/CommandPalette';
 
@@ -50,8 +51,8 @@ const LEARNING_PATHS = [
 
 const TolzyLearnPage: React.FC = () => {
     const router = useRouter();
-    const [courses, setCourses] = useState<Course[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [courses, setCourses] = useState<Course[]>(getFallbackCourses());
+    const [loading, setLoading] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
@@ -65,15 +66,11 @@ const TolzyLearnPage: React.FC = () => {
             try {
                 const res = await fetch('/api/admin/courses');
                 const data = await res.json();
-                if (Array.isArray(data)) {
+                if (Array.isArray(data) && data.length > 0) {
                     setCourses(data);
-                } else {
-                    console.error('Failed to load courses:', data.error);
                 }
             } catch (error) {
                 console.error('Error fetching courses:', error);
-            } finally {
-                setLoading(false);
             }
         };
         fetchCourses();

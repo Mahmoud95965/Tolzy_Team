@@ -3,16 +3,43 @@
 // Supports: prompts, code, articles, questions, ideas, resources
 // ═══════════════════════════════════════════════════════════════
 
-export type PostType = 'prompt' | 'code' | 'article' | 'question' | 'idea' | 'resource';
+export type PostType = 'prompt' | 'code' | 'article' | 'question' | 'idea' | 'resource' | 'stack';
 
 export const POST_TYPE_CONFIG: Record<PostType, { label: string; icon: string; color: string }> = {
-  prompt:   { label: 'برومبت',  icon: '✨', color: '#8b5cf6' },
-  code:     { label: 'كود',     icon: '💻', color: '#3b82f6' },
-  article:  { label: 'مقال',    icon: '📝', color: '#10b981' },
-  question: { label: 'سؤال',    icon: '❓', color: '#f59e0b' },
-  idea:     { label: 'فكرة',    icon: '💡', color: '#f97316' },
-  resource: { label: 'مصدر',    icon: '🔗', color: '#06b6d4' },
+  prompt:   { label: 'برومبت',    icon: '✨', color: '#8b5cf6' },
+  code:     { label: 'كود',       icon: '💻', color: '#3b82f6' },
+  article:  { label: 'مقال',      icon: '📝', color: '#10b981' },
+  question: { label: 'سؤال',      icon: '❓', color: '#f59e0b' },
+  idea:     { label: 'فكرة',      icon: '💡', color: '#f97316' },
+  resource: { label: 'مصدر',      icon: '🔗', color: '#06b6d4' },
+  stack:    { label: 'حزمة أدوات', icon: '📦', color: '#6366f1' },
 };
+
+export interface StackToolItem {
+  tool_id: string;
+  tool_name: string;
+  tool_imageUrl?: string;
+  tool_pricing?: string;
+  tool_category?: string;
+  note: string; // 1-line note on how this tool is used in workflow
+}
+
+export interface PollOption {
+  id: string;
+  text: string;
+  tool_id?: string;
+  tool_name?: string;
+  tool_imageUrl?: string;
+  votes_count: number;
+}
+
+export interface CommunityPoll {
+  id?: string;
+  question: string;
+  options: PollOption[];
+  total_votes: number;
+  user_voted_option_id?: string | null;
+}
 
 export interface CommunityPrompt {
   id: string;
@@ -43,6 +70,9 @@ export interface CommunityPrompt {
   created_at: string;
   updated_at: string;
   tags?: PromptTag[];
+  mentioned_tools?: string[];
+  stack_tools?: StackToolItem[];
+  poll?: CommunityPoll | null;
 }
 
 export interface PromptTag {
@@ -92,11 +122,13 @@ export interface PromptComment {
   id: string;
   prompt_id: string;
   author_uid: string;
+  author_username?: string;
   author_name: string;
   author_avatar: string | null;
   content: string;
   parent_comment_id: string | null;
   created_at: string;
+  mentioned_tools?: string[];
 }
 
 export interface CreatorStats {
@@ -118,6 +150,8 @@ export interface FeedQuery {
   sort: FeedSortMode;
   tag?: string;
   post_type?: PostType;
+  tool_id?: string;
+  tool?: string;
   page?: number;
   limit?: number;
   author_uid?: string;
@@ -134,6 +168,9 @@ export interface CreatePromptRequest {
   code_language?: string;
   link_url?: string;
   tag_slugs: string[];
+  mentioned_tools?: string[];
+  stack_tools?: StackToolItem[];
+  poll?: CommunityPoll | null;
 }
 
 export interface RemixPromptRequest {

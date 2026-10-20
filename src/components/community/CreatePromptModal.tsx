@@ -8,7 +8,12 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
-import type { PromptTag, PostType } from '../../types/community';
+import type { PromptTag, PostType, StackToolItem, CommunityPoll } from '../../types/community';
+import ToolMentionDropdown from './ToolMentionDropdown';
+import { useToolMention } from '../../hooks/useToolMention';
+import { extractMentionedToolSlugs } from '../../utils/toolMention';
+import { useTools } from '../../hooks/useTools';
+import { Tool } from '../../types/tool';
 
 interface CreatePromptModalProps {
   isOpen: boolean;
@@ -24,6 +29,9 @@ interface CreatePromptModalProps {
     code_language: string;
     link_url: string;
     tag_slugs: string[];
+    mentioned_tools?: string[];
+    stack_tools?: StackToolItem[];
+    poll?: CommunityPoll | null;
   }) => Promise<void>;
   tags: PromptTag[];
 }
@@ -133,14 +141,28 @@ const LinkPreviewCard: React.FC<LinkPreviewProps> = ({ url, onRemove }) => {
 
 const CreatePromptModal: React.FC<CreatePromptModalProps> = ({ isOpen, onClose, onSubmit, tags }) => {
   const { user } = useAuth();
+  const { tools: availableTools } = useTools();
+  const [mentionMatches, setMentionMatches] = useState<Tool[]>([]);
   const [title, setTitle] = useState('');
   const [promptText, setPromptText] = useState('');
+  const [mentionedTools, setMentionedTools] = useState<string[]>([]);
   const [codeSnippet, setCodeSnippet] = useState('');
   const [showCode, setShowCode] = useState(false);
   const [showTags, setShowTags] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [dismissedUrl, setDismissedUrl] = useState<string | null>(null);
+
+  const {
+    isOpen: isMentionOpen,
+    query: mentionQuery,
+    activeIndex: mentionActiveIndex,
+    setActiveIndex: setMentionActiveIndex,
+    handleInputChange: handleMentionChange,
+    insertTool,
+    handleKeyDown: handleMentionKeyDown,
+    closeMention,
+  } = useToolMention();
 
   // Detect the first URL in the prompt text
   const detectedUrls = useMemo(() => extractUrls(promptText), [promptText]);
@@ -153,6 +175,10 @@ const CreatePromptModal: React.FC<CreatePromptModalProps> = ({ isOpen, onClose, 
     if (!hasContent) return;
     setSubmitting(true);
     try {
+      const finalMentionedTools = Array.from(
+        new Set([...extractMentionedToolSlugs(promptText), ...mentionedTools])
+      );
+
       await onSubmit({
         post_type: 'prompt',
         title: title.trim(), // empty string if no title entered → card won't show it
@@ -164,9 +190,11 @@ const CreatePromptModal: React.FC<CreatePromptModalProps> = ({ isOpen, onClose, 
         code_language: '',
         link_url: showLinkPreview ? (primaryUrl ?? '') : '',
         tag_slugs: selectedTags,
+        mentioned_tools: finalMentionedTools,
       });
       setTitle('');
       setPromptText('');
+      setMentionedTools([]);
       setCodeSnippet('');
       setShowCode(false);
       setShowTags(false);
@@ -247,14 +275,82 @@ const CreatePromptModal: React.FC<CreatePromptModalProps> = ({ isOpen, onClose, 
             <div className="relative min-h-[120px] mb-4">
               <textarea
                 value={promptText}
-                onChange={e => setPromptText(e.target.value)}
-                placeholder={`بم تفكر يا ${user?.displayName?.split(' ')[0] || 'صديقي'}؟`}
+                onChange={e => {
+                  setPromptText(e.target.value);
+                  handleMentionChange(e.target.value, e.target.selectionStart || e.target.value.length);
+                }}
+                onKeyDown={e => {
+                  if (isMentionOpen && mentionMatches.length > 0) {
+                    const intercepted = handleMentionKeyDown(e, mentionMatches.length, () => {
+                      const selected = mentionMatches[mentionActiveIndex];
+                      if (selected) {
+                        const { newText } = insertTool(selected, promptText);
+                        setPromptText(newText);
+                        setMentionedTools(prev =>
+                          Array.from(new Set([...prev, selected.id]))
+                        );
+                      }
+                    });
+                    if (intercepted) return;
+                  }
+                }}
+                placeholder={`بم تفكر يا ${user?.displayName?.split(' ')[0] || 'صديقي'}؟ اكتب @ للإشارة لأداة...`}
                 rows={4}
-                className="w-full text-xl border-none focus:ring-0 resize-none p-0 placeholder-gray-500 dark:placeholder-gray-400 overflow-hidden bg-transparent text-right text-slate-900 dark:text-white"
+                className="w-full text-lg border-none focus:ring-0 resize-none p-0 placeholder-gray-500 dark:placeholder-gray-400 overflow-hidden bg-transparent text-right text-slate-900 dark:text-white"
               />
+
+              {/* Tool Mention Autocomplete Dropdown */}
+              <ToolMentionDropdown
+                isOpen={isMentionOpen}
+                searchQuery={mentionQuery}
+                activeIndex={mentionActiveIndex}
+                setActiveIndex={setMentionActiveIndex}
+                onMatchesChange={setMentionMatches}
+                onClose={closeMention}
+                onSelect={tool => {
+                  const { newText } = insertTool(tool, promptText);
+                  setPromptText(newText);
+                  setMentionedTools(prev => Array.from(new Set([...prev, tool.id])));
+                }}
+              />
+
+              {/* Mentioned tools preview chips in modal */}
+              {mentionedTools.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5 my-2 text-[11px]">
+                  <span className="font-bold text-neutral-400">الأدوات المشار إليها:</span>
+                  {mentionedTools.map(id => (
+                    <span
+                      key={id}
+                      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60 font-bold"
+                    >
+                      <span>@{id}</span>
+                      <button
+                        type="button"
+                        onClick={() => setMentionedTools(prev => prev.filter(x => x !== id))}
+                        className="hover:text-rose-500 transition-colors p-0.5"
+                        title="إزالة الإشارة"
+                      >
+                        <XCircle size={12} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+
               <div className="flex justify-between items-center mt-2">
-                <button className="cursor-pointer p-1 rounded-full hover:bg-gray-100 dark:hover:bg-white/10">
-                  <Smile size={24} className="text-gray-400" />
+                <button
+                  type="button"
+                  className="cursor-pointer p-1 rounded-full hover:bg-gray-100 dark:hover:bg-white/10"
+                  onClick={() => {
+                    const newText = promptText + '@';
+                    setPromptText(newText);
+                    handleMentionChange(newText, newText.length);
+                  }}
+                  title="الإشارة لأداة @"
+                >
+                  <span className="text-blue-600 dark:text-blue-400 font-extrabold text-sm px-1.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/30">
+                    @ أشر لأداة
+                  </span>
                 </button>
                 <div
                   className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer shadow-sm hover:opacity-90"

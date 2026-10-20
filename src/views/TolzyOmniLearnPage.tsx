@@ -686,14 +686,6 @@ export default function TolzyOmniLearnPage() {
                                         <div className="flex flex-col items-center gap-3">
                                             <span className="text-2xl">⚡</span>
                                             <p className="text-sm text-red-400 font-bold leading-relaxed">{error}</p>
-                                            {(error.includes('توكن') || error.includes('شحن') || error.includes('ترقية') || error.includes('حصة')) && (
-                                                <Link 
-                                                    href="/pricing" 
-                                                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-xl font-black text-xs shadow-md shadow-violet-500/20 transition-all"
-                                                >
-                                                    <span>شحن الرصيد / ترقية الباقة الآن 🚀</span>
-                                                </Link>
-                                            )}
                                         </div>
                                     </div>
                                 )}

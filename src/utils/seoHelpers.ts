@@ -104,33 +104,8 @@ const CATEGORY_NAMES: Record<string, string> = {
  * NOTE: Titles do NOT include '| Tolzy' — handled by layout.tsx template.
  */
 const getToolTexts = (tool: ToolData): { title: string; description: string } => {
-  const categoryStr = Array.isArray(tool.category) ? tool.category[0] : tool.category;
-  let title = `${tool.name} - أداة ${categoryStr}`;
-  let description = `${tool.description} - ${tool.longDescription?.substring(0, 150) || tool.description}. تقييم: ${tool.rating}/5 من ${tool.reviewCount || 0} مراجعة. ${tool.pricing === 'Free' ? 'مجاني تماماً' : tool.pricing === 'Freemium' ? 'نسخة مجانية متاحة' : 'مدفوع'}.`;
-
-  // Custom SEO overrides
-  const name = tool.name.toLowerCase();
-
-  if (name.includes('reimagine home') || tool.id === 'reimagine-home') {
-    title = "صمم غرفتك مجاناً: شرح موقع Reimagine Home AI المذهل";
-    description = "هل تحلم بتغيير ديكور منزلك بدقائق؟ اكتشف سر استخدام موقع Reimagine Home AI لتصميم ديكورك الداخلي باحترافية وبلمسة سحرية. ابدأ تصميمك الآن!";
-  }
-
-  if (name.includes('topaz video ai') || tool.id === 'topaz-video-ai') {
-    title = "سر الدقة المذهلة: شرح ومراجعة برنامج Topaz Video AI";
-    description = "هل تعاني من جودة الفيديو الضعيفة؟ اكتشف كيف يرفع Topaz Video AI دقة فيديوهاتك إلى 8K بضغطة زر. اقرأ المراجعة الشاملة لعام 2026 وجربه بنفسك!";
-  }
-
-  if (name.includes('renderforest') || tool.id === 'renderforest') {
-    title = "Renderforest: تصميم فيديو وانترو احترافي مجاناً";
-    description = "صمم فيديوهات ترويجية، انترو يوتيوب، وشعارات متحركة بسهولة مع Renderforest. قوالب جاهزة للتعديل تناسب المصممين والمبتدئين. جربه الآن.";
-  }
-
-  if (name.includes('adobe podcast') || tool.id === 'adobe-podcast' || name.includes('enhance speech')) {
-    title = "Adobe Podcast: تحسين وتنقية الصوت بالذكاء الاصطناعي مجاناً";
-    description = "حول تسجيلاتك الصوتية إلى جودة استوديو احترافية مع أداة Adobe Podcast (Enhance Speech). إزالة الضوضاء وتحسين الصوت بلمسة واحدة مجاناً.";
-  }
-
+  const title = `شرح وأفضل بدائل أداة ${tool.name} | المميزات والعيوب والأسعار — TOLZY`;
+  const description = `اكتشف كل ما يخص أداة ${tool.name}: هل هي مجانية؟ هل تدعم اللغة العربية؟ تعرف على أهم المميزات والعيوب وروابط الاستخدام المباشر على دليل TOLZY.`;
   return { title, description };
 };
 
@@ -552,12 +527,15 @@ export const generateToolMetadata = (tool: ToolData): Metadata => {
   const categoryStr = Array.isArray(tool.category) ? tool.category[0] : tool.category;
 
   return {
-    title,
+    title: {
+      absolute: title,
+    },
     description,
     keywords: [
       tool.name, ...(tool.tags || []), categoryStr,
       'أداة ذكاء اصطناعي', 'AI tool',
       tool.pricing === 'Free' ? 'مجاني' : '',
+      `بدائل ${tool.name}`, `شرح ${tool.name}`, `سعر ${tool.name}`,
       ...SITE_CONFIG.keywords.slice(0, 5),
     ].filter(Boolean),
     openGraph: {
@@ -610,11 +588,13 @@ export const generateNewsMetadata = (article: ArticleData): Metadata => {
  * Generate Next.js Metadata for course pages
  */
 export const generateCourseMetadata = (course: CourseData): Metadata => {
-  const title = `${course.title} - دورة برمجة مجانية`;
-  const description = course.description || `تعلم ${course.title} من الصفر مع دورة مجانية شاملة باللغة العربية.`;
+  const title = `كورس ${course.title} المجاني | شرح شامل وشهادة إتمام — TOLZY`;
+  const description = `ابدأ الآن دراسة ${course.title} مجاناً باللغة العربية: محتوى تدريبي عملي، مهارات وتطبيقات واقعية، وشهادة إتمام معتمدة عبر أكاديمية TOLZY.`;
 
   return {
-    title,
+    title: {
+      absolute: title,
+    },
     description,
     keywords: [
       course.title, 'كورس برمجة مجاني', 'تعلم البرمجة',

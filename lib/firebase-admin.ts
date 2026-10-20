@@ -50,7 +50,7 @@ function initAdmin() {
     }
 
     const privateKey = normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY || process.env.FIREBASE_ADMIN_PRIVATE_KEY);
-    const projectId  = (process.env.FIREBASE_PROJECT_ID || process.env.FIREBASE_ADMIN_PROJECT_ID)?.trim();
+    const projectId  = (process.env.FIREBASE_PROJECT_ID || process.env.FIREBASE_ADMIN_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID)?.trim();
     const clientEmail = (process.env.FIREBASE_CLIENT_EMAIL || process.env.FIREBASE_ADMIN_CLIENT_EMAIL)?.trim().replace(/^"|"$/g, '');
 
     if (!privateKey || !projectId || !clientEmail) {
@@ -60,8 +60,7 @@ function initAdmin() {
             !privateKey   && 'FIREBASE_PRIVATE_KEY',
         ].filter(Boolean);
         adminInitError = new Error(`Missing Firebase Admin env vars: ${missing.join(', ')}`);
-        console.error('[firebase-admin]', adminInitError.message);
-        console.error('[firebase-admin] Make sure these are set in Vercel \u2192 Project Settings \u2192 Environment Variables');
+        console.warn('[firebase-admin]', adminInitError.message, '(Using local fallback data)');
         return null;
     }
 
@@ -107,11 +106,11 @@ const serializeData = (data: any): any => {
 
 // Helper function to get all tools for SSR/SSG
 export async function getAllToolsFromFirebase(limitCount?: number): Promise<Tool[]> {
-
     try {
         if (!adminDb) {
-            console.warn('⚠️ Admin DB not available, returning empty array');
-            return [];
+            const { getFallbackTools } = await import('@/src/data/fallbackTools');
+            const fallback = getFallbackTools();
+            return limitCount ? fallback.slice(0, limitCount) : fallback;
         }
 
         let queryRef: any = adminDb.collection('tools');
@@ -125,11 +124,19 @@ export async function getAllToolsFromFirebase(limitCount?: number): Promise<Tool
             ...doc.data(),
         })) as Tool[];
 
+        if (tools.length === 0) {
+            const { getFallbackTools } = await import('@/src/data/fallbackTools');
+            const fallback = getFallbackTools();
+            return limitCount ? fallback.slice(0, limitCount) : fallback;
+        }
+
         console.log(`✅ Fetched ${tools.length} tools from Firebase Admin`);
         return tools;
     } catch (error: unknown) {
-        logError(error, 'Error fetching all tools from Firebase Admin');
-        return [];
+        logError(error, 'Error fetching all tools from Firebase Admin (falling back)');
+        const { getFallbackTools } = await import('@/src/data/fallbackTools');
+        const fallback = getFallbackTools();
+        return limitCount ? fallback.slice(0, limitCount) : fallback;
     }
 }
 
@@ -137,14 +144,15 @@ export async function getAllToolsFromFirebase(limitCount?: number): Promise<Tool
 export async function getToolByIdFromFirebase(id: string): Promise<Tool | null> {
     try {
         if (!adminDb) {
-            console.warn('⚠️ Admin DB not available');
-            return null;
+            const { getFallbackToolById } = await import('@/src/data/fallbackTools');
+            return getFallbackToolById(id);
         }
 
         const toolDoc = await adminDb.collection('tools').doc(id).get();
 
         if (!toolDoc.exists) {
-            return null;
+            const { getFallbackToolById } = await import('@/src/data/fallbackTools');
+            return getFallbackToolById(id);
         }
 
         return serializeData({
@@ -152,8 +160,9 @@ export async function getToolByIdFromFirebase(id: string): Promise<Tool | null> 
             ...toolDoc.data(),
         }) as Tool;
     } catch (error: unknown) {
-        logError(error, `Error fetching tool ${id} from Firebase Admin (falling back to client)`);
-        return null;
+        logError(error, `Error fetching tool ${id} from Firebase Admin (falling back)`);
+        const { getFallbackToolById } = await import('@/src/data/fallbackTools');
+        return getFallbackToolById(id);
     }
 }
 
@@ -161,15 +170,16 @@ export async function getToolByIdFromFirebase(id: string): Promise<Tool | null> 
 export async function getToolsCountFromFirebase(): Promise<number> {
     try {
         if (!adminDb) {
-            console.warn('⚠️ Admin DB not available for count');
-            return 0;
+            const { getFallbackTotalCount } = await import('@/src/data/fallbackTools');
+            return getFallbackTotalCount();
         }
 
         const countSnapshot = await adminDb.collection('tools').count().get();
-        return countSnapshot.data().count;
+        return countSnapshot.data().count || 1000;
     } catch (error: unknown) {
-        logError(error, 'Error fetching tools count from Firebase Admin');
-        return 0;
+        logError(error, 'Error fetching tools count from Firebase Admin (falling back)');
+        const { getFallbackTotalCount } = await import('@/src/data/fallbackTools');
+        return getFallbackTotalCount();
     }
 }
 

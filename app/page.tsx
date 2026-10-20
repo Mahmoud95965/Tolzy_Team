@@ -72,7 +72,7 @@ export default function Home() {
     };
 
     return (
-        <PageLayout navbarOffset={false}>
+        <PageLayout navbarOffset={false} showCopilot={false}>
             <Script
                 id="organization-schema"
                 type="application/ld+json"

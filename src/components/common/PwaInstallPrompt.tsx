@@ -9,7 +9,10 @@ const PwaInstallPrompt: React.FC = () => {
   const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
-    // Prevent prompt if already dismissed or installed
+    // Don't show in studio or if already dismissed
+    if (typeof window !== 'undefined' && window.location.pathname.includes('/reels-studio')) {
+      return;
+    }
     if (localStorage.getItem('tolzy_pwa_dismissed') === 'true') {
         return;
     }

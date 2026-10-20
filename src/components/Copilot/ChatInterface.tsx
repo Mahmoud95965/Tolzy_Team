@@ -400,82 +400,17 @@ const VOICE_OPTIONS = [
     { id: 'en-US-JennyNeural', name: 'Jenny', label: 'English (US)', gender: 'Female', flag: '🇺🇸' },
 ];
 
-// ─── Upgrade Plan Modal for Pro/Max Features ───
+// ─── Upgrade Plan Modal (Disabled - Platform is 100% free) ───
 const UpgradePlanModal = ({
     isOpen,
     onClose,
-    title = 'ميزة TOLZY Voice متاحة حصرياً لباقات Pro و MAX 👑',
-    description = 'نموذج TOLZY Voice يتيح لك توليد وتحويل أي نصوص إلى أصوات واقعية وإذاعية فائقة النقاء باستخدام تقنيات Azure Neural Voices المتطورة.'
 }: {
     isOpen: boolean;
     onClose: () => void;
     title?: string;
     description?: string;
 }) => {
-    if (!isOpen) return null;
-    return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200" dir="rtl">
-            <div className="relative w-full max-w-lg rounded-3xl bg-neutral-900 border border-neutral-800 shadow-2xl p-6 sm:p-8 text-right overflow-hidden">
-                {/* Ambient glow */}
-                <div className="absolute -top-24 -right-24 w-60 h-60 bg-amber-500/20 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute -bottom-24 -left-24 w-60 h-60 bg-orange-500/20 rounded-full blur-3xl pointer-events-none" />
-
-                <div className="flex items-center justify-between mb-5 relative z-10">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/25">
-                            <span className="material-symbols-outlined text-white text-[24px]">graphic_eq</span>
-                        </div>
-                        <div>
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                                PRO & MAX EXCLUSIVE ⚡
-                            </span>
-                            <h3 className="text-base sm:text-lg font-black text-white mt-1">{title}</h3>
-                        </div>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-neutral-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
-                    >
-                        <span className="material-symbols-outlined text-[18px]">close</span>
-                    </button>
-                </div>
-
-                <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed mb-6 relative z-10 font-medium">
-                    {description}
-                </p>
-
-                {/* Features List */}
-                <div className="space-y-2.5 mb-6 bg-white/[0.03] border border-white/[0.06] rounded-2xl p-4 relative z-10">
-                    <div className="flex items-center gap-2.5 text-xs text-neutral-200">
-                        <span className="material-symbols-outlined text-amber-400 text-[18px]">verified</span>
-                        <span>توليد أصوات واقعية بلهجات متعددة (مصرية، خليجية، فصحى، إنجليزية).</span>
-                    </div>
-                    <div className="flex items-center gap-2.5 text-xs text-neutral-200">
-                        <span className="material-symbols-outlined text-amber-400 text-[18px]">verified</span>
-                        <span>أولوية قصوى وسرعة استجابة فائقة لمعالجة البيانات والنماذج.</span>
-                    </div>
-                </div>
-
-                {/* CTA Buttons */}
-                <div className="flex items-center gap-3 relative z-10">
-                    <Link
-                        href="/pricing"
-                        onClick={onClose}
-                        className="flex-1 py-3 px-5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white text-xs sm:text-sm font-black text-center shadow-lg shadow-orange-500/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2 no-underline"
-                    >
-                        <span>ترقية الحساب إلى Pro / MAX ⚡</span>
-                        <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                    </Link>
-                    <button
-                        onClick={onClose}
-                        className="py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-neutral-300 text-xs font-bold transition-colors cursor-pointer"
-                    >
-                        إلغاء
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
+    return null;
 };
 
 const formatMessageContent = (text: string) => {
@@ -884,29 +819,9 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
         }
     }, [userProfile?.plan]);
 
-    useEffect(() => {
-        if (!user?.uid) return;
-        let isCancelled = false;
-        const fetchPlan = async () => {
-            try {
-                const res = await fetch(`/api/user/plan?uid=${encodeURIComponent(user.uid)}`, { cache: 'no-store' });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (!isCancelled && data?.plan) {
-                        setLivePlan(data.plan);
-                    }
-                }
-            } catch (e) {
-                console.error('Failed to fetch live plan in ChatInterface:', e);
-            }
-        };
-        fetchPlan();
-        return () => { isCancelled = true; };
-    }, [user?.uid]);
-
-    const normalizedPlan = String(livePlan || userProfile?.plan || userData?.plan || 'free').toLowerCase();
-    const isProPlan = normalizedPlan.includes('pro') || normalizedPlan.includes('max') || normalizedPlan.includes('ultra') || normalizedPlan.includes('admin') || userProfile?.role === 'admin' || userData?.role === 'admin' || user?.email === 'mahmoud.m.moussa5310@gmail.com';
-    const isFree = !isProPlan;
+    const normalizedPlan = String(userProfile?.plan || 'free').toLowerCase();
+    const isProPlan = true;
+    const isFree = false;
     const [showGuestOverlay, setShowGuestOverlay] = useState(true);
 
     const [messages, setMessages] = useState<Message[]>([]);
@@ -1229,9 +1144,7 @@ const ChatInterface = ({ initialChatId }: { initialChatId?: string }) => {
                 m.id === assistantMessageId
                     ? { 
                         ...m, 
-                        content: isTokenDepleted
-                            ? `${errorMsg}\n\n👉 [**اضغط هنا لشحن الرصيد وترقية الباقة الآن ⚡**](/pricing)`
-                            : (m.content || errorMsg), 
+                        content: m.content || errorMsg, 
                         isStreaming: false, 
                         status: 'complete' as const 
                       }

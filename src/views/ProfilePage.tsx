@@ -1,23 +1,37 @@
 "use client";
+
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '../context/AuthContext';
-import { useTools } from '../hooks/useTools';
 import { useUserData } from '../hooks/useUserData';
 import { getUsersSavedTools, getUsersSubmittedTools } from '../services/tools.service';
-import Link from 'next/link';
 import PageLayout from '../components/layout/PageLayout';
 import SavedTools from '../components/tools/SavedTools';
-import { updateProfile } from 'firebase/auth';
-import { 
-  User, Camera, Loader, Mail, Calendar, Shield, Settings, 
-  Edit2, Check, X, Award, Heart, Bookmark, Activity, 
-  Upload, BookOpen, FileText, Zap, ChevronRight, LogOut, Bell, Lock, Phone, MapPin, Globe, AlertCircle, MessageSquare,
-  Crown, Gauge, ArrowUpRight
-} from 'lucide-react';
+import { updateProfile, signOut } from 'firebase/auth';
 import { auth, db } from '../config/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
-// supabase client not needed here — uploads go through /api/user/upload-avatar
+import { toast } from 'react-hot-toast';
+import {
+  User,
+  Camera,
+  Loader2,
+  Mail,
+  Calendar,
+  Shield,
+  Edit3,
+  Check,
+  X,
+  Bookmark,
+  Zap,
+  LogOut,
+  Upload,
+  BookOpen,
+  MessageSquare,
+  Sparkles,
+  ExternalLink,
+  ChevronLeft
+} from 'lucide-react';
 
 interface ViewedUser {
   uid: string;
@@ -26,7 +40,7 @@ interface ViewedUser {
   firstName: string;
   lastName: string;
   photoURL: string | null;
-  coverURL: string | null;
+  coverURL?: string | null;
   email: string;
   createdAt: string;
   role: string;
@@ -34,107 +48,111 @@ interface ViewedUser {
 }
 
 const ProfilePage: React.FC = () => {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const profileUsername = searchParams.get('username')?.trim().toLowerCase();
 
-  const { user, userProfile } = useAuth();
-  const { userData } = useUserData();
-  const { tools: globalTools } = useTools();
+  const { user, userProfile, logout } = useAuth();
+  const { userData, refreshUserData } = useUserData();
 
+  // Navigation Tabs: 'saved' | 'added' | 'admin' | 'posts'
+  const [activeTab, setActiveTab] = useState<'saved' | 'added' | 'admin' | 'posts'>('saved');
+
+  // Edit Profile States
   const [isEditing, setIsEditing] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
+  // Other User Profile States
   const [viewedUser, setViewedUser] = useState<ViewedUser | null>(null);
   const [viewedLoading, setViewedLoading] = useState(false);
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const [loadingUserPosts, setLoadingUserPosts] = useState(false);
-  const [tokenUsage, setTokenUsage] = useState<any>(null);
+
+  // Tools Data
+  const [savedTools, setSavedTools] = useState<any[]>([]);
+  const [addedTools, setAddedTools] = useState<any[]>([]);
+  const [isLoadingTools, setIsLoadingTools] = useState(true);
 
   // Determine if viewing own profile or someone else's
-  const isOwnProfile = !profileUsername || (viewedUser?.uid === user?.uid) || (userData?.displayName && profileUsername === userData.displayName.trim().toLowerCase().replace(/[^a-zA-Z0-9]/g, ''));
+  const isOwnProfile =
+    !profileUsername ||
+    viewedUser?.uid === user?.uid ||
+    (userData?.displayName &&
+      profileUsername ===
+        userData.displayName.trim().toLowerCase().replace(/[^a-zA-Z0-9]/g, ''));
+
   const activeUser = viewedUser || {
     uid: user?.uid || '',
-    username: '',
-    displayName: userData?.displayName || user?.displayName || 'مستخدم',
+    username: profileUsername || '',
+    displayName: userData?.displayName || user?.displayName || 'المستخدم',
     firstName: userData?.firstName || '',
     lastName: userData?.lastName || '',
     photoURL: user?.photoURL || userData?.photoURL || null,
-    coverURL: userData?.coverURL || null,
     email: user?.email || '',
     createdAt: userData?.createdAt || '',
     role: userData?.role || 'user',
     plan: userProfile?.plan || 'free',
   };
 
-  // Fetch real token usage for the active user
+  const isAdmin =
+    isOwnProfile &&
+    (userData?.role === 'admin' ||
+      user?.email?.toLowerCase() === 'mahmoud.m.moussa5310@gmail.com');
+
+  // Pre-fill form inputs
   useEffect(() => {
-    const fetchUsage = async () => {
-      const targetUid = activeUser.uid;
-      if (!targetUid) return;
+    if (userData) {
+      setFirstName(userData.firstName || '');
+      setLastName(userData.lastName || '');
+    } else if (user?.displayName) {
+      const parts = user.displayName.split(' ');
+      setFirstName(parts[0] || '');
+      setLastName(parts.slice(1).join(' ') || '');
+    }
+  }, [userData, user]);
+
+
+  // Fetch user tools (Saved & Submitted)
+  useEffect(() => {
+    const fetchTools = async () => {
+      if (!user?.uid || !isOwnProfile) return;
+      setIsLoadingTools(true);
       try {
-        const res = await fetch(`/api/user/token-usage?userId=${targetUid}`);
-        if (res.ok) {
-          const data = await res.json();
-          setTokenUsage(data);
-        }
+        const [saved, submitted] = await Promise.all([
+          isAdmin ? Promise.resolve([]) : getUsersSavedTools(user.uid),
+          getUsersSubmittedTools(user.uid),
+        ]);
+        setSavedTools(saved);
+        setAddedTools(submitted);
       } catch (err) {
-        console.error('Failed to fetch user token usage on profile:', err);
-      }
-    };
-    fetchUsage();
-  }, [activeUser.uid]);
-
-  const rawPlan = tokenUsage?.plan || String(viewedUser?.plan || userProfile?.plan || 'free').toLowerCase();
-  const isMaxPlan = rawPlan.includes('max') || rawPlan.includes('ultra');
-  const isProPlan = !isMaxPlan && (rawPlan.includes('pro') || rawPlan.includes('plus'));
-  const isAdminPlan = rawPlan === 'admin' || (isOwnProfile && (userData?.role === 'admin' || user?.email?.toLowerCase() === 'mahmoud.m.moussa5310@gmail.com'));
-
-  // Check admin privileges (only for own profile)
-  const isAdmin = isOwnProfile && (userData?.role === 'admin' || user?.email?.toLowerCase() === 'mahmoud.m.moussa5310@gmail.com');
-
-  // Fetch viewed user profile when username is in URL
-  useEffect(() => {
-    if (!profileUsername) {
-      setViewedUser(null);
-      return;
-    }
-    const fetchViewedUser = async () => {
-      setViewedLoading(true);
-      try {
-        const res = await fetch(`/api/community/user-profile?username=${encodeURIComponent(profileUsername)}`, { cache: 'no-store' });
-        if (res.ok) {
-          const data = await res.json();
-          setViewedUser(data);
-        } else {
-          setViewedUser(null);
-          setError('المستخدم غير موجود');
-        }
-      } catch (e) {
-        setViewedUser(null);
-        setError('فشل تحميل الملف الشخصي');
+        console.error('Error fetching tools:', err);
       } finally {
-        setViewedLoading(false);
+        setIsLoadingTools(false);
       }
     };
-    fetchViewedUser();
-  }, [profileUsername]);
+    fetchTools();
+  }, [user?.uid, isOwnProfile, isAdmin]);
 
-  // Fetch community posts when viewing another user's profile
+  // Redirect legacy /profile?username=... requests to the dedicated /community/user/[id] route
   useEffect(() => {
-    if (!profileUsername || isOwnProfile) {
-      setUserPosts([]);
-      return;
+    if (profileUsername) {
+      router.replace(`/community/user/${encodeURIComponent(profileUsername)}`);
     }
+  }, [profileUsername, router]);
+
+  // Fetch community posts when viewing someone else's profile
+  useEffect(() => {
+    if (!profileUsername || isOwnProfile) return;
     const fetchPosts = async () => {
       setLoadingUserPosts(true);
       try {
-        const res = await fetch(`/api/community/user-posts?username=${encodeURIComponent(profileUsername)}`, { cache: 'no-store' });
+        const res = await fetch(
+          `/api/community/user-posts?username=${encodeURIComponent(profileUsername)}`,
+          { cache: 'no-store' }
+        );
         if (res.ok) {
           const data = await res.json();
           setUserPosts(data.posts || []);
@@ -150,32 +168,8 @@ const ProfilePage: React.FC = () => {
     fetchPosts();
   }, [profileUsername, isOwnProfile]);
 
-  useEffect(() => {
-    if (userData) {
-      setFirstName(userData.firstName || '');
-      setLastName(userData.lastName || '');
-      setCoverURL(userData.coverURL || null);
-    }
-    if (user?.email) {
-      setEmail(user.email);
-    }
-  }, [userData, user]);
-
-  useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => setSuccess(null), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [success]);
-
-  const [savedTools, setSavedTools] = useState<any[]>([]);
-  const [addedTools, setAddedTools] = useState<any[]>([]);
-  const [isLoadingTools, setIsLoadingTools] = useState(true);
-  const [coverURL, setCoverURL] = useState<string | null>(userData?.coverURL || null);
-
-  // ... (edit state) ...
-
-  const compressImage = (file: File, maxSize = 1200, quality = 0.8): Promise<File> => {
+  // Image compressor helper
+  const compressImage = (file: File, maxSize = 800, quality = 0.85): Promise<File> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
@@ -196,12 +190,20 @@ const ProfilePage: React.FC = () => {
           canvas.height = height;
           const ctx = canvas.getContext('2d');
           ctx?.drawImage(img, 0, 0, width, height);
-          canvas.toBlob((blob) => {
-            if (blob) {
-              const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webp", { type: 'image/webp' });
-              resolve(newFile);
-            } else reject(new Error('Compression failed'));
-          }, 'image/webp', quality);
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const newFile = new File(
+                  [blob],
+                  file.name.replace(/\.[^/.]+$/, '') + '.webp',
+                  { type: 'image/webp' }
+                );
+                resolve(newFile);
+              } else reject(new Error('Compression failed'));
+            },
+            'image/webp',
+            quality
+          );
         };
         img.onerror = reject;
       };
@@ -209,73 +211,26 @@ const ProfilePage: React.FC = () => {
     });
   };
 
-  // Fetch tools directly for reliability
-  useEffect(() => {
-    const fetchUserTools = async () => {
-      if (!user?.uid) return;
-      setIsLoadingTools(true);
-      try {
-        // إلغاء جلب الأدوات المحفوظة نهائياً للمسؤول لتسريع التحميل وتجنب المشاكل
-        const [saved, submitted] = await Promise.all([
-          isAdmin ? Promise.resolve([]) : getUsersSavedTools(user.uid),
-          getUsersSubmittedTools(user.uid)
-        ]);
-        setSavedTools(saved);
-        setAddedTools(submitted);
-      } catch (err) {
-        console.error('Error fetching user tools:', err);
-      } finally {
-        setIsLoadingTools(false);
-      }
-    };
+  // Instant Avatar Upload (Without Full Page Reload)
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user || !isOwnProfile) return;
 
-    fetchUserTools();
-  }, [user?.uid, isAdmin]);
-
-  // Keep savedTools synced with global context updates for optimistic UI (optional/hybrid)
-  useEffect(() => {
-    if (user?.uid && globalTools.length > 0) {
-      // This can be used to update live status if needed, but the main fetch above ensures we have ALL of them initially.
-      // We can re-run the fetch if we want strict sync or just rely on local state updates if we implemented them.
-      // For now, let's stick to the initial fetch to solve the "missing tools" bug.
-    }
-  }, [globalTools, user?.uid]);
-
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    // ⛔ Security: only the owner can upload their own photo
-    if (!file || !user) return;
-    if (!isOwnProfile) {
-      setError('ليس لديك صلاحية تعديل ملف هذا المستخدم');
-      return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      setError('حجم الصورة يجب أن يكون أقل من 10 ميجابايت');
-      return;
-    }
-
-    if (!file.type.startsWith('image/')) {
-      setError('يرجى اختيار صورة صالحة');
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error('حجم الصورة يجب أن يكون أقل من 8 ميجابايت');
       return;
     }
 
     try {
-      setIsLoading(true);
-      setError(null);
-      setUploadProgress(10);
+      setIsUploadingPhoto(true);
+      const loadingToast = toast.loading('جاري رفع ومعالجة الصورة الشخصية...');
 
       const compressed = await compressImage(file);
-      setUploadProgress(30);
-
-      // ✔️ Secure upload via server-side API (token verified on server)
       const idToken = await user.getIdToken();
       const formData = new FormData();
       formData.append('file', compressed);
       formData.append('type', 'avatar');
 
-      setUploadProgress(50);
-
       const res = await fetch('/api/user/upload-avatar', {
         method: 'POST',
         headers: { Authorization: `Bearer ${idToken}` },
@@ -284,149 +239,93 @@ const ProfilePage: React.FC = () => {
 
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
-        throw new Error(json.error || 'فشل الرفع');
+        throw new Error(json.error || 'فشل رفع الصورة');
       }
 
       const { publicUrl } = await res.json();
-      setUploadProgress(80);
 
+      // Update Firebase Auth & Firestore
       await updateProfile(auth.currentUser!, { photoURL: publicUrl });
-
       const userDocRef = doc(db, 'users', user.uid);
       await updateDoc(userDocRef, {
         photoURL: publicUrl,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       });
 
-      setUploadProgress(100);
-      setSuccess('تم تحديث الصورة الشخصية بنجاح!');
-      setTimeout(() => window.location.reload(), 1000);
-
+      toast.dismiss(loadingToast);
+      toast.success('تم تحديث الصورة الشخصية بنجاح!');
+      if (refreshUserData) refreshUserData();
     } catch (err: any) {
-      console.error('❌ Upload Error:', err);
-      setError('فشل رفع الصورة: ' + (err.message || 'خطأ غير معروف'));
+      toast.error(err.message || 'حدث خطأ أثناء رفع الصورة');
     } finally {
-      setIsLoading(false);
-      setUploadProgress(0);
+      setIsUploadingPhoto(false);
     }
   };
 
-  const handleCoverUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    // ⛔ Security: only the owner can upload their own cover
-    if (!file || !user) return;
-    if (!isOwnProfile) {
-      setError('ليس لديك صلاحية تعديل ملف هذا المستخدم');
-      return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      setError('حجم صورة الغلاف يجب أن يكون أقل من 10 ميجابايت');
-      return;
-    }
-
-    if (!file.type.startsWith('image/')) {
-      setError('يرجى اختيار صورة صالحة');
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      setError(null);
-      setUploadProgress(10);
-
-      const compressed = await compressImage(file, 1600, 0.8);
-      setUploadProgress(30);
-
-      // ✔️ Secure upload via server-side API (token verified on server)
-      const idToken = await user.getIdToken();
-      const formData = new FormData();
-      formData.append('file', compressed);
-      formData.append('type', 'cover');
-
-      setUploadProgress(50);
-
-      const res = await fetch('/api/user/upload-avatar', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${idToken}` },
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const json = await res.json().catch(() => ({}));
-        throw new Error(json.error || 'فشل الرفع');
-      }
-
-      const { publicUrl } = await res.json();
-      setUploadProgress(80);
-
-      const userDocRef = doc(db, 'users', user.uid);
-      await updateDoc(userDocRef, {
-        coverURL: publicUrl,
-        updatedAt: new Date().toISOString()
-      });
-
-      setCoverURL(publicUrl);
-      setUploadProgress(100);
-      setSuccess('تم تحديث صورة الغلاف بنجاح!');
-      setTimeout(() => window.location.reload(), 1000);
-
-    } catch (err: any) {
-      console.error('❌ Cover Upload Error:', err);
-      setError('فشل رفع صورة الغلاف: ' + (err.message || 'خطأ غير معروف'));
-    } finally {
-      setIsLoading(false);
-      setUploadProgress(0);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Profile Information Save (Instant optimistic update)
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    // ⛔ Security: only the owner can submit profile changes
-    if (!user) return;
-    if (!isOwnProfile) {
-      setError('ليس لديك صلاحية تعديل ملف هذا المستخدم');
-      return;
-    }
+    if (!user || !isOwnProfile) return;
 
     if (!firstName.trim() || !lastName.trim()) {
-      setError('يرجى إدخال الاسم الأول والأخير');
+      toast.error('يرجى إدخال الاسم الأول واسم العائلة');
       return;
     }
 
     try {
-      setIsLoading(true);
-      setError(null);
-
+      setIsSavingProfile(true);
       const newDisplayName = `${firstName.trim()} ${lastName.trim()}`;
-      await updateProfile(auth.currentUser!, {
-        displayName: newDisplayName
-      });
 
+      await updateProfile(auth.currentUser!, { displayName: newDisplayName });
       const userDocRef = doc(db, 'users', user.uid);
       await updateDoc(userDocRef, {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         displayName: newDisplayName,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       });
 
-      setSuccess('تم تحديث الملف الشخصي بنجاح!');
       setIsEditing(false);
-      setTimeout(() => window.location.reload(), 1000);
+      toast.success('تم حفظ التعديلات بنجاح!');
+      if (refreshUserData) refreshUserData();
     } catch (err) {
-      console.error('Update Error:', err);
-      setError('حدث خطأ أثناء تحديث الملف الشخصي');
+      toast.error('تعذر حفظ البيانات، يرجى المحاولة لاحقاً');
     } finally {
-      setIsLoading(false);
+      setIsSavingProfile(false);
     }
   };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push('/');
+      toast.success('تم تسجيل الخروج');
+    } catch (error) {
+      await signOut(auth);
+      window.location.href = '/';
+    }
+  };
+
+  const getPlanBadge = () => {
+    if (isAdmin) {
+      return {
+        label: 'مسؤول المنصة 👑',
+        className: 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900',
+      };
+    }
+    return {
+      label: 'عضو المنصة ✨',
+      className: 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300',
+    };
+  };
+
+  const planBadge = getPlanBadge();
 
   if (!isOwnProfile && viewedLoading) {
     return (
       <PageLayout>
-        <div className="flex justify-center py-20">
-          <Loader className="w-10 h-10 animate-spin text-indigo-500" />
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
         </div>
       </PageLayout>
     );
@@ -434,335 +333,271 @@ const ProfilePage: React.FC = () => {
 
   return (
     <PageLayout>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-6 sm:space-y-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-6" dir="rtl">
 
-        {/* Messages */}
-        {success && (
-          <div className="bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 p-4 rounded-xl flex items-center gap-3 animate-fade-in-down text-sm sm:text-base">
-            <Check className="w-5 h-5 shrink-0" />
-            <p className="font-bold">{success}</p>
-          </div>
-        )}
-        {error && (
-          <div className="bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 p-4 rounded-xl flex items-center gap-3 animate-fade-in-down text-sm sm:text-base">
-            <X className="w-5 h-5 shrink-0" />
-            <p className="font-bold">{error}</p>
-          </div>
-        )}
+        {/* ─── Modern Minimal Profile Header ─── */}
+        <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-6 sm:p-8 shadow-sm">
+          {/* Subtle background glow */}
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-blue-500/10 dark:bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 bg-purple-500/10 dark:bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Central Profile Card */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] shadow-sm sm:shadow-xl text-center flex flex-col items-center relative overflow-hidden">
-          {/* Cover Photo */}
-          <div className="relative w-full h-40 sm:h-52 group">
-            {(activeUser.coverURL || coverURL || userData?.coverURL) ? (
-              <img
-                src={activeUser.coverURL || coverURL || userData?.coverURL || ''}
-                alt="Cover"
-                className="w-full h-full object-cover rounded-t-[2rem]"
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-indigo-400 to-purple-500 rounded-t-[2rem] flex items-center justify-center">
-                <div className="text-white/30 font-black text-4xl sm:text-5xl tracking-widest">TOLZY</div>
-              </div>
-            )}
-
-            {/* Cover Upload Overlay — only for own profile */}
-            {isOwnProfile && (
-              <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center cursor-pointer text-white rounded-t-[2rem]">
-                <Camera className="w-7 h-7 mb-1.5" />
-                <span className="text-xs font-bold">تغيير الغلاف</span>
-                <input type="file" className="hidden" accept="image/*" onChange={handleCoverUpload} disabled={isLoading} />
-              </label>
-            )}
-
-            {uploadProgress > 0 && (
-              <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-10 rounded-t-[2rem]">
-                <Loader className="w-6 h-6 text-white animate-spin mb-1" />
-                <span className="text-white text-[10px] font-bold">{uploadProgress}%</span>
-              </div>
-            )}
-          </div>
-
-          {/* Profile Picture */}
-          <div className="relative group -mt-14 sm:-mt-16 mb-4 z-10">
-            <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-lg border-4 border-white dark:border-slate-800 relative">
-              {activeUser.photoURL ? (
-                <img src={activeUser.photoURL} alt="Profile" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <User className="w-12 h-12 text-slate-400" />
-                </div>
-              )}
-
-              {/* Upload Overlay — only for own profile */}
-              {isOwnProfile && (
-                <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center cursor-pointer text-white">
-                  <Camera className="w-6 h-6 mb-1.5" />
-                  <span className="text-[10px] sm:text-xs font-bold">تغيير الصورة</span>
-                  <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isLoading} />
-                </label>
-              )}
-
-              {uploadProgress > 0 && (
-                <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center z-10">
-                  <Loader className="w-6 h-6 text-white animate-spin mb-1" />
-                  <span className="text-white text-[10px] font-bold">{uploadProgress}%</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="px-6 pb-6 sm:px-10 sm:pb-10 w-full">
-
-          {/* Basic Info */}
-          <div className="z-10 w-full">
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white flex items-center justify-center gap-2 mb-3">
-              {activeUser.displayName}
-              {activeUser.role === 'admin' && <Award className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500 fill-yellow-500/20" />}
-            </h1>
+          <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start justify-between gap-6">
             
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 mb-8">
-              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-full border border-slate-100 dark:border-slate-700/50">
-                <Mail className="w-3.5 h-3.5 text-indigo-500" />
-                <span className="truncate max-w-[200px] sm:max-w-none">{activeUser.email || 'غير متوفر'}</span>
-              </div>
-              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-full border border-slate-100 dark:border-slate-700/50">
-                <Calendar className="w-3.5 h-3.5 text-purple-500" />
-                <span>عضو منذ {activeUser.createdAt ? new Date(activeUser.createdAt).toLocaleDateString('ar-EG') : 'غير محدد'}</span>
-              </div>
-              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-3.5 py-1.5 rounded-full border border-slate-100 dark:border-slate-700/50">
-                <Shield className="w-3.5 h-3.5 text-amber-500" />
-                <span className="font-bold">
-                  الخطة: {
-                    isAdminPlan ? 'حساب الإدارة (Admin 👑)' :
-                    isMaxPlan ? 'خطة الاستوديو (MAX 2.5M) 👑' :
-                    isProPlan ? 'الخطة الاحترافية (Pro 500K) ⭐' :
-                    'الخطة المجانية (Free 10K)'
-                  }
-                </span>
-              </div>
-            </div>
+            {/* Avatar & Info */}
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-5 text-center md:text-right">
+              
+              {/* Avatar with quick upload button */}
+              <div className="relative group shrink-0">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-800 ring-2 ring-neutral-200 dark:ring-neutral-700 shadow-md">
+                  {activeUser.photoURL ? (
+                    <img
+                      src={activeUser.photoURL}
+                      alt={activeUser.displayName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-blue-600 to-indigo-600 text-white text-3xl font-black">
+                      {activeUser.displayName?.charAt(0)?.toUpperCase() || 'U'}
+                    </div>
+                  )}
 
-            {/* Real Token Usage Box */}
-            {isOwnProfile && tokenUsage && (
-              <div className="mb-8 max-w-xl mx-auto p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 text-right space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Gauge className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">رصيد واستخدام التوكن الحقيقي (AI Tokens)</h3>
-                  </div>
-                  <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300">
-                    {tokenUsage.percentageUsed || 0}% مستهلك
+                  {/* Upload overlay */}
+                  {isOwnProfile && (
+                    <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center cursor-pointer text-white text-xs font-bold gap-1">
+                      {isUploadingPhoto ? (
+                        <Loader2 className="w-6 h-6 animate-spin text-white" />
+                      ) : (
+                        <>
+                          <Camera className="w-6 h-6" />
+                          <span>تغيير</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handlePhotoUpload}
+                        disabled={isUploadingPhoto}
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              {/* Text Info */}
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5">
+                  <h1 className="text-xl sm:text-2xl font-black text-neutral-900 dark:text-white">
+                    {activeUser.displayName}
+                  </h1>
+                  <span
+                    className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${planBadge.className}`}
+                  >
+                    {planBadge.label}
                   </span>
                 </div>
 
-                {/* Progress bar */}
-                <div className="w-full h-2.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full ${
-                      (tokenUsage.percentageUsed || 0) >= 90 ? 'bg-rose-500' :
-                      (tokenUsage.percentageUsed || 0) >= 75 ? 'bg-amber-500' : 'bg-blue-600'
-                    } transition-all duration-500 rounded-full`}
-                    style={{ width: `${tokenUsage.percentageUsed || 0}%` }}
-                  />
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-xs text-neutral-500 dark:text-neutral-400">
+                  {activeUser.email && (
+                    <span className="flex items-center gap-1">
+                      <Mail className="w-3.5 h-3.5 text-neutral-400" />
+                      <span className="font-mono">{activeUser.email}</span>
+                    </span>
+                  )}
+                  {activeUser.createdAt && (
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5 text-neutral-400" />
+                      <span>
+                        عضو منذ {new Date(activeUser.createdAt).toLocaleDateString('ar-EG')}
+                      </span>
+                    </span>
+                  )}
                 </div>
+              </div>
+            </div>
 
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-2 text-xs font-mono pt-1 text-center">
-                  <div className="bg-white dark:bg-slate-900/80 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
-                    <span className="text-[10px] text-slate-400 block mb-0.5">المستهلك</span>
-                    <span className="font-bold text-slate-900 dark:text-white">{(tokenUsage.tokensUsed || 0).toLocaleString()}</span>
-                  </div>
-                  <div className="bg-white dark:bg-slate-900/80 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
-                    <span className="text-[10px] text-slate-400 block mb-0.5">المتبقي</span>
-                    <span className="font-bold text-blue-600 dark:text-blue-400">{(tokenUsage.tokensRemaining || 0).toLocaleString()}</span>
-                  </div>
-                  <div className="bg-white dark:bg-slate-900/80 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
-                    <span className="text-[10px] text-slate-400 block mb-0.5">إجمالي الباقة</span>
-                    <span className="font-bold text-slate-700 dark:text-slate-300">{(tokenUsage.tokenAllowance || 0).toLocaleString()}</span>
-                  </div>
-                </div>
+            {/* Header Action Buttons */}
+            {isOwnProfile && (
+              <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto justify-center">
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(!isEditing)}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                    isEditing
+                      ? 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 border-neutral-300 dark:border-neutral-700'
+                      : 'bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 border-transparent shadow-sm'
+                  }`}
+                >
+                  {isEditing ? <X className="w-3.5 h-3.5" /> : <Edit3 className="w-3.5 h-3.5" />}
+                  <span>{isEditing ? 'إغلاق التعديل' : 'تعديل الملف'}</span>
+                </button>
 
-                {!isAdminPlan && (
-                  <div className="pt-1 text-left">
-                    <Link 
-                      href="/pricing"
-                      className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
-                    >
-                      <span>ترقية الباقة أو زيادة الرصيد</span>
-                      <ArrowUpRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                )}
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 transition-colors"
+                  title="تسجيل الخروج"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">تسجيل الخروج</span>
+                </button>
               </div>
             )}
+          </div>
 
-            {/* Actions */}
-            <div className="flex flex-col sm:flex-row w-full sm:w-auto items-center justify-center gap-3">
+          {/* ─── Inline Edit Form (Collapsible, fast) ─── */}
+          {isOwnProfile && isEditing && (
+            <div className="mt-6 pt-6 border-t border-neutral-100 dark:border-neutral-800 animate-in fade-in slide-in-from-top-2 duration-200">
+              <form onSubmit={handleSaveProfile} className="max-w-xl mx-auto space-y-4">
+                <div className="text-center md:text-right mb-2">
+                  <h3 className="text-sm font-bold text-neutral-900 dark:text-white">تعديل الاسم المعروض</h3>
+                  <p className="text-xs text-neutral-400">سيظهر اسمك في المجتمع والتعليقات والملف الشخصي</p>
+                </div>
 
-              {isOwnProfile && (
-              <>
-              <button
-                onClick={() => setIsEditing(!isEditing)}
-                className={`flex items-center justify-center gap-2 w-full sm:w-auto mx-auto px-6 py-2.5 sm:py-3 rounded-xl transition-all font-bold text-sm sm:text-base ${
-                  isEditing 
-                    ? 'bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20' 
-                    : 'bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20 dark:bg-white dark:hover:bg-slate-100 dark:text-slate-900 dark:shadow-white/10'
-                }`}
-              >
-                {isEditing ? <X className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
-                {isEditing ? 'إلغاء التعديل' : 'تعديل الملف الشخصي'}
-              </button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-neutral-600 dark:text-neutral-400 mb-1">الاسم الأول</label>
+                    <input
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 text-xs text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-neutral-600 dark:text-neutral-400 mb-1">اسم العائلة</label>
+                    <input
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 text-xs text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                </div>
 
-              <button
-                onClick={async () => {
-                   const { signOut } = await import('firebase/auth');
-                   await signOut(auth);
-                   window.location.href = '/';
-                }}
-                className="flex md:hidden items-center justify-center gap-2 w-full mx-auto px-6 py-2.5 sm:py-3 rounded-xl transition-all font-bold text-sm sm:text-base bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20"
-              >
-                <LogOut className="w-4 h-4 rtl:-scale-x-100" />
-                تسجيل الخروج
-              </button>
-              </>
-              )}
+                <div className="flex items-center justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSavingProfile}
+                    className="flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50 shadow-sm"
+                  >
+                    {isSavingProfile ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>جاري الحفظ...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>حفظ التعديلات</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
-          </div>
-          </div>
-        </div>
-
-        {/* Edit Form */}
-        {isOwnProfile && isEditing && (
-          <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-[2rem] border border-indigo-100 dark:border-indigo-900/30 animate-fade-in-up shadow-sm">
-            <form onSubmit={handleSubmit} className="space-y-6 max-w-xl mx-auto">
-              <div className="text-center mb-6 sm:mb-8">
-                <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">تحديث البيانات</h2>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">الاسم الأول</label>
-                  <input
-                    type="text"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all outline-none text-sm"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">الاسم الأخير</label>
-                  <input
-                    type="text"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all outline-none text-sm"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2 opacity-60">
-                <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">البريد الإلكتروني (غير قابل للتعديل)</label>
-                <div className="relative">
-                  <Mail className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    type="text"
-                    value={email}
-                    disabled
-                    className="w-full pr-10 pl-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-transparent cursor-not-allowed text-sm text-slate-500"
-                    dir="ltr"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-3.5 bg-indigo-600 text-white rounded-xl text-sm sm:text-base font-bold shadow-lg shadow-indigo-500/20 hover:bg-indigo-700 hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-70 disabled:hover:scale-100"
-              >
-                {isLoading ? 'جاري الحفظ...' : 'حفظ التغييرات'}
-              </button>
-            </form>
-          </div>
-        )}
-
-        {/* Stats Grid */}
-        {isOwnProfile && (
-        <div className={`grid ${isAdmin ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4'} gap-3 sm:gap-4`}>
-          {!isAdmin && (
-            <>
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-2xl sm:rounded-[1.5rem] flex flex-col items-center justify-center text-center group shadow-sm transition-all hover:border-indigo-500/30">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-2 sm:mb-3 group-hover:scale-110 group-hover:-rotate-6 transition-transform">
-                  <Bookmark className="w-5 h-5 sm:w-6 sm:h-6" />
-                </div>
-                <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-0.5">{savedTools.length}</p>
-                <p className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">المكتبة</p>
-              </div>
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-2xl sm:rounded-[1.5rem] flex flex-col items-center justify-center text-center group shadow-sm transition-all hover:border-rose-500/30">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center text-rose-600 dark:text-rose-400 mb-2 sm:mb-3 group-hover:scale-110 group-hover:-rotate-6 transition-transform">
-                  <Heart className="w-5 h-5 sm:w-6 sm:h-6" />
-                </div>
-                <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-0.5">
-                  {savedTools.filter(t => t.isFeatured).length}
-                </p>
-                <p className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">المفضلة</p>
-              </div>
-            </>
           )}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-2xl sm:rounded-[1.5rem] flex flex-col items-center justify-center text-center group shadow-sm transition-all hover:border-amber-500/30">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-600 dark:text-amber-400 mb-2 sm:mb-3 group-hover:scale-110 group-hover:-rotate-6 transition-transform">
-              <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
-            <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-0.5">{addedTools.length}</p>
-            <p className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">المضافة</p>
-          </div>
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-2xl sm:rounded-[1.5rem] flex flex-col items-center justify-center text-center group shadow-sm transition-all hover:border-emerald-500/30">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-2 sm:mb-3 group-hover:scale-110 group-hover:-rotate-6 transition-transform">
-              <Activity className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
-            <p className="text-sm sm:text-base font-black text-emerald-500 mb-0.5 mt-2sm:mt-0 pt-1">نشط</p>
-            <p className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">الحالة</p>
-          </div>
         </div>
-        )}
 
-        {/* Admin Section */}
-        {isOwnProfile && isAdmin && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-8">
-            {[
-              { title: 'رفع الأدوات', icon: Upload, href: '/admin/upload-tools', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20', hover: 'hover:border-blue-500/30' },
-              { title: 'المحتوى', icon: BookOpen, href: '/admin/courses', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/20', hover: 'hover:border-purple-500/30' },
-              { title: 'الأدوات', icon: Zap, href: '/tools', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/20', hover: 'hover:border-amber-500/30' },
-              { title: 'اللوحة', icon: Shield, href: '/admin', color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-900/20', hover: 'hover:border-orange-500/30' },
-            ].map((item, idx) => (
-              <Link 
-                key={idx} 
-                href={item.href} 
-                className={`group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm transition-all ${item.hover}`}
-              >
-                <div className={`w-10 h-10 rounded-full ${item.bg} ${item.color} flex items-center justify-center mb-2 group-hover:scale-110 transition-transform`}>
-                  <item.icon className="w-5 h-5" />
-                </div>
-                <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white capitalize">{item.title}</h3>
-              </Link>
-            ))}
-          </div>
-        )}
+        {/* ─── Fast Navigation Tabs ─── */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none border-b border-neutral-200 dark:border-neutral-800 text-xs font-bold">
+          {isOwnProfile ? (
+            <>
+              {!isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('saved')}
+                  className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-all whitespace-nowrap ${
+                    activeTab === 'saved'
+                      ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-black'
+                      : 'border-transparent text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
+                  }`}
+                >
+                  <Bookmark className="w-4 h-4" />
+                  <span>المكتبة المحفوظة</span>
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 font-mono">
+                    {savedTools.length}
+                  </span>
+                </button>
+              )}
 
-        {/* Added Tools List */}
-        {isOwnProfile && addedTools.length > 0 && (
-          <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="flex items-center gap-3 mb-6 sm:mb-8">
-              <div className="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center">
-                <Zap className="w-5 h-5 text-amber-500" />
-              </div>
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">أدواتي المضافة</h3>
-            </div>
+              {addedTools.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('added')}
+                  className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-all whitespace-nowrap ${
+                    activeTab === 'added'
+                      ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-black'
+                      : 'border-transparent text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
+                  }`}
+                >
+                  <Zap className="w-4 h-4 text-amber-500" />
+                  <span>أدواتي المضافة</span>
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 font-mono">
+                    {addedTools.length}
+                  </span>
+                </button>
+              )}
+
+
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('admin')}
+                  className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-all whitespace-nowrap ${
+                    activeTab === 'admin'
+                      ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-black'
+                      : 'border-transparent text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
+                  }`}
+                >
+                  <Shield className="w-4 h-4 text-purple-500" />
+                  <span>إدارة النظام</span>
+                </button>
+              )}
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setActiveTab('posts')}
+              className="flex items-center gap-2 px-4 py-3 border-b-2 border-blue-600 text-blue-600 font-black"
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>منشورات المجتمع</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-neutral-100 dark:bg-neutral-800 font-mono">
+                {userPosts.length}
+              </span>
+            </button>
+          )}
+        </div>
+
+        {/* ─── Tab Content 1: Saved Tools ─── */}
+        {isOwnProfile && activeTab === 'saved' && !isAdmin && (
+          <div className="space-y-4">
             {isLoadingTools ? (
               <div className="flex justify-center py-12">
-                <Link href="/learn" className="text-emerald-500 hover:text-emerald-600 transition-colors">🚀 ابدأ التعلم الآن</Link>
+                <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+              </div>
+            ) : (
+              <SavedTools tools={savedTools} />
+            )}
+          </div>
+        )}
+
+        {/* ─── Tab Content 2: Submitted Tools ─── */}
+        {isOwnProfile && activeTab === 'added' && (
+          <div className="space-y-4">
+            {isLoadingTools ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
               </div>
             ) : (
               <SavedTools tools={addedTools} />
@@ -770,65 +605,89 @@ const ProfilePage: React.FC = () => {
           </div>
         )}
 
-        {/* Saved Tools List */}
-        {isOwnProfile && !isAdmin && (
-        <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm mb-6">
-          <div className="flex items-center gap-3 mb-6 sm:mb-8">
-            <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center">
-              <Bookmark className="w-5 h-5 text-indigo-500" />
-            </div>
-            <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">مكتبتي</h3>
+        {/* ─── Tab Content 4: Admin Shortcuts ─── */}
+        {isOwnProfile && isAdmin && activeTab === 'admin' && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              {
+                title: 'رفع الأدوات',
+                desc: 'إضافة ومراجعة أدوات جديدة',
+                icon: Upload,
+                href: '/admin/upload-tools',
+                color: 'text-blue-600 dark:text-blue-400',
+              },
+              {
+                title: 'إدارة الكورسات',
+                desc: 'المسارات والمحتوى التعليمي',
+                icon: BookOpen,
+                href: '/admin/courses',
+                color: 'text-purple-600 dark:text-purple-400',
+              },
+              {
+                title: 'إدارة الأدوات',
+                desc: 'تعديل وحذف الأدوات الحالية',
+                icon: Zap,
+                href: '/tools',
+                color: 'text-amber-600 dark:text-amber-400',
+              },
+              {
+                title: 'لوحة التحكم العامة',
+                desc: 'الإحصائيات والمستخدمين',
+                icon: Shield,
+                href: '/admin',
+                color: 'text-emerald-600 dark:text-emerald-400',
+              },
+            ].map((item, idx) => (
+              <Link
+                key={idx}
+                href={item.href}
+                className="p-5 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-700 transition-all flex flex-col justify-between group shadow-sm"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <item.icon className={`w-5 h-5 ${item.color}`} />
+                  <ChevronLeft className="w-4 h-4 text-neutral-400 group-hover:-translate-x-1 transition-transform" />
+                </div>
+                <div>
+                  <h3 className="text-xs sm:text-sm font-bold text-neutral-900 dark:text-white mb-0.5">
+                    {item.title}
+                  </h3>
+                  <p className="text-[11px] text-neutral-400 line-clamp-1">{item.desc}</p>
+                </div>
+              </Link>
+            ))}
           </div>
-          {isLoadingTools ? (
-            <div className="flex justify-center py-12">
-              <Loader className="w-8 h-8 text-indigo-500 animate-spin" />
-            </div>
-          ) : (
-             <SavedTools tools={savedTools} />
-          )}
-        </div>
         )}
 
-        {/* Community Posts for Other Users */}
-        {!isOwnProfile && (
-          <div className="space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
-                <MessageSquare className="w-5 h-5 text-emerald-500" />
-              </div>
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">منشورات المجتمع</h3>
-            </div>
+        {/* ─── Tab Content 5: Community Posts (For public user view) ─── */}
+        {!isOwnProfile && activeTab === 'posts' && (
+          <div className="space-y-3">
             {loadingUserPosts ? (
               <div className="flex justify-center py-12">
-                <Loader className="w-8 h-8 text-indigo-500 animate-spin" />
+                <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
               </div>
             ) : userPosts.length === 0 ? (
-              <div className="text-center py-10 text-slate-500 bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800">
-                لا توجد منشورات عامة بعد
+              <div className="text-center py-12 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 text-neutral-400 text-xs">
+                لا توجد منشورات عامة لهذا المستخدم بعد.
               </div>
             ) : (
-              <div className="space-y-4">
-                {userPosts.map((post: any) => (
-                  <div key={post.id} className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm p-5 sm:p-6 hover:shadow-md transition-shadow">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold text-slate-900 dark:text-white">{post.author_name}</span>
-                        <span className="text-xs text-slate-400">@{post.author_username || activeUser.username}</span>
-                      </div>
-                      <span className="text-xs text-slate-400">{new Date(post.created_at).toLocaleDateString('ar-EG')}</span>
-                    </div>
-                    <h4 className="font-bold text-slate-800 dark:text-slate-200 mb-2">{post.title}</h4>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-3 whitespace-pre-wrap">{post.prompt_text || post.content}</p>
-                    {post.tags && post.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-3">
-                        {post.tags.map((tag: string) => (
-                          <span key={tag} className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold px-2.5 py-1 rounded-full">{tag}</span>
-                        ))}
-                      </div>
-                    )}
+              userPosts.map((post: any) => (
+                <div
+                  key={post.id}
+                  className="p-5 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 space-y-2 shadow-sm"
+                >
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-neutral-900 dark:text-white">
+                      {post.title}
+                    </span>
+                    <span className="text-neutral-400 text-[10px]">
+                      {new Date(post.created_at).toLocaleDateString('ar-EG')}
+                    </span>
                   </div>
-                ))}
-              </div>
+                  <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap">
+                    {post.prompt_text || post.content}
+                  </p>
+                </div>
+              ))
             )}
           </div>
         )}

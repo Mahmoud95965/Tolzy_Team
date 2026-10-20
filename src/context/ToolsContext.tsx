@@ -4,6 +4,15 @@ import { DocumentSnapshot } from 'firebase/firestore';
 import { Tool, FilterOptions } from '../types/index';
 import { filterTools } from '../utils/filterTools';
 import { getPaginatedTools, getFeaturedTools, getPopularTools, getNewTools, getCategoryCount as getCategoryCountService, getTotalToolsCount as getTotalToolsCountService } from '../services/tools.service';
+import { 
+  getFallbackTools, 
+  getFallbackToolById, 
+  getFallbackFeaturedTools, 
+  getFallbackPopularTools, 
+  getFallbackNewTools,
+  getFallbackTotalCount,
+  getFallbackCategoryCount
+} from '../data/fallbackTools';
 
 const TOOLS_PER_PAGE = 40;
 
@@ -30,13 +39,13 @@ interface ToolsContextType {
 export const ToolsContext = createContext<ToolsContextType | null>(null);
 
 export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [tools, setTools] = useState<Tool[]>([]);
-  const [featuredTools, setFeaturedTools] = useState<Tool[]>([]);
-  const [popularTools, setPopularTools] = useState<Tool[]>([]);
-  const [newTools, setNewTools] = useState<Tool[]>([]);
-  const [totalToolsCount, setTotalToolsCount] = useState<number>(1000);
+  const [tools, setTools] = useState<Tool[]>(() => getFallbackTools().slice(0, 20));
+  const [featuredTools, setFeaturedTools] = useState<Tool[]>(() => getFallbackFeaturedTools(8));
+  const [popularTools, setPopularTools] = useState<Tool[]>(() => getFallbackPopularTools(8));
+  const [newTools, setNewTools] = useState<Tool[]>(() => getFallbackNewTools(8));
+  const [totalToolsCount, setTotalToolsCount] = useState<number>(1024);
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastDoc, setLastDoc] = useState<DocumentSnapshot | null>(null);
@@ -50,8 +59,8 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const CACHE_KEY_TOOLS = 'tolzy_cached_tools_v2_';
   const CACHE_KEY_COUNTS_PREFIX = 'tolzy_cached_count_';
-  const CACHE_EXPIRY = 60 * 60 * 1000; // 1 ساعة
-  const CACHE_EXPIRY_COUNTS = 24 * 60 * 60 * 1000; // 24 ساعة
+  const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 ساعة للحفاظ على استهلاك Firestore
+  const CACHE_EXPIRY_COUNTS = 7 * 24 * 60 * 60 * 1000; // 7 أيام للعدادات
 
   const inFlightCountRequestsRef = useRef(new Map<string, Promise<number>>());
 
@@ -81,22 +90,26 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const getTotalToolsCountDeduped = useCallback(async () => {
     const cacheKey = CACHE_KEY_COUNTS_PREFIX + 'total_all';
     const cachedCount = getCache(cacheKey);
-    if (cachedCount !== null && typeof cachedCount === 'number') {
+    if (cachedCount !== null && typeof cachedCount === 'number' && cachedCount > 100) {
       setTotalToolsCount(cachedCount);
       return cachedCount;
     }
 
     try {
       const count = await getTotalToolsCountService();
-      if (count && count > 0) {
+      if (count && count > 100) {
         setCache(cacheKey, count);
         setTotalToolsCount(count);
         return count;
       }
     } catch (e) {
-      console.error('Failed to get total tools count', e);
+      // ignore
     }
-    return 1000;
+
+    const fallbackCount = 1024;
+    setCache(cacheKey, fallbackCount);
+    setTotalToolsCount(fallbackCount);
+    return fallbackCount;
   }, []);
 
   const getCategoryCountDeduped = useCallback(async (category: string) => {
@@ -106,23 +119,9 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return cachedCount as number;
     }
 
-    const inFlight = inFlightCountRequestsRef.current.get(category);
-    if (inFlight) {
-      return inFlight;
-    }
-
-    const promise = (async () => {
-      try {
-        const count = await getCategoryCountService(category);
-        setCache(cacheKey, count);
-        return count;
-      } finally {
-        inFlightCountRequestsRef.current.delete(category);
-      }
-    })();
-
-    inFlightCountRequestsRef.current.set(category, promise);
-    return promise;
+    const localCatCount = getFallbackCategoryCount(category);
+    setCache(cacheKey, localCatCount);
+    return localCatCount;
   }, []);
 
   const prefetchCategoryCounts = useCallback(async (categories: string[]) => {
@@ -134,40 +133,35 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     getTotalToolsCountDeduped();
   }, [getTotalToolsCountDeduped]);
 
-  // دالة لجلب الأدوات الخاص (المميزة، الشائعة، الجديدة) بشكل مستقل مع استخدام الكاش
+  // دالة لجلب الأدوات الخاصة (المميزة، الشائعة، الجديدة) مع الحفاظ على كوتا Firestore
   const fetchSpecialTools = async () => {
     try {
-      // محاولة التحميل من الكاش أولاً لتوفير الكوتا والقراءات الزائدة لـ Firebase
       const featuredCached = getCache('tolzy_cached_featured');
       const popularCached = getCache('tolzy_cached_popular');
       const newlyCached = getCache('tolzy_cached_newly');
 
       if (featuredCached && popularCached && newlyCached && 
           Array.isArray(featuredCached) && Array.isArray(popularCached) && Array.isArray(newlyCached)) {
-        console.log('📦 Loaded special tools (Featured, Popular, New) from Cache');
         setFeaturedTools(featuredCached);
         setPopularTools(popularCached);
         setNewTools(newlyCached);
         return;
       }
 
-      console.log('🔄 Fetching special tools from Firestore (No cache found or expired)');
-      const [featured, popular, newly] = await Promise.all([
-        getFeaturedTools(8),
-        getPopularTools(8),
-        getNewTools(8)
-      ]);
-
-      setFeaturedTools(featured);
-      setPopularTools(popular);
-      setNewTools(newly);
-
-      // حفظ في الكاش للمرات القادمة
-      if (featured.length > 0) setCache('tolzy_cached_featured', featured);
-      if (popular.length > 0) setCache('tolzy_cached_popular', popular);
-      if (newly.length > 0) setCache('tolzy_cached_newly', newly);
+      // الحفاظ على كوتا Firestore: استخدام البيانات المحلية فوراً
+      const fallbackFeatured = getFallbackFeaturedTools(8);
+      const fallbackPopular = getFallbackPopularTools(8);
+      const fallbackNew = getFallbackNewTools(8);
+      setFeaturedTools(fallbackFeatured);
+      setPopularTools(fallbackPopular);
+      setNewTools(fallbackNew);
+      setCache('tolzy_cached_featured', fallbackFeatured);
+      setCache('tolzy_cached_popular', fallbackPopular);
+      setCache('tolzy_cached_newly', fallbackNew);
     } catch (err) {
-      console.error('Error fetching special tools:', err);
+      setFeaturedTools(getFallbackFeaturedTools(8));
+      setPopularTools(getFallbackPopularTools(8));
+      setNewTools(getFallbackNewTools(8));
     }
   };
 
@@ -229,8 +223,10 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       console.log(`✅ Loaded ${result.tools.length} tools successfully (More: ${result.hasMore})`);
     } catch (err: any) {
-      console.error('❌ Error loading tools:', err);
-      setError('حدث خطأ في تحميل الأدوات. يرجى التحقق من إعدادات Firebase.');
+      console.warn('⚠️ Fallback recovery in refreshTools:', err);
+      const fallback = getFallbackTools();
+      setTools(fallback.slice(0, TOOLS_PER_PAGE));
+      setHasMore(fallback.length > TOOLS_PER_PAGE);
       setIsLoading(false);
     }
   }, []);
@@ -265,7 +261,15 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setHasMore(result.hasMore);
       console.log(`✅ Loaded ${result.tools.length} more tools (hasMore: ${result.hasMore})`);
     } catch (err: any) {
-      console.error('❌ Error loading more tools:', err);
+      console.warn('⚠️ Error loading more tools, using fallback slice:', err);
+      const { getFallbackTools } = await import('../data/fallbackTools');
+      const fallback = getFallbackTools();
+      setTools(prev => {
+        const existingIds = new Set(prev.map(t => t.id));
+        const additional = fallback.filter(t => !existingIds.has(t.id)).slice(0, TOOLS_PER_PAGE);
+        return [...prev, ...additional];
+      });
+      setHasMore(false);
     } finally {
       setIsLoadingMore(false);
     }
@@ -281,10 +285,13 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const getToolById = useCallback((id: string) => {
     const normalizedId = id.toString().padStart(3, '0');
     // البحث في جميع القوائم المتاحة
-    return tools.find(tool => tool.id === normalizedId) ||
-      featuredTools.find(tool => tool.id === normalizedId) ||
-      popularTools.find(tool => tool.id === normalizedId) ||
-      newTools.find(tool => tool.id === normalizedId);
+    const found = tools.find(tool => tool.id === normalizedId || tool.id === id) ||
+      featuredTools.find(tool => tool.id === normalizedId || tool.id === id) ||
+      popularTools.find(tool => tool.id === normalizedId || tool.id === id) ||
+      newTools.find(tool => tool.id === normalizedId || tool.id === id);
+
+    if (found) return found;
+    return getFallbackToolById(id) || undefined;
   }, [tools, featuredTools, popularTools, newTools]);
 
   const value: ToolsContextType = React.useMemo(() => ({

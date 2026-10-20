@@ -22,18 +22,16 @@ export function getCentralAuthUrl(returnPathOrUrl?: string): string {
 
     const hostname = window.location.hostname.toLowerCase();
     const isSub = isSubdomain(hostname);
-    
-    // Determine the return URL
-    let targetReturn = returnPathOrUrl;
-    if (!targetReturn) {
-        targetReturn = window.location.href;
-    } else if (targetReturn.startsWith('/')) {
-        targetReturn = `${window.location.protocol}//${window.location.host}${targetReturn}`;
-    }
-
-    const encodedReturn = encodeURIComponent(targetReturn);
 
     if (isSub) {
+        let targetReturn = returnPathOrUrl;
+        if (!targetReturn) {
+            targetReturn = window.location.href;
+        } else if (targetReturn.startsWith('/')) {
+            targetReturn = `${window.location.protocol}//${window.location.host}${targetReturn}`;
+        }
+        const encodedReturn = encodeURIComponent(targetReturn);
+
         if (hostname.includes('tolzy.me')) {
             return `https://tolzy.me/auth?redirect=${encodedReturn}`;
         }
@@ -41,7 +39,8 @@ export function getCentralAuthUrl(returnPathOrUrl?: string): string {
         return `http://localhost:3000/auth?redirect=${encodedReturn}`;
     }
 
-    return returnPathOrUrl ? `/auth?redirect=${encodedReturn}` : '/auth';
+    // On standard root domain or localhost, always use matching relative URL to guarantee SSR & Client hydration parity
+    return returnPathOrUrl ? `/auth?redirect=${encodeURIComponent(returnPathOrUrl)}` : '/auth';
 }
 
 export function redirectToAuth(returnPathOrUrl?: string): void {
