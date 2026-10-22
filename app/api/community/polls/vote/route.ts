@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     // 1. Fetch prompt using safe guaranteed columns
     const { data: prompt, error: fetchError } = await supabase
       .from('community_prompts')
-      .select('id, description, prompt_text')
+      .select('id, description, prompt_text, author_uid')
       .eq('id', prompt_id)
       .single();
 
@@ -85,6 +85,24 @@ export async function POST(req: NextRequest) {
           .eq('id', prompt_id);
       } catch {
         // Ignored if column doesn't exist in Supabase
+      }
+
+      // Notify the poll creator if the voter is not the author
+      if (prompt.author_uid && user_uid && prompt.author_uid !== user_uid) {
+        try {
+          const preview = (prompt.prompt_text || extractedPoll.question || 'استطلاعك').substring(0, 60);
+          await supabase.from('notifications').insert({
+            recipient_uid: prompt.author_uid,
+            actor_uid: user_uid,
+            actor_name: 'عضو في المجتمع',
+            type: 'poll_vote',
+            post_id: prompt_id,
+            post_preview: preview,
+            is_read: false
+          });
+        } catch (notifErr) {
+          console.warn('[community/polls/vote] Notification warning:', notifErr);
+        }
       }
 
       return NextResponse.json({ success: true, poll: updatedPoll });

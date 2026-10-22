@@ -11,6 +11,7 @@ import PwaInstallPrompt from '@/src/components/common/PwaInstallPrompt';
 import '@/src/index.css';
 
 import { CompareProvider } from '@/src/context/CompareContext';
+import { NotificationsProvider } from '@/src/context/NotificationsContext';
 import ToolComparisonDock from '@/src/components/tools/ToolComparisonDock';
 import ToolComparisonModal from '@/src/components/tools/ToolComparisonModal';
 
@@ -192,13 +193,15 @@ export default function RootLayout({
                     <AuthProvider>
                         <ToolsProvider>
                             <CompareProvider>
-                                <I18nProvider>
-                                    {children}
-                                    <ToolComparisonDock />
-                                    <ToolComparisonModal />
-                                    <PwaInstallPrompt />
-                                    <Toaster position="bottom-center" toastOptions={{ duration: 3000 }} />
-                                </I18nProvider>
+                                <NotificationsProvider>
+                                    <I18nProvider>
+                                        {children}
+                                        <ToolComparisonDock />
+                                        <ToolComparisonModal />
+                                        <PwaInstallPrompt />
+                                        <Toaster position="bottom-center" toastOptions={{ duration: 3000 }} />
+                                    </I18nProvider>
+                                </NotificationsProvider>
                             </CompareProvider>
                         </ToolsProvider>
                     </AuthProvider>

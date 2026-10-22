@@ -114,6 +114,37 @@ export async function POST(req: NextRequest) {
           console.error('[community/comments] Notification warning:', e);
         }
       }
+
+      // Check for user @mentions inside comment content
+      try {
+        const mentionMatches = (content.match(/@([a-zA-Z0-9_\u0600-\u06FF]+)/g) || [])
+          .map((m: string) => m.slice(1).toLowerCase());
+
+        if (mentionMatches.length > 0) {
+          const { data: mentionedUsers } = await supabase
+            .from('profiles')
+            .select('id, username')
+            .in('username', mentionMatches);
+
+          if (mentionedUsers && mentionedUsers.length > 0) {
+            for (const mu of mentionedUsers) {
+              if (mu.id !== author_uid && mu.id !== prompt.author_uid) {
+                await supabase.from('notifications').insert({
+                  recipient_uid: mu.id,
+                  actor_uid: author_uid,
+                  actor_name: author_name,
+                  type: 'mention',
+                  post_id: prompt_id,
+                  post_preview: content.substring(0, 60),
+                  is_read: false
+                });
+              }
+            }
+          }
+        }
+      } catch (mentionErr) {
+        console.warn('[community/comments] Mention notification warning:', mentionErr);
+      }
     }
 
     return NextResponse.json({ success: true, data: comment });

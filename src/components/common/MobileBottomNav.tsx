@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Home, Users, Bell, User, MoreHorizontal, X, Zap, BrainCircuit, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
+import { useNotifications } from '../../context/NotificationsContext';
 import { getCentralAuthUrl } from '../../utils/authRedirect';
 
 interface NavItem {
@@ -32,8 +33,8 @@ const MobileBottomNav: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  // Unread notifications count — wire to real data later
-  const unreadCount = 0;
+  // Real-time unread notifications count from unified context
+  const { unreadCount } = useNotifications();
 
   const navItems: NavItem[] = [
     { href: '/', icon: Home, label: 'الرئيسية' },
