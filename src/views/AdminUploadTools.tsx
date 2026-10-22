@@ -630,8 +630,8 @@ export default function AdminUploadTools() {
         {/* ========================================================= */}
         {activeTab === 'smart_upload' && (
           <div className="space-y-6">
-            {/* Quick Templates Download Bar */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Quick Templates & Database Export Download Bar */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <button
                 onClick={downloadExcelTemplate}
                 className="flex items-center justify-between p-4 rounded-2xl bg-[#f5f5eb] hover:bg-[#ffffff] border border-[#d2d2c8] hover:border-[#14140f] transition-all cursor-pointer text-right group"
@@ -641,8 +641,8 @@ export default function AdminUploadTools() {
                     <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-[#14140f]">تحميل قالب Excel الذكي (.xlsx)</h4>
-                    <p className="text-[11px] text-[#6e6e64]">ملف مجهز بالكامل بالأعمدة ومثال أداة لتعبئته</p>
+                    <h4 className="text-xs sm:text-sm font-bold text-[#14140f]">قالب Excel الذكي (.xlsx)</h4>
+                    <p className="text-[10px] sm:text-[11px] text-[#6e6e64]">أعمدة مجهزة وجاهزة للتعبئة</p>
                   </div>
                 </div>
                 <Download className="w-4 h-4 text-[#6e6e64] group-hover:text-[#14140f] transition-colors" />
@@ -658,11 +658,29 @@ export default function AdminUploadTools() {
                     <FileJson className="w-5 h-5 text-indigo-600" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-[#14140f]">تحميل نموذج JSON (.json)</h4>
-                    <p className="text-[11px] text-[#6e6e64]">هيكل بيانات قياسي للأدوات مع الفئات والوسوم</p>
+                    <h4 className="text-xs sm:text-sm font-bold text-[#14140f]">نموذج JSON (.json)</h4>
+                    <p className="text-[10px] sm:text-[11px] text-[#6e6e64]">هيكل بيانات قياسي للأدوات</p>
                   </div>
                 </div>
                 <Download className="w-4 h-4 text-[#6e6e64] group-hover:text-[#14140f] transition-colors" />
+              </a>
+
+              <a
+                href="/all-tools.json"
+                download="tolzy-all-tools-database.json"
+                className="flex items-center justify-between p-4 rounded-2xl bg-[#beff50]/20 hover:bg-[#beff50] border border-[#14140f]/20 hover:border-[#14140f] transition-all cursor-pointer text-right group"
+                title="تحميل جميع الأدوات المسجلة في المشروع حالياً"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#14140f] text-[#beff50] flex items-center justify-center shrink-0">
+                    <Layers className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-bold text-[#14140f]">تصدير كل الأدوات (1021 أداة)</h4>
+                    <p className="text-[10px] sm:text-[11px] text-[#14140f]/70">تحميل نسخة كاملة من القاعدة كـ JSON</p>
+                  </div>
+                </div>
+                <Download className="w-4 h-4 text-[#14140f] transition-colors" />
               </a>
             </div>
 
