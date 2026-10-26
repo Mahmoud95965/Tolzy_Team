@@ -52,11 +52,11 @@ const ToolsGrid: React.FC<ToolsGridProps> = ({ tools, title, enableInfiniteScrol
   }
 
   return (
-    <div className="py-6">
+    <div className="py-2 sm:py-6">
       {title && (
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">{title}</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">{title}</h2>
       )}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         {tools.map((tool) => (
           <ToolCard key={tool.id} tool={tool} />
         ))}

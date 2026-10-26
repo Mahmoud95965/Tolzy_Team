@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import { FilterOptions, ToolCategory, ToolPricing } from '../../types';
 import {
@@ -29,9 +31,9 @@ const mainCategories: { id: ToolCategory; label: string; icon: React.ElementType
 ];
 
 const pricingOptions: { id: ToolPricing | 'All'; label: string }[] = [
-  { id: 'All', label: 'كل الأسعار' },
+  { id: 'All', label: 'الكل' },
   { id: 'Free', label: 'مجاني' },
-  { id: 'Freemium', label: 'فريميوم' },
+  { id: 'Freemium', label: 'مزيج' },
   { id: 'Paid', label: 'مدفوع' },
 ];
 
@@ -83,34 +85,36 @@ const ToolFilters: React.FC<ToolFiltersProps> = ({
   );
 
   return (
-    <div className="space-y-4 text-right" dir="rtl">
-      {/* Search Bar & AI Toggle */}
-      <div className="bg-[#ffffff] border border-[#d2d2c8] p-3 sm:p-4 rounded-[28px] shadow-none space-y-3">
-        <div className="flex flex-col sm:flex-row gap-2.5 items-stretch">
+    <div className="space-y-2.5 sm:space-y-3.5 text-right" dir="rtl">
+      
+      {/* ─── 1. SEARCH BAR & AI TOGGLE ─── */}
+      <div className="bg-[#ffffff] border border-[#d2d2c8] p-2 sm:p-3 rounded-2xl sm:rounded-[24px] shadow-2xs space-y-2">
+        <div className="flex items-center gap-2">
+          
           {/* Main Search Input */}
           <div className="flex-1 relative">
             <input
               type="text"
               placeholder={
                 filters.isAiSearch
-                  ? "صف ما تريد إنجازه (مثال: أداة لتوليد فيديوهات من نص)..."
+                  ? "صف ما تريده (مثال: أداة لتوليد فيديوهات)..."
                   : "ابحث عن أي أداة ذكاء اصطناعي..."
               }
               value={filters.searchQuery || ''}
               onChange={handleSearchChange}
-              className="w-full pr-11 pl-10 py-3 bg-[#f5f5eb] border border-[#d2d2c8] focus:border-[#14140f] rounded-[18px] text-sm sm:text-base text-[#14140f] placeholder:text-[#6e6e64] focus:outline-none transition-colors font-normal"
+              className="w-full pr-9 sm:pr-11 pl-9 py-2 sm:py-2.5 bg-[#f5f5eb] border border-[#d2d2c8] focus:border-[#14140f] rounded-xl sm:rounded-[16px] text-xs sm:text-sm text-[#14140f] placeholder:text-[#a0a096] focus:outline-none transition-colors"
               dir="rtl"
             />
-            <div className="absolute top-0 right-0 h-full w-11 flex items-center justify-center text-[#6e6e64]">
-              <Search className="w-4 h-4" />
+            <div className="absolute top-0 right-0 h-full w-9 sm:w-11 flex items-center justify-center text-[#a0a096]">
+              <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
             {filters.searchQuery && (
               <button
                 onClick={clearSearch}
-                className="absolute top-0 left-0 h-full w-10 flex items-center justify-center text-[#6e6e64] hover:text-[#14140f] transition-colors"
+                className="absolute top-0 left-0 h-full w-9 flex items-center justify-center text-[#a0a096] hover:text-[#14140f] transition-colors cursor-pointer"
                 title="مسح البحث"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
@@ -118,98 +122,99 @@ const ToolFilters: React.FC<ToolFiltersProps> = ({
           {/* AI Semantic Search Toggle */}
           <button
             onClick={toggleAiSearch}
-            className={`flex items-center justify-center gap-2 px-5 py-3 rounded-[18px] border font-medium text-xs sm:text-sm transition-colors select-none shrink-0 ${
+            className={`flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-[16px] border font-bold text-xs transition-all select-none shrink-0 cursor-pointer ${
               filters.isAiSearch
-                ? 'bg-[#beff50] border-[#14140f] text-[#14140f]'
-                : 'bg-[#f5f5eb] border-[#d2d2c8] text-[#14140f] hover:border-[#14140f]'
+                ? 'bg-[#beff50] border-[#14140f] text-[#14140f] shadow-2xs'
+                : 'bg-[#f5f5eb] border-[#d2d2c8] text-[#6e6e64] hover:text-[#14140f]'
             }`}
+            title="تفعيل البحث الذكي الدلالي"
           >
-            <Sparkles className="w-4 h-4 text-[#14140f]" />
-            <span>البحث الذكي (AI)</span>
+            <Sparkles className="w-3.5 h-3.5 text-[#14140f]" />
+            <span className="hidden xs:inline">البحث الذكي</span>
+            <span className="xs:hidden">AI</span>
           </button>
+
         </div>
 
         {filters.isAiSearch && (
-          <div className="text-xs font-medium text-[#14140f] px-1.5 py-1 rounded-xl bg-[#beff50]/30 border border-[#14140f]/10 flex items-center justify-between gap-2 animate-in fade-in duration-200">
-            <span className="flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-[#14140f] shrink-0" />
-              <span>محرك الذكاء الاصطناعي نشط: يفهم استفسارك باللغة الطبيعية ويستخرج أفضل الأدوات المناسبة</span>
+          <div className="text-[11px] font-medium text-[#14140f] px-2.5 py-1 rounded-xl bg-[#beff50]/30 border border-[#14140f]/15 flex items-center justify-between gap-2 animate-in fade-in duration-150">
+            <span className="flex items-center gap-1.5 truncate">
+              <Sparkles className="w-3 h-3 text-[#14140f] shrink-0" />
+              <span className="truncate">محرك الذكاء الاصطناعي يفهم استفسارك ويستخرج أنسب الأدوات</span>
             </span>
-            <span className="text-[10px] bg-[#14140f] text-[#beff50] px-2 py-0.5 rounded-full font-mono font-bold">
-              AI Active
+            <span className="text-[9px] bg-[#14140f] text-[#beff50] px-1.5 py-0.2 rounded-full font-mono font-bold shrink-0">
+              AI ON
             </span>
           </div>
         )}
       </div>
 
-      {/* Categories & Filters Row */}
-      <div className="flex flex-col gap-2.5">
-        {/* Categories Carousel */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 no-scrollbar -mx-2 px-2 sm:mx-0 sm:px-0">
-          <button
-            onClick={() => handleCategoryChange('All')}
-            className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium border transition-colors select-none ${
-              filters.category === 'All'
-                ? 'bg-[#beff50] border-[#14140f] text-[#14140f]'
-                : 'bg-[#ffffff] border-[#d2d2c8] text-[#14140f] hover:border-[#14140f]'
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5" />
-            <span>جميع الفئات</span>
-          </button>
+      {/* ─── 2. CATEGORIES HORIZONTAL PILLS ─── */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none no-scrollbar -mx-1 px-1">
+        <button
+          onClick={() => handleCategoryChange('All')}
+          className={`flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors select-none cursor-pointer ${
+            filters.category === 'All'
+              ? 'bg-[#14140f] border-[#14140f] text-[#ffffff] shadow-2xs'
+              : 'bg-[#ffffff] border-[#d2d2c8] text-[#6e6e64] hover:text-[#14140f]'
+          }`}
+        >
+          <Layers className="w-3 h-3" />
+          <span>الكل</span>
+        </button>
 
-          {mainCategories.map((cat) => {
-            const Icon = cat.icon;
-            const isSelected = filters.category === cat.id;
+        {mainCategories.map((cat) => {
+          const Icon = cat.icon;
+          const isSelected = filters.category === cat.id;
+          return (
+            <button
+              key={cat.id}
+              onClick={() => handleCategoryChange(cat.id)}
+              className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors select-none cursor-pointer ${
+                isSelected
+                  ? 'bg-[#beff50] border-[#14140f] text-[#14140f] font-bold shadow-2xs'
+                  : 'bg-[#ffffff] border-[#d2d2c8] text-[#6e6e64] hover:text-[#14140f]'
+              }`}
+            >
+              <Icon className="w-3 h-3 text-[#14140f]" />
+              <span>{cat.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ─── 3. PRICING ROW & RESET ─── */}
+      <div className="flex items-center justify-between gap-2 pt-0.5">
+        <div className="flex items-center gap-1 bg-[#f5f5eb] p-0.5 rounded-full border border-[#d2d2c8] text-xs">
+          {pricingOptions.map((p) => {
+            const isSelected = (filters.pricing || 'All') === p.id;
             return (
               <button
-                key={cat.id}
-                onClick={() => handleCategoryChange(cat.id)}
-                className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium border transition-colors select-none ${
+                key={p.id}
+                onClick={() => handlePricingChange(p.id)}
+                className={`px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs transition-colors cursor-pointer ${
                   isSelected
-                    ? 'bg-[#beff50] border-[#14140f] text-[#14140f]'
-                    : 'bg-[#ffffff] border-[#d2d2c8] text-[#14140f] hover:border-[#14140f]'
+                    ? 'bg-[#ffffff] text-[#14140f] font-bold border border-[#d2d2c8] shadow-2xs'
+                    : 'text-[#6e6e64] hover:text-[#14140f]'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5 text-[#14140f]" />
-                <span>{cat.label}</span>
+                {p.label}
               </button>
             );
           })}
         </div>
 
-        {/* Pricing Segmented Row + Reset */}
-        <div className="flex items-center justify-between gap-2 pt-1">
-          <div className="flex items-center gap-1.5 bg-[#f5f5eb] p-1 rounded-full border border-[#d2d2c8] text-xs font-normal">
-            {pricingOptions.map((p) => {
-              const isSelected = (filters.pricing || 'All') === p.id;
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => handlePricingChange(p.id)}
-                  className={`px-3.5 py-1.5 rounded-full transition-colors ${
-                    isSelected
-                      ? 'bg-[#beff50] text-[#14140f] border border-[#14140f]/20 font-medium'
-                      : 'text-[#6e6e64] hover:text-[#14140f]'
-                  }`}
-                >
-                  {p.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {hasActiveFilters && (
-            <button
-              onClick={resetFilters}
-              className="flex items-center gap-1.5 text-xs font-normal text-[#14140f] hover:text-[#6e6e64] transition-colors px-3 py-1.5 rounded-full bg-[#f5f5eb] border border-[#d2d2c8]"
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span>إعادة ضبط</span>
-            </button>
-          )}
-        </div>
+        {hasActiveFilters && (
+          <button
+            onClick={resetFilters}
+            className="inline-flex items-center gap-1 text-[11px] font-bold text-[#14140f] hover:text-[#6e6e64] transition-colors px-2.5 py-1 rounded-full bg-[#f5f5eb] border border-[#d2d2c8] cursor-pointer"
+          >
+            <RotateCcw className="w-3 h-3" />
+            <span>إعادة ضبط</span>
+          </button>
+        )}
       </div>
+
     </div>
   );
 };

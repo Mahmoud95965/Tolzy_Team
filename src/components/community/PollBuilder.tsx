@@ -116,20 +116,20 @@ export const PollBuilder: React.FC<PollBuilderProps> = ({
 
   return (
     <div
-      className="space-y-3.5 p-4 rounded-2xl bg-amber-50/40 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 text-right"
+      className="space-y-3 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#ffffff] border border-[#d2d2c8] text-right shadow-2xs"
       dir="rtl"
     >
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center shadow-xs">
+          <div className="w-7 h-7 rounded-lg bg-[#14140f] text-[#beff50] flex items-center justify-center shadow-xs">
             <BarChart2 className="w-4 h-4" />
           </div>
           <div>
-            <h4 className="font-bold text-xs sm:text-sm text-amber-950 dark:text-amber-200">
+            <h4 className="font-bold text-xs sm:text-sm text-[#14140f]">
               تصويت أو مقارنة أدوات (Poll)
             </h4>
-            <p className="text-[10px] sm:text-[11px] text-amber-700/80 dark:text-amber-400">
+            <p className="text-[10px] sm:text-[11px] text-[#6e6e64]">
               <span className="hidden sm:inline">أضف خيارات تصويت مع إمكانية ربط كل خيار بأداة من الدليل (Tool A vs Tool B)</span>
               <span className="sm:hidden">أضف خيارات تصويت ومقارنة بين الأدوات</span>
             </p>
@@ -139,7 +139,7 @@ export const PollBuilder: React.FC<PollBuilderProps> = ({
         <button
           type="button"
           onClick={() => onChange(null)}
-          className="text-neutral-400 hover:text-rose-500 p-1 rounded-lg transition-colors"
+          className="text-[#a0a096] hover:text-rose-500 p-1 rounded-lg transition-colors cursor-pointer"
           title="إلغاء التصويت"
         >
           <X className="w-4 h-4" />
@@ -148,7 +148,7 @@ export const PollBuilder: React.FC<PollBuilderProps> = ({
 
       {/* Question Field */}
       <div>
-        <label className="text-[11px] font-bold text-amber-900 dark:text-amber-300 block mb-1">
+        <label className="text-[11px] font-bold text-[#14140f] block mb-1">
           سؤال التصويت:
         </label>
         <input
@@ -156,20 +156,20 @@ export const PollBuilder: React.FC<PollBuilderProps> = ({
           placeholder={defaultQuestion || 'مثال: أيهما تفضل لتوليد الأكواد؟ أو ما هي أداتك اليومية؟'}
           value={poll.question}
           onChange={(e) => handleQuestionChange(e.target.value)}
-          className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-neutral-900 border border-amber-200/80 dark:border-amber-800/80 text-xs text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-amber-500 shadow-2xs"
+          className="w-full px-3.5 py-2 rounded-xl bg-[#f5f5eb] border border-[#d2d2c8] text-xs text-[#14140f] placeholder:text-[#a0a096] focus:outline-none focus:border-[#14140f]"
         />
       </div>
 
       {/* Poll Options List */}
       <div className="space-y-2">
-        <label className="text-[11px] font-bold text-amber-900 dark:text-amber-300 block">
+        <label className="text-[11px] font-bold text-[#14140f] block">
           خيارات التصويت (2 إلى 4 خيارات):
         </label>
 
         {poll.options.map((option, idx) => (
           <div key={option.id} className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 font-bold text-[11px] flex items-center justify-center shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="w-6 h-6 rounded-lg bg-[#f5f5eb] border border-[#d2d2c8] text-[#14140f] font-bold text-[11px] flex items-center justify-center shrink-0">
                 {idx + 1}
               </span>
 
@@ -179,13 +179,13 @@ export const PollBuilder: React.FC<PollBuilderProps> = ({
                 placeholder={`الخيار ${idx + 1} (مثال: ${idx === 0 ? 'ChatGPT' : 'Claude'})...`}
                 value={option.text}
                 onChange={(e) => handleOptionTextChange(option.id, e.target.value)}
-                className="flex-1 px-3 py-1.5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="flex-1 px-3 py-1.5 rounded-xl bg-[#f5f5eb] border border-[#d2d2c8] text-xs text-[#14140f] placeholder:text-[#a0a096] focus:outline-none focus:border-[#14140f]"
               />
 
               {/* Link to Tool Button */}
               {option.tool_id ? (
-                <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-100 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-800 text-[11px] font-bold text-amber-800 dark:text-amber-300 shrink-0">
-                  <div className="w-4 h-4 rounded bg-white dark:bg-neutral-800 p-0.5 flex items-center justify-center overflow-hidden">
+                <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-[#beff50]/20 border border-[#14140f] text-[11px] font-bold text-[#14140f] shrink-0">
+                  <div className="w-4 h-4 rounded bg-[#ffffff] border border-[#d2d2c8] p-0.5 flex items-center justify-center overflow-hidden">
                     <ToolImage
                       name={option.tool_name || ''}
                       imageUrl={option.tool_imageUrl}
@@ -193,11 +193,11 @@ export const PollBuilder: React.FC<PollBuilderProps> = ({
                       className="w-full h-full object-contain"
                     />
                   </div>
-                  <span className="truncate max-w-[80px]">{option.tool_name}</span>
+                  <span className="truncate max-w-[70px] sm:max-w-[80px]">{option.tool_name}</span>
                   <button
                     type="button"
                     onClick={() => handleUnlinkTool(option.id)}
-                    className="hover:text-rose-500 transition-colors mr-0.5"
+                    className="hover:text-rose-500 transition-colors mr-0.5 cursor-pointer"
                     title="فك الربط بالأداة"
                   >
                     <X className="w-3 h-3" />
@@ -211,7 +211,7 @@ export const PollBuilder: React.FC<PollBuilderProps> = ({
                       activeToolPickerOptionId === option.id ? null : option.id
                     )
                   }
-                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:border-amber-400 text-[11px] font-bold text-neutral-600 dark:text-neutral-400 hover:text-amber-600 transition-colors shrink-0"
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#ffffff] border border-[#d2d2c8] hover:border-[#14140f] text-[11px] font-bold text-[#14140f] transition-colors shrink-0 cursor-pointer"
                   title="ربط هذا الخيار بأداة من الدليل"
                 >
                   <LinkIcon className="w-3 h-3" />
@@ -224,7 +224,7 @@ export const PollBuilder: React.FC<PollBuilderProps> = ({
                 <button
                   type="button"
                   onClick={() => handleRemoveOption(option.id)}
-                  className="p-1.5 text-neutral-400 hover:text-rose-500 transition-colors shrink-0"
+                  className="p-1.5 text-[#a0a096] hover:text-rose-500 transition-colors shrink-0 cursor-pointer"
                   title="حذف الخيار"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -234,48 +234,44 @@ export const PollBuilder: React.FC<PollBuilderProps> = ({
 
             {/* Inline Tool Picker Popup */}
             {activeToolPickerOptionId === option.id && (
-              <div className="p-2.5 rounded-xl bg-white dark:bg-neutral-900 border border-amber-200 dark:border-amber-800 shadow-md space-y-1.5 mr-8">
-                <div className="flex items-center gap-1.5 px-2 py-1 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
-                  <Search className="w-3.5 h-3.5 text-neutral-400" />
+              <div className="p-2.5 rounded-xl bg-[#ffffff] border border-[#d2d2c8] shadow-md space-y-1.5 mr-6 sm:mr-8">
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-[#f5f5eb] rounded-lg border border-[#d2d2c8]">
+                  <Search className="w-3.5 h-3.5 text-[#a0a096]" />
                   <input
                     type="text"
                     autoFocus
                     placeholder="ابحث عن أداة لربطها..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-transparent text-xs text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none"
+                    className="w-full bg-transparent text-xs text-[#14140f] placeholder:text-[#a0a096] focus:outline-none"
                   />
                   <button
                     type="button"
                     onClick={() => setActiveToolPickerOptionId(null)}
-                    className="text-neutral-400 hover:text-neutral-600"
+                    className="text-[#a0a096] hover:text-[#14140f]"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
-                <div className="max-h-36 overflow-y-auto space-y-1">
+                <div className="max-h-36 overflow-y-auto space-y-1 no-scrollbar">
                   {filteredTools.map((t) => (
                     <button
                       key={t.id}
                       type="button"
                       onClick={() => handleLinkToolToOption(option.id, t)}
-                      className="w-full flex items-center justify-between p-1.5 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/40 text-right text-xs transition-colors"
+                      className="w-full flex items-center gap-2 p-1.5 rounded-lg hover:bg-[#f5f5eb] text-right transition-colors cursor-pointer"
                     >
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded bg-neutral-100 dark:bg-neutral-800 p-0.5 flex items-center justify-center">
-                          <ToolImage
-                            name={t.name}
-                            imageUrl={t.imageUrl}
-                            size="sm"
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
-                        <span className="font-bold">{t.name}</span>
+                      <div className="w-5 h-5 rounded bg-[#ffffff] border border-[#d2d2c8] p-0.5 shrink-0 flex items-center justify-center">
+                        <ToolImage
+                          name={t.name}
+                          imageUrl={t.imageUrl}
+                          size="sm"
+                          className="w-full h-full object-contain"
+                        />
                       </div>
-                      <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">
-                        ربط ↵
-                      </span>
+                      <span className="text-xs font-bold text-[#14140f] truncate flex-1">{t.name}</span>
+                      <Check className="w-3 h-3 text-emerald-600 shrink-0" />
                     </button>
                   ))}
                 </div>
@@ -290,7 +286,7 @@ export const PollBuilder: React.FC<PollBuilderProps> = ({
         <button
           type="button"
           onClick={handleAddOption}
-          className="w-full py-2 px-3 rounded-xl border border-dashed border-amber-300 dark:border-amber-800 hover:border-amber-500 bg-white/50 dark:bg-neutral-900/50 text-xs font-bold text-amber-700 dark:text-amber-400 flex items-center justify-center gap-1.5 transition-all"
+          className="w-full py-2 px-3 rounded-xl border border-dashed border-[#d2d2c8] hover:border-[#14140f] bg-[#f5f5eb] hover:bg-[#ffffff] text-xs font-bold text-[#14140f] flex items-center justify-center gap-1.5 transition-all cursor-pointer"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>إضافة خيار آخر ({poll.options.length}/4)</span>

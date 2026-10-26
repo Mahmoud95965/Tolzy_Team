@@ -125,25 +125,25 @@ const ToolsPage: React.FC = () => {
   return (
     <PageLayout>
       <div className="relative min-h-screen bg-[#ffffff] text-[#14140f] text-right font-sans">
-        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 pt-20 pb-16 sm:pt-28 sm:pb-20 md:pt-36 md:pb-28">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-6 sm:pt-12 pb-16 sm:pb-24">
           {/* Header Section */}
-          <div className="text-center mb-6 sm:mb-10 space-y-3 sm:space-y-4 max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-[#f5f5eb] border border-[#d2d2c8] text-[#14140f] text-[10px] sm:text-xs font-medium uppercase tracking-[0.05em] sm:tracking-[0.1em]">
+          <div className="text-center mb-4 sm:mb-8 space-y-2 sm:space-y-3 max-w-2xl mx-auto">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f5f5eb] border border-[#d2d2c8] text-[#14140f] text-[10px] sm:text-xs font-bold">
               <span className="w-2 h-2 rounded-full bg-[#beff50] border border-[#14140f]" />
-              <span>دليل موثق لأدوات الذكاء الاصطناعي (+{totalToolsCount || 1024} أداة)</span>
+              <span>دليل الأدوات الذكي (+{totalToolsCount || 1024} أداة)</span>
             </div>
 
-            <h1 className="text-2xl sm:text-5xl font-bold sm:font-medium text-[#14140f] tracking-tight sm:tracking-[-0.03em]">
+            <h1 className="text-xl sm:text-3xl md:text-4xl font-black text-[#14140f] tracking-tight">
               استكشف أفضل أدوات الذكاء الاصطناعي
             </h1>
 
-            <p className="text-xs sm:text-base text-[#6e6e64] font-normal leading-relaxed px-2">
+            <p className="text-xs sm:text-sm text-[#6e6e64] leading-relaxed hidden xs:block">
               ابحث، صنف، وقارن بين مئات البرمجيات والأدوات التقنية لتسريع إنتاجيتك وتطوير مشاريعك
             </p>
           </div>
 
           {/* Interactive Filters Panel */}
-          <div className="mb-8">
+          <div className="mb-6">
             <ToolFilters
               filters={filters}
               setFilters={setFilters}
@@ -152,8 +152,8 @@ const ToolsPage: React.FC = () => {
 
           {/* AI Semantic Insights & Recommendation Card */}
           {showSemanticResults && aiSummary && (
-            <div className="mb-6 p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-blue-50/90 via-indigo-50/70 to-emerald-50/90 border border-blue-200/90 shadow-xs flex items-start gap-3.5 animate-in fade-in slide-in-from-top-2 duration-300">
-              <div className="w-9 h-9 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+            <div className="mb-4 p-3.5 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-50/90 via-indigo-50/70 to-emerald-50/90 border border-blue-200/90 shadow-2xs flex items-start gap-3 animate-in fade-in duration-200">
+              <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-2xs mt-0.5">
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
               <div className="space-y-1 text-right flex-1 min-w-0">
@@ -161,7 +161,7 @@ const ToolsPage: React.FC = () => {
                   <span className="text-xs font-bold text-blue-700">
                     تحليل وتوصيات الذكاء الاصطناعي (TOLZY AI)
                   </span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-mono font-bold">
+                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-mono font-bold">
                     نشط
                   </span>
                 </div>
@@ -173,20 +173,14 @@ const ToolsPage: React.FC = () => {
           )}
 
           {/* Results Header Bar */}
-          <div className="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-[#d2d2c8]">
-            <div className="flex items-center gap-2.5">
-              <div className="w-1.5 h-5 rounded-full bg-[#beff50] border border-[#14140f]" />
-              <h2 className="text-lg sm:text-xl font-medium text-[#14140f] flex items-center gap-2">
+          <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-[#d2d2c8]">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-1.5 h-4 sm:h-5 rounded-full bg-[#beff50] border border-[#14140f] shrink-0" />
+              <h2 className="text-sm sm:text-lg font-bold text-[#14140f] truncate">
                 {showSemanticResults ? (
-                  <>
-                    <span>نتائج البحث الذكي عن: </span>
-                    <span className="text-[#14140f] font-medium">"{filters.searchQuery}"</span>
-                  </>
+                  <span>نتائج البحث الذكي عن "{filters.searchQuery}"</span>
                 ) : filters.searchQuery ? (
-                  <>
-                    <span>نتائج البحث: </span>
-                    <span className="text-[#14140f] font-medium">"{filters.searchQuery}"</span>
-                  </>
+                  <span>نتائج البحث عن "{filters.searchQuery}"</span>
                 ) : filters.category && filters.category !== 'All' ? (
                   <span>أدوات فئة {filters.category}</span>
                 ) : (
@@ -195,11 +189,11 @@ const ToolsPage: React.FC = () => {
               </h2>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 shrink-0">
               {isCurrentlyLoading && (
-                <Loader className="w-4 h-4 animate-spin text-[#14140f]" />
+                <Loader className="w-3.5 h-3.5 animate-spin text-[#14140f]" />
               )}
-              <span className="text-xs font-medium text-[#14140f] bg-[#f5f5eb] px-3.5 py-1 rounded-full border border-[#d2d2c8]">
+              <span className="text-[11px] sm:text-xs font-bold text-[#14140f] bg-[#f5f5eb] px-2.5 py-0.5 rounded-full border border-[#d2d2c8]">
                 {noFiltersApplied ? `+${totalToolsCount || 1024} أداة` : `${activeToolsList.length} أداة`}
               </span>
             </div>

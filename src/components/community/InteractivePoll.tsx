@@ -98,21 +98,21 @@ export const InteractivePoll: React.FC<InteractivePollProps> = ({
 
   return (
     <div
-      className="my-2.5 sm:my-3.5 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-50/40 via-white to-amber-50/20 dark:from-neutral-900/90 dark:via-neutral-900 dark:to-neutral-950 border border-amber-200/80 dark:border-neutral-800 shadow-xs space-y-2.5 sm:space-y-3"
+      className="my-2.5 sm:my-3.5 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[#ffffff] border border-[#d2d2c8] shadow-2xs space-y-2.5 sm:space-y-3"
       dir="rtl"
     >
       {/* Poll Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-amber-500 text-white flex items-center justify-center shadow-2xs">
+          <div className="w-6 h-6 rounded-lg bg-[#14140f] text-[#beff50] flex items-center justify-center shadow-xs">
             {isToolVersusTool ? <Swords className="w-3.5 h-3.5" /> : <BarChart2 className="w-3.5 h-3.5" />}
           </div>
-          <span className="text-xs font-black text-neutral-900 dark:text-white">
+          <span className="text-xs font-black text-[#14140f]">
             {isToolVersusTool ? 'مقارنة وتصويت الأدوات (VS)' : 'استطلاع رأي المجتمع'}
           </span>
         </div>
 
-        <span className="text-[11px] font-bold text-neutral-400 flex items-center gap-1">
+        <span className="text-[11px] font-bold text-[#6e6e64] flex items-center gap-1 font-mono">
           <Users className="w-3 h-3" />
           <span>{totalVotes} تصويت</span>
         </span>
@@ -120,7 +120,7 @@ export const InteractivePoll: React.FC<InteractivePollProps> = ({
 
       {/* Question if defined */}
       {poll.question && (
-        <h4 className="text-xs sm:text-sm font-bold text-neutral-800 dark:text-neutral-100 leading-snug">
+        <h4 className="text-xs sm:text-sm font-bold text-[#14140f] leading-snug">
           {poll.question}
         </h4>
       )}
@@ -141,9 +141,9 @@ export const InteractivePoll: React.FC<InteractivePollProps> = ({
               className={`relative w-full overflow-hidden p-2.5 sm:p-3 rounded-lg sm:rounded-xl border text-right transition-all cursor-pointer ${
                 hasVoted
                   ? isSelected
-                    ? 'border-amber-500 bg-amber-50/50 dark:bg-amber-950/30 ring-1 ring-amber-500/30'
-                    : 'border-neutral-200 dark:border-neutral-800 bg-white/60 dark:bg-neutral-900/60'
-                  : 'border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-amber-400 hover:bg-amber-50/30 dark:hover:bg-amber-950/20 active:scale-[0.99]'
+                    ? 'border-[#14140f] bg-[#beff50]/20'
+                    : 'border-[#d2d2c8] bg-[#f5f5eb]'
+                  : 'border-[#d2d2c8] bg-[#f5f5eb] hover:border-[#14140f] hover:bg-[#eaeae0] active:scale-[0.99]'
               }`}
             >
               {/* Animated Progress Bar Fill */}
@@ -154,8 +154,8 @@ export const InteractivePoll: React.FC<InteractivePollProps> = ({
                   transition={{ duration: 0.6, ease: 'easeOut' }}
                   className={`absolute inset-y-0 right-0 pointer-events-none ${
                     isSelected
-                      ? 'bg-amber-500/20 dark:bg-amber-500/25'
-                      : 'bg-neutral-200/50 dark:bg-neutral-800/60'
+                      ? 'bg-[#beff50]/40'
+                      : 'bg-[#d2d2c8]/40'
                   }`}
                 />
               )}
@@ -167,15 +167,15 @@ export const InteractivePoll: React.FC<InteractivePollProps> = ({
                   {hasVoted && (
                     <div className="shrink-0">
                       {isSelected ? (
-                        <CheckCircle2 className="w-4 h-4 text-amber-500" />
+                        <CheckCircle2 className="w-4 h-4 text-[#14140f]" />
                       ) : (
-                        <div className="w-4 h-4 rounded-full border border-neutral-300 dark:border-neutral-700" />
+                        <div className="w-4 h-4 rounded-full border border-[#d2d2c8]" />
                       )}
                     </div>
                   )}
 
                   {option.tool_id && (
-                    <div className="w-6 h-6 rounded-md bg-white dark:bg-neutral-800 border border-neutral-200/60 dark:border-neutral-700/60 p-0.5 flex items-center justify-center shrink-0">
+                    <div className="w-6 h-6 rounded-md bg-[#ffffff] border border-[#d2d2c8] p-0.5 flex items-center justify-center shrink-0">
                       <ToolImage
                         name={option.tool_name || option.text}
                         imageUrl={option.tool_imageUrl}
@@ -188,8 +188,8 @@ export const InteractivePoll: React.FC<InteractivePollProps> = ({
                   <span
                     className={`text-xs font-bold truncate ${
                       isSelected
-                        ? 'text-amber-900 dark:text-amber-200'
-                        : 'text-neutral-800 dark:text-neutral-200'
+                        ? 'text-[#14140f]'
+                        : 'text-[#2c2c26]'
                     }`}
                   >
                     {option.text}
@@ -199,10 +199,10 @@ export const InteractivePoll: React.FC<InteractivePollProps> = ({
                 {/* Percentage & Vote Count */}
                 {hasVoted && (
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-[11px] text-neutral-400 font-mono">
+                    <span className="text-[11px] text-[#6e6e64] font-mono">
                       {voteCount} صوت
                     </span>
-                    <span className="font-mono font-black text-xs text-neutral-900 dark:text-white">
+                    <span className="font-mono font-black text-xs text-[#14140f]">
                       {percentage}%
                     </span>
                   </div>
@@ -214,7 +214,7 @@ export const InteractivePoll: React.FC<InteractivePollProps> = ({
       </div>
 
       {/* Footer Info */}
-      <div className="flex items-center justify-between pt-1 text-[10px] text-neutral-400 border-t border-neutral-100 dark:border-neutral-800">
+      <div className="flex items-center justify-between pt-1 text-[10px] text-[#6e6e64] border-t border-[#d2d2c8]">
         <span>{hasVoted ? '✓ تم تسجيل صوتك' : 'اضغط على خيارك للمشاركة في التصويت'}</span>
         <span>صوت واحد لكل عضو</span>
       </div>

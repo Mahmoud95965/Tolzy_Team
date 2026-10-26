@@ -117,13 +117,13 @@ const Navbar: React.FC = () => {
           }`}
       >
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
+          <div className="flex items-center justify-between h-14 sm:h-20">
             {/* Logo Section */}
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <span className="text-2xl font-medium tracking-tight text-[#14140f]">
+            <Link href="/" className="flex items-center gap-2 sm:gap-2.5 group">
+              <span className="text-xl sm:text-2xl font-black tracking-tight text-[#14140f]">
                 TOLZY
               </span>
-              <span className="text-[10px] font-medium tracking-[0.1em] uppercase px-2 py-0.5 rounded-full bg-[#f5f5eb] text-[#6e6e64] border border-[#d2d2c8]">
+              <span className="text-[9px] sm:text-[10px] font-bold tracking-[0.05em] uppercase px-2 py-0.5 rounded-full bg-[#f5f5eb] text-[#6e6e64] border border-[#d2d2c8]">
                 DIRECTORY
               </span>
             </Link>
@@ -259,6 +259,24 @@ const Navbar: React.FC = () => {
                 >
                   <span className="hidden xs:inline">تسجيل الدخول</span>
                   <span className="xs:hidden">دخول</span>
+                </Link>
+              )}
+            </div>
+
+            {/* Mobile Actions (Search + Notification + User) */}
+            <div className="flex lg:hidden items-center gap-2">
+              {user || userProfile ? (
+                <div className="flex items-center gap-1.5">
+                  <NotificationBell />
+                  <UserProfile className="text-[#14140f]" iconClassName="bg-[#f5f5eb] text-[#14140f] !w-8 !h-8" />
+                </div>
+              ) : (
+                <Link
+                  href={getCentralAuthUrl()}
+                  prefetch={false}
+                  className="px-3 py-1.5 bg-[#beff50] text-[#14140f] text-xs font-bold rounded-full transition-colors shrink-0"
+                >
+                  دخول
                 </Link>
               )}
             </div>

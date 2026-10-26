@@ -630,24 +630,24 @@ const CommunityPromptPage: React.FC = () => {
 
   return (
     <PageLayout>
-      <div className="max-w-6xl mx-auto px-3.5 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-5 sm:space-y-6" dir="rtl">
+      <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-4 sm:space-y-6 pb-28 sm:pb-36" dir="rtl">
         
         {/* ─── 1. WORLD-CLASS EDITORIAL COMMUNITY HEADER ─── */}
-        <div className="bg-[#f5f5eb] border border-[#d2d2c8] rounded-2xl sm:rounded-[28px] p-4 sm:p-7 relative overflow-hidden shadow-none">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-[#f5f5eb] border border-[#d2d2c8] rounded-2xl sm:rounded-[28px] p-3.5 sm:p-7 relative overflow-hidden shadow-none">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
             
             {/* Title & Brand */}
-            <div className="space-y-1.5 max-w-xl">
+            <div className="space-y-1 sm:space-y-1.5 max-w-xl">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#beff50] border border-[#14140f] animate-pulse" />
-                <span className="text-xs font-bold text-[#14140f] uppercase tracking-wider">
+                <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#beff50] border border-[#14140f] animate-pulse" />
+                <span className="text-[11px] sm:text-xs font-bold text-[#14140f] uppercase tracking-wider">
                   مجتمع TOLZY المفتوح
                 </span>
               </div>
-              <h1 className="text-xl sm:text-3xl font-black text-[#14140f] tracking-tight">
+              <h1 className="text-lg sm:text-3xl font-black text-[#14140f] tracking-tight">
                 نقاشات، استطلاعات رأي، وتجارب أدوات الذكاء الاصطناعي
               </h1>
-              <p className="text-xs sm:text-sm text-[#6e6e64] leading-relaxed">
+              <p className="text-xs sm:text-sm text-[#6e6e64] leading-relaxed line-clamp-2 sm:line-clamp-none">
                 ملتقى المطورين والتقنيين العرب لتبادل الخبرات، إجراء استطلاعات المقارنة، واستعراض حزم الأدوات.
               </p>
             </div>
@@ -660,7 +660,7 @@ const CommunityPromptPage: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="ابحث في النقاشات، الاستطلاعات، أو الأعضاء..."
-                className="w-full pl-8 pr-10 py-2.5 rounded-full bg-[#ffffff] border border-[#d2d2c8] focus:border-[#14140f] text-xs text-[#14140f] placeholder:text-[#a0a096] focus:outline-none transition-all shadow-2xs"
+                className="w-full pl-8 pr-10 py-2 sm:py-2.5 rounded-full bg-[#ffffff] border border-[#d2d2c8] focus:border-[#14140f] text-xs text-[#14140f] placeholder:text-[#a0a096] focus:outline-none transition-all shadow-2xs"
               />
               {searchQuery && (
                 <button
@@ -683,10 +683,10 @@ const CommunityPromptPage: React.FC = () => {
           <div className="lg:col-span-2 space-y-4 sm:space-y-5">
             
             {/* ─── NATIVE APP-LIKE POST COMPOSER ─── */}
-            <div className="bg-[#ffffff] border border-[#d2d2c8] rounded-2xl sm:rounded-[24px] p-4 sm:p-5 shadow-2xs space-y-3.5">
+            <div className="bg-[#ffffff] border border-[#d2d2c8] rounded-2xl sm:rounded-[24px] p-3.5 sm:p-5 shadow-2xs space-y-3 sm:space-y-3.5">
               
               {/* Type Switcher Pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1">
                 {COMPOSER_POST_TYPES.map((t) => {
                   const isSelected = composerType === t.type;
                   return (
@@ -694,7 +694,7 @@ const CommunityPromptPage: React.FC = () => {
                       key={t.type}
                       type="button"
                       onClick={() => handleTypeSelect(t.type)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 select-none cursor-pointer ${
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 select-none cursor-pointer whitespace-nowrap ${
                         isSelected
                           ? 'bg-[#14140f] text-[#ffffff] shadow-xs'
                           : 'bg-[#f5f5eb] text-[#6e6e64] hover:text-[#14140f] hover:bg-[#eaeae0]'
@@ -709,8 +709,8 @@ const CommunityPromptPage: React.FC = () => {
 
               {/* Composer Input Area */}
               <div className="relative">
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-full bg-[#14140f] text-[#beff50] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                <div className="flex items-start gap-2.5 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#14140f] text-[#beff50] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
                     {user?.displayName?.[0]?.toUpperCase() || 'U'}
                   </div>
 
@@ -1007,17 +1007,17 @@ const CommunityPromptPage: React.FC = () => {
             </div>
 
             {/* ─── 3. FEED FILTER TABS & SORT CONTROLS ─── */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
               
               {/* Filter Pills (All, Polls, Ideas, Stacks, Code, Prompts) */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none snap-x">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar snap-x -mx-1 px-1">
                 <button
                   type="button"
                   onClick={() => {
                     setActiveType(null);
                     setPage(1);
                   }}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer whitespace-nowrap ${
                     activeType === null
                       ? 'bg-[#14140f] text-[#ffffff] shadow-xs'
                       : 'bg-[#f5f5eb] text-[#6e6e64] hover:text-[#14140f] border border-[#d2d2c8]'
@@ -1032,7 +1032,7 @@ const CommunityPromptPage: React.FC = () => {
                     setActiveType('poll');
                     setPage(1);
                   }}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer whitespace-nowrap ${
                     activeType === 'poll'
                       ? 'bg-[#beff50] text-[#14140f] border border-[#14140f] shadow-xs'
                       : 'bg-[#f5f5eb] text-[#6e6e64] hover:text-[#14140f] border border-[#d2d2c8]'
@@ -1048,7 +1048,7 @@ const CommunityPromptPage: React.FC = () => {
                     setActiveType('idea');
                     setPage(1);
                   }}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer whitespace-nowrap ${
                     activeType === 'idea'
                       ? 'bg-[#14140f] text-[#ffffff] shadow-xs'
                       : 'bg-[#f5f5eb] text-[#6e6e64] hover:text-[#14140f] border border-[#d2d2c8]'
@@ -1064,7 +1064,7 @@ const CommunityPromptPage: React.FC = () => {
                     setActiveType('stack');
                     setPage(1);
                   }}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer whitespace-nowrap ${
                     activeType === 'stack'
                       ? 'bg-[#14140f] text-[#ffffff] shadow-xs'
                       : 'bg-[#f5f5eb] text-[#6e6e64] hover:text-[#14140f] border border-[#d2d2c8]'
@@ -1080,7 +1080,7 @@ const CommunityPromptPage: React.FC = () => {
                     setActiveType('code');
                     setPage(1);
                   }}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer whitespace-nowrap ${
                     activeType === 'code'
                       ? 'bg-[#14140f] text-[#ffffff] shadow-xs'
                       : 'bg-[#f5f5eb] text-[#6e6e64] hover:text-[#14140f] border border-[#d2d2c8]'
@@ -1092,7 +1092,7 @@ const CommunityPromptPage: React.FC = () => {
               </div>
 
               {/* Sort Switcher (Latest / Trending / Top) */}
-              <div className="flex items-center gap-1 bg-[#f5f5eb] p-1 rounded-full border border-[#d2d2c8] shrink-0 self-start sm:self-auto">
+              <div className="flex items-center gap-1 bg-[#f5f5eb] p-1 rounded-full border border-[#d2d2c8] shrink-0 self-start sm:self-auto overflow-x-auto max-w-full">
                 {SORT_OPTIONS.map((opt) => (
                   <button
                     key={opt.key}
@@ -1101,7 +1101,7 @@ const CommunityPromptPage: React.FC = () => {
                       setSort(opt.key);
                       setPage(1);
                     }}
-                    className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                    className={`inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
                       sort === opt.key
                         ? 'bg-[#ffffff] text-[#14140f] font-bold shadow-2xs border border-[#d2d2c8]'
                         : 'text-[#6e6e64] hover:text-[#14140f]'

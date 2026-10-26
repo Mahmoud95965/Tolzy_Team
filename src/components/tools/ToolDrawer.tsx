@@ -44,6 +44,15 @@ const ToolDrawer: React.FC<ToolDrawerProps> = ({ isOpen, onClose, tool }) => {
   const [helpfulCount, setHelpfulCount] = useState(0);
   const [notHelpfulCount, setNotHelpfulCount] = useState(0);
   const [isActionInProgress, setIsActionInProgress] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Mobile detection for bottom-sheet animation
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Hard Locks for double triggers (Strict Mode)
   const saveLock = useRef(false);
@@ -219,50 +228,55 @@ const ToolDrawer: React.FC<ToolDrawerProps> = ({ isOpen, onClose, tool }) => {
             className="fixed inset-0 bg-[#14140f]/60 z-50 transition-opacity"
           />
 
-          {/* Sliding Panel */}
+          {/* Sliding Panel / Mobile Bottom Sheet */}
           <motion.div
-            initial={{ x: '-100%', opacity: 0.95 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: '-100%', opacity: 0.95 }}
+            initial={isMobile ? { y: '100%' } : { x: '-100%', opacity: 0.95 }}
+            animate={isMobile ? { y: 0 } : { x: 0, opacity: 1 }}
+            exit={isMobile ? { y: '100%' } : { x: '-100%', opacity: 0.95 }}
             transition={{ type: 'spring', damping: 28, stiffness: 220 }}
-            className="fixed inset-y-0 left-0 w-full sm:max-w-xl bg-[#ffffff] text-[#14140f] border-r border-[#d2d2c8] z-50 shadow-none flex flex-col text-right select-none overflow-hidden"
+            className="fixed inset-x-0 bottom-0 max-h-[90vh] sm:max-h-full sm:inset-y-0 sm:left-0 sm:right-auto w-full sm:max-w-xl bg-[#ffffff] text-[#14140f] border-t sm:border-t-0 sm:border-r border-[#d2d2c8] rounded-t-[28px] sm:rounded-none z-50 shadow-2xl sm:shadow-none flex flex-col text-right select-none overflow-hidden"
             dir="rtl"
           >
+            {/* Mobile Sheet Drag Handle */}
+            <div className="sm:hidden pt-2.5 pb-1 flex justify-center bg-[#f5f5eb]">
+              <div className="w-12 h-1.5 rounded-full bg-[#d2d2c8]" />
+            </div>
+
             {/* Header Control Bar */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#d2d2c8] bg-[#f5f5eb]">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[#d2d2c8] bg-[#f5f5eb]">
               <button 
                 onClick={onClose}
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-[#ffffff] border border-[#d2d2c8] text-[#14140f] hover:border-[#14140f] transition-colors"
+                className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-[#ffffff] border border-[#d2d2c8] text-[#14140f] hover:border-[#14140f] transition-colors"
                 aria-label="إغلاق النافذة"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
-              <h2 className="text-base font-medium text-[#14140f] flex items-center gap-2">
+              <h2 className="text-sm sm:text-base font-bold text-[#14140f] flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-[#14140f]" />
                 مراجعة الأداة
               </h2>
             </div>
 
             {/* Scrollable Container */}
-            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 no-scrollbar pb-24">
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6 no-scrollbar pb-28">
               
               {/* Profile Card */}
-              <div className="bg-[#f5f5eb] border border-[#d2d2c8] p-6 rounded-[28px]">
-                <div className="flex flex-col sm:flex-row items-center gap-5">
-                  <div className="p-2 rounded-[18px] bg-[#ffffff] border border-[#d2d2c8]">
+              <div className="bg-[#f5f5eb] border border-[#d2d2c8] p-4 sm:p-6 rounded-[20px] sm:rounded-[28px]">
+                <div className="flex flex-col sm:flex-row items-center gap-3.5 sm:gap-5">
+                  <div className="p-2 rounded-[16px] sm:rounded-[18px] bg-[#ffffff] border border-[#d2d2c8] shrink-0">
                     <ToolImage
                       name={tool.name}
                       categoryName={primaryCategory}
                       subcategoryName={Array.isArray(tool.subcategory) ? tool.subcategory?.[0] : tool.subcategory}
-                      size="lg"
+                      size="md"
                     />
                   </div>
 
-                  <div className="flex-1 text-center sm:text-right space-y-2">
+                  <div className="flex-1 text-center sm:text-right space-y-1.5 sm:space-y-2">
                     <div className="flex flex-wrap justify-center sm:justify-start items-center gap-2">
-                      <h3 className="text-2xl font-medium text-[#14140f] tracking-tight">{tool.name}</h3>
+                      <h3 className="text-xl sm:text-2xl font-black text-[#14140f] tracking-tight">{tool.name}</h3>
                       {tool.isFeatured && (
-                        <span className="inline-flex items-center gap-1 px-3 py-0.5 bg-[#beff50] text-[#14140f] rounded-full text-[10px] font-medium uppercase tracking-[0.1em]">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#beff50] text-[#14140f] rounded-full text-[10px] font-bold uppercase tracking-[0.05em]">
                           <Award className="w-3 h-3" /> مميز
                         </span>
                       )}
@@ -276,7 +290,7 @@ const ToolDrawer: React.FC<ToolDrawerProps> = ({ isOpen, onClose, tool }) => {
                             {Array.from({ length: 5 }).map((_, i) => (
                               <Star
                                 key={i}
-                                className={`h-4 w-4 ${
+                                className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${
                                   i < Math.floor(tool.rating)
                                     ? 'text-[#14140f] fill-[#14140f]'
                                     : 'text-[#d2d2c8]'
@@ -295,7 +309,7 @@ const ToolDrawer: React.FC<ToolDrawerProps> = ({ isOpen, onClose, tool }) => {
                       )}
                     </div>
 
-                    <p className="text-xs font-medium text-[#14140f] bg-[#ffffff] border border-[#d2d2c8] px-3 py-1 rounded-full inline-block">
+                    <p className="text-[11px] sm:text-xs font-medium text-[#14140f] bg-[#ffffff] border border-[#d2d2c8] px-3 py-1 rounded-full inline-block">
                       {primaryCategory}
                     </p>
                   </div>
@@ -303,20 +317,20 @@ const ToolDrawer: React.FC<ToolDrawerProps> = ({ isOpen, onClose, tool }) => {
               </div>
 
               {/* Actions Grid */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 <a
                   href={tool.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="col-span-2 flex items-center justify-center gap-2 py-3.5 bg-[#beff50] hover:bg-[#abf03c] text-[#14140f] rounded-[28px] font-medium text-sm transition-colors shadow-none"
+                  className="col-span-2 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3.5 bg-[#beff50] hover:bg-[#abf03c] text-[#14140f] rounded-full font-bold text-xs sm:text-sm transition-colors shadow-none"
                 >
                   <span>زيارة الموقع</span>
-                  <ExternalLink className="w-4 h-4" />
+                  <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </a>
 
                 <button
                   onClick={handleSave}
-                  className={`flex items-center justify-center gap-2 py-3.5 border rounded-[28px] font-medium text-sm transition-colors ${
+                  className={`flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3.5 border rounded-full font-bold text-xs sm:text-sm transition-colors ${
                     isSaved
                       ? 'bg-[#beff50]/20 border-[#14140f] text-[#14140f]'
                       : 'bg-[#ffffff] border-[#d2d2c8] text-[#14140f] hover:border-[#14140f]'
@@ -324,13 +338,13 @@ const ToolDrawer: React.FC<ToolDrawerProps> = ({ isOpen, onClose, tool }) => {
                 >
                   {isSaved ? (
                     <>
-                      <BookmarkCheck className="w-4 h-4 fill-current" />
+                      <BookmarkCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
                       <span>محفوظ ({savedCount})</span>
                     </>
                   ) : (
                     <>
-                      <Bookmark className="w-4 h-4" />
-                      <span>حفظ الأداة</span>
+                      <Bookmark className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      <span>حفظ</span>
                     </>
                   )}
                 </button>
@@ -342,14 +356,14 @@ const ToolDrawer: React.FC<ToolDrawerProps> = ({ isOpen, onClose, tool }) => {
                   toggleCompare(tool);
                   openModal();
                 }}
-                className={`w-full py-3 px-4 rounded-[28px] border text-xs sm:text-sm font-medium transition-colors flex items-center justify-center gap-2 cursor-pointer ${
+                className={`w-full py-2.5 sm:py-3 px-3 sm:px-4 rounded-full border text-xs sm:text-sm font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer ${
                   isInCompare(tool.id)
                     ? 'bg-[#beff50] border-[#14140f] text-[#14140f]'
                     : 'bg-[#f5f5eb] border-[#d2d2c8] text-[#14140f] hover:border-[#14140f]'
                 }`}
               >
-                <ArrowLeftRight className="w-4 h-4" />
-                <span>{isInCompare(tool.id) ? 'الأداة في قائمة المقارنة (فتح جدول المقارنة)' : 'مقارنة هذه الأداة مع أدوات أخرى'}</span>
+                <ArrowLeftRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span>{isInCompare(tool.id) ? 'الأداة في قائمة المقارنة (فتح الجدول)' : 'مقارنة هذه الأداة مع أدوات أخرى'}</span>
               </button>
 
               {/* Quick Specs Cards */}
@@ -390,11 +404,11 @@ const ToolDrawer: React.FC<ToolDrawerProps> = ({ isOpen, onClose, tool }) => {
               </div>
 
               {/* Detailed Pros & Cons Grid */}
-              <div className="grid grid-cols-1 gap-3">
+              <div className="grid grid-cols-1 gap-2.5 sm:gap-3">
                 {/* Pros */}
                 {tool.pros && tool.pros.length > 0 && (
-                  <div className="bg-[#f5f5eb] border border-[#d2d2c8] p-5 rounded-[18px] space-y-2">
-                    <h5 className="text-[#14140f] text-xs font-medium flex items-center gap-2">
+                  <div className="bg-[#f5f5eb] border border-[#d2d2c8] p-3.5 sm:p-5 rounded-[16px] sm:rounded-[18px] space-y-2">
+                    <h5 className="text-[#14140f] text-xs font-bold flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4 text-[#14140f]" />
                       النقاط الإيجابية والمميزات
                     </h5>
@@ -411,8 +425,8 @@ const ToolDrawer: React.FC<ToolDrawerProps> = ({ isOpen, onClose, tool }) => {
 
                 {/* Cons */}
                 {tool.cons && tool.cons.length > 0 && (
-                  <div className="bg-[#f5f5eb] border border-[#d2d2c8] p-5 rounded-[18px] space-y-2">
-                    <h5 className="text-[#6e6e64] text-xs font-medium flex items-center gap-2">
+                  <div className="bg-[#f5f5eb] border border-[#d2d2c8] p-3.5 sm:p-5 rounded-[16px] sm:rounded-[18px] space-y-2">
+                    <h5 className="text-[#6e6e64] text-xs font-bold flex items-center gap-2">
                       <XCircle className="w-4 h-4 text-[#6e6e64]" />
                       نقاط بحاجة للتحسين / العيوب
                     </h5>
@@ -429,16 +443,16 @@ const ToolDrawer: React.FC<ToolDrawerProps> = ({ isOpen, onClose, tool }) => {
               </div>
 
               {/* Voting Feedbacks Widget */}
-              <div className="bg-[#f5f5eb] border border-[#d2d2c8] p-5 rounded-[28px] space-y-3 text-center">
-                <h5 className="text-xs font-medium text-[#14140f]">هل تجد مراجعة هذه الأداة مفيدة؟</h5>
-                <div className="flex justify-center gap-3">
+              <div className="bg-[#f5f5eb] border border-[#d2d2c8] p-4 sm:p-5 rounded-[20px] sm:rounded-[28px] space-y-3 text-center">
+                <h5 className="text-xs font-bold text-[#14140f]">هل تجد مراجعة هذه الأداة مفيدة؟</h5>
+                <div className="flex justify-center gap-2 sm:gap-3">
                   <button
                     onClick={() => handleVote('helpful')}
                     disabled={isActionInProgress}
-                    className={`flex items-center gap-2 px-5 py-2 rounded-full border text-xs transition-colors ${
+                    className={`flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 rounded-full border text-xs transition-colors cursor-pointer ${
                       userVote === 'helpful'
-                        ? 'bg-[#beff50] border-[#14140f] text-[#14140f] font-medium'
-                        : 'bg-[#ffffff] border-[#d2d2c8] text-[#14140f] hover:border-[#14140f] font-normal'
+                        ? 'bg-[#beff50] border-[#14140f] text-[#14140f] font-bold'
+                        : 'bg-[#ffffff] border-[#d2d2c8] text-[#14140f] hover:border-[#14140f] font-medium'
                     }`}
                   >
                     <ThumbsUp className="w-3.5 h-3.5" />
@@ -448,10 +462,10 @@ const ToolDrawer: React.FC<ToolDrawerProps> = ({ isOpen, onClose, tool }) => {
                   <button
                     onClick={() => handleVote('notHelpful')}
                     disabled={isActionInProgress}
-                    className={`flex items-center gap-2 px-5 py-2 rounded-full border text-xs transition-colors ${
+                    className={`flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 rounded-full border text-xs transition-colors cursor-pointer ${
                       userVote === 'notHelpful'
-                        ? 'bg-[#14140f] border-[#14140f] text-[#ffffff] font-medium'
-                        : 'bg-[#ffffff] border-[#d2d2c8] text-[#6e6e64] hover:text-[#14140f] hover:border-[#14140f] font-normal'
+                        ? 'bg-[#14140f] border-[#14140f] text-[#ffffff] font-bold'
+                        : 'bg-[#ffffff] border-[#d2d2c8] text-[#6e6e64] hover:text-[#14140f] hover:border-[#14140f] font-medium'
                     }`}
                   >
                     <ThumbsDown className="w-3.5 h-3.5" />

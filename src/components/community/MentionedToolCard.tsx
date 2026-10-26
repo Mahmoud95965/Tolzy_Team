@@ -162,15 +162,12 @@ export const MentionedToolCard: React.FC<MentionedToolCardProps> = ({
     <Link
       href={`/tools/${targetId}`}
       onClick={(e) => e.stopPropagation()}
-      className={`group relative flex items-center justify-between p-3.5 rounded-2xl bg-white/80 dark:bg-neutral-900/80 backdrop-blur-md border border-neutral-200/90 dark:border-neutral-800 hover:border-blue-500/70 dark:hover:border-blue-500/70 shadow-xs hover:shadow-md transition-all duration-200 text-right overflow-hidden ${className}`}
+      className={`group relative flex items-center justify-between p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-[#f5f5eb] border border-[#d2d2c8] hover:border-[#14140f] shadow-2xs transition-all duration-200 text-right overflow-hidden ${className}`}
       dir="rtl"
     >
-      {/* Subtle Glow on Hover */}
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-
       {/* Right side: Tool Logo + Info */}
-      <div className="flex items-center gap-3 min-w-0 flex-1">
-        <div className="w-11 h-11 rounded-xl bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/60 dark:border-neutral-700/60 flex items-center justify-center shrink-0 p-1.5 shadow-xs overflow-hidden group-hover:scale-105 transition-transform">
+      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+        <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-[#ffffff] border border-[#d2d2c8] flex items-center justify-center shrink-0 p-1 shadow-2xs overflow-hidden group-hover:scale-105 transition-transform">
           <ToolImage
             name={displayName}
             imageUrl={resolved?.imageUrl}
@@ -180,13 +177,13 @@ export const MentionedToolCard: React.FC<MentionedToolCardProps> = ({
                 ? resolved?.category[0]
                 : resolved?.category || 'Programming'
             }
-            className="w-full h-full object-contain rounded-lg"
+            className="w-full h-full object-contain rounded-md"
           />
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h4 className="font-bold text-xs sm:text-sm text-neutral-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <h4 className="font-bold text-xs sm:text-sm text-[#14140f] truncate group-hover:underline transition-colors">
               {displayName}
             </h4>
             <span
@@ -195,18 +192,18 @@ export const MentionedToolCard: React.FC<MentionedToolCardProps> = ({
               {pricingBadgeConfig.label}
             </span>
           </div>
-          <p className="text-[11px] text-neutral-500 dark:text-neutral-400 truncate mt-0.5 max-w-[280px]">
+          <p className="text-[10px] sm:text-[11px] text-[#6e6e64] truncate mt-0.5 max-w-[240px] sm:max-w-[280px]">
             {description}
           </p>
         </div>
       </div>
 
       {/* Left side: Action Button */}
-      <div className="flex items-center gap-1.5 shrink-0 mr-3">
-        <span className="hidden sm:inline-block text-[11px] font-bold text-blue-600 dark:text-blue-400 transition-colors">
-          عرض الأداة
+      <div className="flex items-center gap-1.5 shrink-0 mr-2 sm:mr-3">
+        <span className="hidden sm:inline-block text-[11px] font-bold text-[#14140f] transition-colors">
+          عرض
         </span>
-        <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white flex items-center justify-center transition-all shadow-xs">
+        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#ffffff] border border-[#d2d2c8] text-[#14140f] group-hover:bg-[#beff50] group-hover:border-[#14140f] flex items-center justify-center transition-all shadow-2xs">
           <ArrowUpRight className="w-3.5 h-3.5" />
         </div>
       </div>

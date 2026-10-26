@@ -296,13 +296,13 @@ const PromptCard: React.FC<PromptCardProps> = ({
 
   return (
     <article
-      className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-sm hover:border-neutral-300 dark:hover:border-neutral-700/80 transition-all relative"
+      className="bg-[#ffffff] border border-[#d2d2c8] rounded-2xl sm:rounded-[24px] shadow-2xs hover:border-[#14140f] transition-all relative overflow-hidden"
       dir="rtl"
     >
       {/* ─── Header: Author Info + Type Badge + Menu ─── */}
-      <div className="p-3.5 sm:p-5 pb-2.5 sm:pb-3 flex items-start justify-between gap-3">
+      <div className="p-3 sm:p-5 pb-2 sm:pb-3 flex items-start justify-between gap-2.5 sm:gap-3">
         {/* Author */}
-        <div className="flex items-center gap-2.5 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Link
             href={authorProfilePath}
             className="shrink-0 hover:opacity-90 transition-opacity"
@@ -311,13 +311,13 @@ const PromptCard: React.FC<PromptCardProps> = ({
               <img
                 src={prompt.author_avatar}
                 alt={prompt.author_name}
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover ring-1 ring-neutral-200 dark:ring-neutral-700"
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl object-cover border border-[#d2d2c8]"
               />
             ) : (
               <div
-                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${getAvatarColor(
+                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl ${getAvatarColor(
                   prompt.author_name
-                )} flex items-center justify-center text-white font-bold text-xs sm:text-sm shadow-sm`}
+                )} flex items-center justify-center text-white font-bold text-xs sm:text-sm shadow-xs`}
               >
                 {prompt.author_name?.[0]?.toUpperCase() || 'U'}
               </div>
@@ -328,25 +328,25 @@ const PromptCard: React.FC<PromptCardProps> = ({
             <div className="flex items-center gap-1.5 sm:gap-2">
               <Link
                 href={authorProfilePath}
-                className="font-bold text-neutral-900 dark:text-white text-xs sm:text-sm hover:underline truncate max-w-[150px] sm:max-w-none"
+                className="font-bold text-[#14140f] text-xs sm:text-sm hover:underline truncate max-w-[130px] sm:max-w-none"
               >
                 {prompt.author_name}
               </Link>
               {prompt.author_username && (
-                <span className="text-[11px] sm:text-xs text-neutral-400 font-mono hidden sm:inline">
+                <span className="text-[11px] sm:text-xs text-[#a0a096] font-mono hidden sm:inline">
                   @{prompt.author_username}
                 </span>
               )}
             </div>
 
-            <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-neutral-400 mt-0.5">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-[#6e6e64] mt-0.5">
               <span className="flex items-center gap-1">
-                <Clock className="w-3 h-3 text-neutral-400" />
+                <Clock className="w-3 h-3 text-[#a0a096]" />
                 <span>{timeAgo(prompt.created_at)}</span>
               </span>
               <span>•</span>
               <span
-                className="text-[10px] sm:text-[11px] font-bold px-1.5 sm:px-2 py-0.5 rounded-md inline-flex items-center gap-1"
+                className="text-[10px] sm:text-[11px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full inline-flex items-center gap-1"
                 style={{
                   backgroundColor: `${typeConfig.color}15`,
                   color: typeConfig.color,
@@ -364,21 +364,21 @@ const PromptCard: React.FC<PromptCardProps> = ({
           <button
             type="button"
             onClick={() => setShowMenu(!showMenu)}
-            className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-neutral-700 dark:hover:text-white transition-colors"
+            className="p-1.5 rounded-lg hover:bg-[#f5f5eb] text-[#a0a096] hover:text-[#14140f] transition-colors"
             title="خيارات"
           >
             <MoreHorizontal className="w-4 h-4" />
           </button>
 
           {showMenu && (
-            <div className="absolute left-0 top-full mt-1 w-36 rounded-xl bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 shadow-xl py-1 z-20 text-xs font-semibold animate-in fade-in zoom-in-95 duration-150">
+            <div className="absolute left-0 top-full mt-1 w-36 rounded-xl bg-[#ffffff] border border-[#d2d2c8] shadow-lg py-1 z-20 text-xs font-semibold animate-in fade-in zoom-in-95 duration-150">
               <button
                 type="button"
                 onClick={() => {
                   onShare(prompt.id);
                   setShowMenu(false);
                 }}
-                className="w-full flex items-center gap-2 px-3.5 py-2 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors"
+                className="w-full flex items-center gap-2 px-3.5 py-2 text-[#14140f] hover:bg-[#f5f5eb] transition-colors text-right"
               >
                 <Share2 className="w-3.5 h-3.5" />
                 <span>مشاركة الرابط</span>
@@ -391,7 +391,7 @@ const PromptCard: React.FC<PromptCardProps> = ({
                     onDelete?.(prompt.id);
                     setShowMenu(false);
                   }}
-                  className="w-full flex items-center gap-2 px-3.5 py-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                  className="w-full flex items-center gap-2 px-3.5 py-2 text-rose-600 hover:bg-rose-50 transition-colors text-right"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   <span>حذف المنشور</span>
@@ -404,8 +404,8 @@ const PromptCard: React.FC<PromptCardProps> = ({
 
       {/* ─── Post Title (if present) ─── */}
       {prompt.title?.trim() && (
-        <div className="px-4 sm:px-5 pb-2">
-          <h2 className="text-base font-black text-neutral-900 dark:text-white leading-snug">
+        <div className="px-3.5 sm:px-5 pb-1.5 sm:pb-2">
+          <h2 className="text-sm sm:text-base font-black text-[#14140f] leading-snug">
             {prompt.title.trim()}
           </h2>
         </div>
@@ -413,14 +413,14 @@ const PromptCard: React.FC<PromptCardProps> = ({
 
       {/* ─── Body text with URL auto-links ─── */}
       {contentText && (
-        <div className="px-4 sm:px-5 pb-3 text-sm text-neutral-700 dark:text-neutral-200 leading-relaxed">
+        <div className="px-3.5 sm:px-5 pb-2.5 sm:pb-3 text-xs sm:text-sm text-[#2c2c26] leading-relaxed">
           <p className="whitespace-pre-wrap">
             {renderTextWithLinks(displayText)}
             {isLong && !expanded && (
               <button
                 type="button"
                 onClick={() => setExpanded(true)}
-                className="font-bold text-blue-600 dark:text-blue-400 hover:underline mr-1 text-xs"
+                className="font-bold text-blue-600 hover:underline mr-1 text-xs"
               >
                 ...عرض المزيد
               </button>
@@ -429,7 +429,7 @@ const PromptCard: React.FC<PromptCardProps> = ({
               <button
                 type="button"
                 onClick={() => setExpanded(false)}
-                className="font-bold text-blue-600 dark:text-blue-400 hover:underline mr-1 text-xs"
+                className="font-bold text-blue-600 hover:underline mr-1 text-xs"
               >
                 إخفاء
               </button>
@@ -534,15 +534,15 @@ const PromptCard: React.FC<PromptCardProps> = ({
       )}
 
       {/* ─── Bottom Action Bar ─── */}
-      <div className="px-2.5 sm:px-4 py-1.5 sm:py-2 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between text-xs font-bold text-neutral-500">
+      <div className="px-2.5 sm:px-4 py-1.5 sm:py-2 border-t border-[#d2d2c8] flex items-center justify-between text-xs font-bold text-[#6e6e64]">
         {/* Like Button */}
         <button
           type="button"
           onClick={() => onVote(prompt.id, 'up')}
-          className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl transition-all ${
+          className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full transition-all cursor-pointer ${
             liked
-              ? 'text-rose-600 bg-rose-50 dark:bg-rose-950/30'
-              : 'hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white'
+              ? 'text-rose-600 bg-rose-50'
+              : 'hover:bg-[#f5f5eb] hover:text-[#14140f]'
           }`}
         >
           <Heart
@@ -558,10 +558,10 @@ const PromptCard: React.FC<PromptCardProps> = ({
         <button
           type="button"
           onClick={() => onComment(prompt.id)}
-          className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl transition-all ${
+          className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full transition-all cursor-pointer ${
             isCommentsOpen
-              ? 'text-blue-600 bg-blue-50 dark:bg-blue-950/30'
-              : 'hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white'
+              ? 'text-[#14140f] bg-[#f5f5eb] border border-[#d2d2c8]'
+              : 'hover:bg-[#f5f5eb] hover:text-[#14140f]'
           }`}
         >
           <MessageSquare className="w-4 h-4" />
@@ -573,7 +573,7 @@ const PromptCard: React.FC<PromptCardProps> = ({
         <button
           type="button"
           onClick={() => onShare(prompt.id)}
-          className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white transition-all"
+          className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full hover:bg-[#f5f5eb] hover:text-[#14140f] transition-all cursor-pointer"
         >
           <Share2 className="w-4 h-4" />
           <span className="hidden sm:inline">مشاركة</span>
@@ -582,12 +582,12 @@ const PromptCard: React.FC<PromptCardProps> = ({
 
       {/* ─── Inline Comments Drawer ─── */}
       {isCommentsOpen && (
-        <div className="bg-neutral-50/60 dark:bg-neutral-950/40 border-t border-neutral-100 dark:border-neutral-800/80 p-4 sm:p-5 space-y-4 animate-in fade-in duration-200">
+        <div className="bg-[#f5f5eb] border-t border-[#d2d2c8] p-3 sm:p-5 space-y-3 sm:space-y-4 animate-in fade-in duration-200">
           
           {/* Add Comment Input Box */}
           {currentUser ? (
             <form onSubmit={handleSendComment} className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#14140f] text-[#beff50] font-bold text-xs flex items-center justify-center shrink-0">
                 {currentUser.displayName?.[0]?.toUpperCase() || 'U'}
               </div>
 
@@ -617,7 +617,7 @@ const PromptCard: React.FC<PromptCardProps> = ({
                     }
                   }}
                   placeholder="اكتب تعليقك... (استخدم @ للإشارة لأداة)"
-                  className="w-full px-3.5 py-2 pl-9 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-neutral-400"
+                  className="w-full px-3.5 py-2 pl-9 rounded-full bg-[#ffffff] border border-[#d2d2c8] text-xs text-[#14140f] focus:outline-none focus:border-[#14140f] placeholder:text-[#a0a096]"
                 />
 
                 {/* Quick @ mention trigger button inside input */}
@@ -640,7 +640,7 @@ const PromptCard: React.FC<PromptCardProps> = ({
                       }
                     }, 0);
                   }}
-                  className="absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-md flex items-center justify-center text-xs font-bold text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-md flex items-center justify-center text-xs font-bold text-[#a0a096] hover:text-[#14140f] hover:bg-[#f5f5eb] transition-colors"
                   title="الإشارة لأداة ذكية من الدليل (@)"
                 >
                   @
@@ -662,7 +662,7 @@ const PromptCard: React.FC<PromptCardProps> = ({
               <button
                 type="submit"
                 disabled={!commentText.trim() || isSubmittingComment}
-                className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors disabled:opacity-40 flex items-center gap-1 shrink-0"
+                className="px-3.5 py-2 rounded-full bg-[#14140f] hover:bg-[#30302a] text-[#ffffff] text-xs font-bold transition-colors disabled:opacity-40 flex items-center gap-1 shrink-0 cursor-pointer"
               >
                 {isSubmittingComment ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -673,8 +673,8 @@ const PromptCard: React.FC<PromptCardProps> = ({
               </button>
             </form>
           ) : (
-            <div className="text-center py-2 text-xs text-neutral-400">
-              <Link href="/auth" className="text-blue-600 dark:text-blue-400 font-bold hover:underline">
+            <div className="text-center py-2 text-xs text-[#6e6e64]">
+              <Link href="/auth" className="text-[#14140f] font-bold underline">
                 سجّل دخولك
               </Link>{' '}
               للمشاركة والتعليق على هذا المنشور.
@@ -684,14 +684,14 @@ const PromptCard: React.FC<PromptCardProps> = ({
           {/* Comments List */}
           {isLoadingComments ? (
             <div className="flex justify-center py-4">
-              <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+              <Loader2 className="w-5 h-5 animate-spin text-[#14140f]" />
             </div>
           ) : comments.length === 0 ? (
-            <div className="text-center py-4 text-xs text-neutral-400">
+            <div className="text-center py-4 text-xs text-[#6e6e64]">
               لا توجد تعليقات بعد. كن أول من يعلق! 💬
             </div>
           ) : (
-            <div className="space-y-2.5 max-h-64 overflow-y-auto pl-1">
+            <div className="space-y-2 max-h-64 overflow-y-auto pl-1 no-scrollbar">
               {comments.map((comment, idx) => {
                 const commentAuthorIdentifier = comment.author_username || comment.author_uid || comment.author_name || 'user';
                 const commentAuthorProfilePath = `/community/user/${encodeURIComponent(commentAuthorIdentifier)}`;
@@ -700,11 +700,11 @@ const PromptCard: React.FC<PromptCardProps> = ({
                 return (
                   <div
                     key={comment.id || `comment-${idx}`}
-                    className="flex items-start justify-between gap-2.5 p-3 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800/80 text-xs hover:border-neutral-200 dark:hover:border-neutral-700/60 transition-all"
+                    className="flex items-start justify-between gap-2.5 p-2.5 sm:p-3 rounded-xl bg-[#ffffff] border border-[#d2d2c8] text-xs hover:border-[#14140f] transition-all"
                   >
                     <div className="flex items-start gap-2.5 flex-1 min-w-0">
                       <Link href={commentAuthorProfilePath} className="shrink-0">
-                        <div className="w-7 h-7 rounded-full bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center font-bold text-[11px] text-neutral-700 dark:text-neutral-300 shrink-0 mt-0.5 hover:ring-2 hover:ring-blue-500/40 transition-all">
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#14140f] text-[#beff50] flex items-center justify-center font-bold text-[10px] sm:text-[11px] shrink-0 mt-0.5">
                           {comment.author_name?.[0]?.toUpperCase() || 'U'}
                         </div>
                       </Link>
@@ -712,15 +712,15 @@ const PromptCard: React.FC<PromptCardProps> = ({
                         <div className="flex items-center gap-2">
                           <Link
                             href={commentAuthorProfilePath}
-                            className="font-bold text-neutral-900 dark:text-white hover:underline hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                            className="font-bold text-[#14140f] hover:underline transition-colors"
                           >
                             {comment.author_name}
                           </Link>
-                          <span className="text-[10px] text-neutral-400">
+                          <span className="text-[10px] text-[#a0a096]">
                             {timeAgo(comment.created_at)}
                           </span>
                         </div>
-                        <p className="text-neutral-700 dark:text-neutral-300 mt-1 leading-relaxed whitespace-pre-wrap break-words">
+                        <p className="text-[#2c2c26] mt-1 leading-relaxed whitespace-pre-wrap break-words">
                           {renderTextWithLinks(comment.content)}
                         </p>
 
@@ -732,12 +732,12 @@ const PromptCard: React.FC<PromptCardProps> = ({
                                 key={`cmt-m-${m.slug}`}
                                 href={`/tools/${m.slug}`}
                                 onClick={(e) => e.stopPropagation()}
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors border border-blue-200/60 dark:border-blue-800/60"
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#f5f5eb] text-[#14140f] hover:bg-[#beff50] transition-colors border border-[#d2d2c8]"
                                 title={`استكشف أداة ${m.name}`}
                               >
-                                <Sparkles className="w-2.5 h-2.5 text-blue-500 shrink-0" />
+                                <Sparkles className="w-2.5 h-2.5 text-[#14140f] shrink-0" />
                                 <span>{m.name}</span>
-                                <ArrowUpRight className="w-2.5 h-2.5 text-blue-400 shrink-0" />
+                                <ArrowUpRight className="w-2.5 h-2.5 text-[#6e6e64] shrink-0" />
                               </Link>
                             ))}
                           </div>
@@ -749,7 +749,7 @@ const PromptCard: React.FC<PromptCardProps> = ({
                       <button
                         type="button"
                         onClick={() => onDeleteComment(comment.id, prompt.id)}
-                        className="text-neutral-400 hover:text-rose-500 p-1 transition-colors shrink-0"
+                        className="text-[#a0a096] hover:text-rose-500 p-1 transition-colors shrink-0 cursor-pointer"
                         title="حذف التعليق"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
