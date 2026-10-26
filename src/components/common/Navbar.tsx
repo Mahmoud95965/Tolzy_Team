@@ -156,7 +156,7 @@ const Navbar: React.FC = () => {
                 </button>
                 <div className="absolute top-full right-0 w-72 bg-[#ffffff] rounded-[18px] border border-[#d2d2c8] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-2 group-hover:translate-y-0 p-3 z-50">
                   <div className="flex flex-col gap-1">
-                    <Link href={getSubdomainUrl('community', '/community')} className="flex items-start gap-3 p-3 rounded-[12px] hover:bg-[#f5f5eb] transition-colors group/link">
+                    <Link href="/community" className="flex items-start gap-3 p-3 rounded-[12px] hover:bg-[#f5f5eb] transition-colors group/link">
                       <div className="w-9 h-9 rounded-[8px] bg-[#f5f5eb] border border-[#d2d2c8] flex items-center justify-center text-[#14140f] shrink-0">
                         <Users className="w-4 h-4" />
                       </div>

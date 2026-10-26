@@ -152,7 +152,7 @@ export default function EcosystemHome() {
             id: 'community',
             title: '6. مجتمع المنظومة والتوجيهات (Tolzy Community)',
             subdomain: 'community.tolzy.me',
-            url: getSubdomainUrl('community', '/community'),
+            url: '/community',
             icon: Users,
             badge: 'دومين فرعي مستقل',
             badgeBg: 'bg-teal-500/10 border-teal-500/30 text-teal-600 dark:text-teal-400',

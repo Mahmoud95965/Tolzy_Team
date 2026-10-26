@@ -99,7 +99,15 @@ export async function GET(req: NextRequest) {
       .range(offset, offset + limit - 1);
 
     if (authorUid) query = query.eq('author_uid', authorUid);
-    if (postType) query = query.eq('post_type', postType);
+    if (postType) {
+      if (postType === 'poll') {
+        query = query.or('post_type.eq.question,description.ilike.%TOLZY_POLL_DATA%');
+      } else if (postType === 'stack') {
+        query = query.or('post_type.eq.resource,description.ilike.%TOLZY_STACK_DATA%');
+      } else {
+        query = query.eq('post_type', postType);
+      }
+    }
     if (tool) {
       query = query.or(`prompt_text.ilike.%(${tool})%,prompt_text.ilike.%${tool}%,title.ilike.%${tool}%`);
     }
@@ -117,7 +125,15 @@ export async function GET(req: NextRequest) {
         .range(offset, offset + limit - 1);
 
       if (authorUid) fallbackQuery = fallbackQuery.eq('author_uid', authorUid);
-      if (postType) fallbackQuery = fallbackQuery.eq('post_type', postType);
+      if (postType) {
+        if (postType === 'poll') {
+          fallbackQuery = fallbackQuery.or('post_type.eq.question,description.ilike.%TOLZY_POLL_DATA%');
+        } else if (postType === 'stack') {
+          fallbackQuery = fallbackQuery.or('post_type.eq.resource,description.ilike.%TOLZY_STACK_DATA%');
+        } else {
+          fallbackQuery = fallbackQuery.eq('post_type', postType);
+        }
+      }
 
       const fallback = await fallbackQuery;
       prompts = fallback.data;
@@ -287,9 +303,13 @@ export async function GET(req: NextRequest) {
       };
     });
 
+    const filteredPrompts = postType
+      ? securePrompts.filter((p: any) => p.post_type === postType || (postType === 'poll' && !!p.poll))
+      : securePrompts;
+
     const total = count || 0;
     return NextResponse.json({
-      prompts: securePrompts,
+      prompts: filteredPrompts,
       total,
       page,
       hasMore: offset + limit < total,

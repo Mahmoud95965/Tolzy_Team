@@ -53,7 +53,8 @@ export async function POST(req: NextRequest) {
       author_avatar,
     } = body;
 
-    if (!prompt_text || !author_uid || !author_name) {
+    const effectivePromptText = (prompt_text || poll?.question || title || '').trim();
+    if (!effectivePromptText || !author_uid || !author_name) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest) {
     const MENTION_REGEX = /@\[([^\]]+)\]\(([^)]+)\)/g;
     const extractedSlugs: string[] = [];
     let match;
-    while ((match = MENTION_REGEX.exec(prompt_text)) !== null) {
+    while ((match = MENTION_REGEX.exec(effectivePromptText)) !== null) {
       if (match[2]) extractedSlugs.push(match[2]);
     }
 
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest) {
     const finalMentionedTools = Array.from(new Set([...(mentioned_tools || []), ...extractedSlugs]));
 
     // Embed metadata inside description as resilient backup
-    let encodedDesc = description || prompt_text;
+    let encodedDesc = description || effectivePromptText;
     if (post_type) {
       encodedDesc += `\n\n<!-- TOLZY_ORIGINAL_POST_TYPE: ${post_type} -->`;
     }
@@ -99,8 +100,8 @@ export async function POST(req: NextRequest) {
     let insertPayload: any = {
       post_type: sanitizeDbPostType(post_type || 'prompt'),
       status: 'published',
-      title: title || '',
-      prompt_text,
+      title: title || (poll?.question ? poll.question : ''),
+      prompt_text: effectivePromptText,
       ai_output: ai_output || null,
       ai_model: ai_model || null,
       description: encodedDesc,

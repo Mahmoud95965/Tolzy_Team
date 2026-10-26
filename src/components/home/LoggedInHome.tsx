@@ -422,7 +422,7 @@ export default function LoggedInHome() {
                                 شارك أفكارك ومشاريعك واستكشف أفضل برومبتات وتطبيقات الذكاء الاصطناعي مع مجتمع المطورين.
                             </p>
                             <Link 
-                                href={getSubdomainUrl("community", "/community")} 
+                                href="/community" 
                                 className={`inline-flex items-center gap-2 text-sm font-bold transition-colors ${isDarkMode ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'}`}
                             >
                                 <span>زيارة المجتمع</span>

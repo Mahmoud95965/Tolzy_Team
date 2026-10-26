@@ -48,7 +48,8 @@ export function getSubdomainUrl(type: SubdomainType, path: string = ''): string 
                 case 'flow':
                     return `https://${FLOW_SUBDOMAIN}${cleanPath === '/axiom' ? '' : cleanPath}`;
                 case 'community':
-                    return `https://${COMMUNITY_SUBDOMAIN}${cleanPath === '/community' ? '' : cleanPath}`;
+                    // Community is served directly on main domain /community (no separate subdomain)
+                    return `https://${MAIN_DOMAIN}${cleanPath.startsWith('/community') ? cleanPath : `/community${cleanPath === '/' ? '' : cleanPath}`}`;
                 case 'copilot':
                     return `https://${COPILOT_SUBDOMAIN}${cleanPath === '/copilot' ? '' : cleanPath}`;
                 case 'main':

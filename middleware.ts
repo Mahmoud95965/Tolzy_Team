@@ -166,13 +166,15 @@ export function middleware(request: NextRequest) {
         return NextResponse.rewrite(url);
     }
 
-    // 4f. community.tolzy.me or community.localhost
+    // 4f. community.tolzy.me or community.localhost -> redirect permanently to main domain /community
     if (hostLower.startsWith('community.') || hostLower === 'community.tolzy.me') {
-        if (url.pathname.startsWith('/community')) {
-            return NextResponse.rewrite(url);
+        const dest = new URL(request.url);
+        dest.hostname = 'tolzy.me';
+        dest.protocol = 'https:';
+        if (!dest.pathname.startsWith('/community')) {
+            dest.pathname = `/community${dest.pathname === '/' ? '' : dest.pathname}`;
         }
-        url.pathname = `/community${url.pathname === '/' ? '' : url.pathname}`;
-        return NextResponse.rewrite(url);
+        return NextResponse.redirect(dest, { status: 301 });
     }
 
     // 4g. copilot.tolzy.me or copilot.localhost

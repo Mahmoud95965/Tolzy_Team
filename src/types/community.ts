@@ -3,7 +3,7 @@
 // Supports: prompts, code, articles, questions, ideas, resources
 // ═══════════════════════════════════════════════════════════════
 
-export type PostType = 'prompt' | 'code' | 'article' | 'question' | 'idea' | 'resource' | 'stack';
+export type PostType = 'prompt' | 'code' | 'article' | 'question' | 'idea' | 'resource' | 'stack' | 'poll';
 
 export const POST_TYPE_CONFIG: Record<PostType, { label: string; icon: string; color: string }> = {
   prompt:   { label: 'برومبت',    icon: '✨', color: '#8b5cf6' },
@@ -13,6 +13,7 @@ export const POST_TYPE_CONFIG: Record<PostType, { label: string; icon: string; c
   idea:     { label: 'فكرة',      icon: '💡', color: '#f97316' },
   resource: { label: 'مصدر',      icon: '🔗', color: '#06b6d4' },
   stack:    { label: 'حزمة أدوات', icon: '📦', color: '#6366f1' },
+  poll:     { label: 'استطلاع رأي', icon: '📊', color: '#ec4899' },
 };
 
 export interface StackToolItem {
