@@ -199,7 +199,29 @@ export default function RootLayout({
                                         <ToolComparisonDock />
                                         <ToolComparisonModal />
                                         <PwaInstallPrompt />
-                                        <Toaster position="top-center" toastOptions={{ duration: 2500 }} />
+                                        <Toaster 
+                                            position="top-center" 
+                                            toastOptions={{ 
+                                                duration: 2200,
+                                                className: '!bg-[#14140f] !text-[#ffffff] !border !border-[#30302a] !rounded-full !py-2 !px-4 !text-xs !font-bold !shadow-xl !max-w-[88vw] !select-none',
+                                                style: {
+                                                    direction: 'rtl',
+                                                    fontFamily: "'Almarai', sans-serif",
+                                                },
+                                                success: {
+                                                    iconTheme: {
+                                                        primary: '#beff50',
+                                                        secondary: '#14140f',
+                                                    },
+                                                },
+                                                error: {
+                                                    iconTheme: {
+                                                        primary: '#f43f5e',
+                                                        secondary: '#ffffff',
+                                                    },
+                                                },
+                                            }} 
+                                        />
                                     </I18nProvider>
                                 </NotificationsProvider>
                             </CompareProvider>
