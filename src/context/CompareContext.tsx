@@ -62,17 +62,17 @@ export const CompareProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!tool || !tool.id) return false;
 
     if (isInCompare(tool.id)) {
-      toast('الأداة مضافة بالفعل لقائمة المقارنة', { icon: 'ℹ️' });
+      toast('الأداة مضافة بالفعل لقائمة المقارنة', { id: 'compare-duplicate', duration: 1500, position: 'top-center', icon: 'ℹ️' });
       return false;
     }
 
     if (compareList.length >= MAX_COMPARE_ITEMS) {
-      toast.error(`يمكن مقارنة ${MAX_COMPARE_ITEMS} أدوات كحد أقصى في وقت واحد`);
+      toast.error(`يمكن مقارنة ${MAX_COMPARE_ITEMS} أدوات كحد أقصى في وقت واحد`, { id: 'compare-limit', duration: 2000, position: 'top-center' });
       return false;
     }
 
     setCompareList((prev) => [...prev, tool]);
-    toast.success(`تمت إضافة ${tool.name} للمقارنة (${compareList.length + 1}/${MAX_COMPARE_ITEMS})`);
+    // تم إلغاء الرسالة المنبثقة المزعجة حتى لا تحجب الرؤية عن أزرار إضافة الأدوات، ويتم التحديث فورياً عبر شريط وقائمة المقارنة
     return true;
   }, [compareList.length, isInCompare]);
 
@@ -83,7 +83,6 @@ export const CompareProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const toggleCompare = useCallback((tool: Tool) => {
     if (isInCompare(tool.id)) {
       removeFromCompare(tool.id);
-      toast(`تمت إزالة ${tool.name} من المقارنة`, { icon: '🗑️' });
     } else {
       addToCompare(tool);
     }

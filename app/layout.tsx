@@ -199,7 +199,7 @@ export default function RootLayout({
                                         <ToolComparisonDock />
                                         <ToolComparisonModal />
                                         <PwaInstallPrompt />
-                                        <Toaster position="bottom-center" toastOptions={{ duration: 3000 }} />
+                                        <Toaster position="top-center" toastOptions={{ duration: 2500 }} />
                                     </I18nProvider>
                                 </NotificationsProvider>
                             </CompareProvider>
