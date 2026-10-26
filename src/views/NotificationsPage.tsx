@@ -279,7 +279,7 @@ export default function NotificationsPage() {
               {/* ========================================================= */}
               {/* 3. FLUID HORIZONTAL PILL TABS                            */}
               {/* ========================================================= */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-2.5 pt-0.5 mb-4 scrollbar-none snap-x snap-mandatory">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-2.5 pt-0.5 mb-4 no-scrollbar snap-x snap-mandatory -mx-1 px-1">
                 {tabs.map((tab) => {
                   const isActive = activeTab === tab.id;
                   const Icon = tab.icon;
@@ -413,23 +413,23 @@ export default function NotificationsPage() {
 
                           {/* Center: Content & Details */}
                           <div className="flex-1 min-w-0 pr-0.5">
-                            <div className="flex items-center justify-between gap-1 mb-0.5">
-                              <p className="text-xs sm:text-sm text-[#14140f] leading-snug truncate">
+                            <div className="flex items-start justify-between gap-1.5 mb-0.5">
+                              <p className="text-xs sm:text-sm text-[#14140f] leading-snug break-words">
                                 {n.actor_uid ? (
                                   <Link
                                     href={`/community/user/${n.actor_uid}`}
                                     onClick={(e) => e.stopPropagation()}
-                                    className="font-bold text-[#14140f] hover:underline ml-1"
+                                    className="font-bold text-[#14140f] hover:underline ml-1 inline"
                                   >
                                     {n.actor_name}
                                   </Link>
                                 ) : (
-                                  <span className="font-bold ml-1">{n.actor_name}</span>
+                                  <span className="font-bold ml-1 inline">{n.actor_name}</span>
                                 )}
-                                <span className="font-normal text-[#6e6e64]">{typeMeta.verb}</span>
+                                <span className="font-normal text-[#6e6e64] inline">{typeMeta.verb}</span>
                               </p>
 
-                              <span className="text-[10px] text-[#a0a096] font-mono shrink-0 whitespace-nowrap">
+                              <span className="text-[10px] text-[#a0a096] font-mono shrink-0 whitespace-nowrap mt-0.5">
                                 {formatRelativeTime(n.created_at)}
                               </span>
                             </div>

@@ -161,14 +161,24 @@ const NotificationBell: React.FC = () => {
       {/* Dropdown Popover */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.96 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-            className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-[330px] sm:w-[380px] bg-[#ffffff] text-[#14140f] rounded-2xl sm:rounded-[24px] border border-[#d2d2c8] shadow-2xl z-[100] overflow-hidden flex flex-col max-h-[85vh]"
-          >
-            {/* Header */}
+          <>
+            {/* Mobile Backdrop Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+              className="fixed inset-0 bg-[#14140f]/35 backdrop-blur-xs z-[99] sm:hidden"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.96 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              className="fixed inset-x-3.5 top-16 max-h-[82vh] sm:absolute sm:inset-x-auto sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[380px] sm:max-h-[85vh] bg-[#ffffff] text-[#14140f] rounded-2xl sm:rounded-[24px] border border-[#d2d2c8] shadow-2xl z-[100] overflow-hidden flex flex-col"
+            >
+              {/* Header */}
             <div className="p-3.5 sm:p-4 border-b border-[#d2d2c8] bg-[#f5f5eb] flex items-center justify-between gap-2 shrink-0">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-full bg-[#14140f] text-[#ffffff] flex items-center justify-center shrink-0">
@@ -252,7 +262,7 @@ const NotificationBell: React.FC = () => {
                         onClick={() => handleNotificationClick(n)}
                         className="flex-1 min-w-0 pr-0.5 block"
                       >
-                        <p className="text-xs text-[#14140f] leading-snug">
+                        <p className="text-xs text-[#14140f] leading-snug break-words">
                           <span className="font-bold ml-1">{n.actor_name}</span>
                           <span className="text-[#6e6e64]">{meta.label}</span>
                         </p>
@@ -302,6 +312,7 @@ const NotificationBell: React.FC = () => {
               </Link>
             </div>
           </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>

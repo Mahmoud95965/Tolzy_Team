@@ -6,6 +6,7 @@ import { BarChart2, CheckCircle2, Swords, Sparkles, Users } from 'lucide-react';
 import ToolImage from '../common/ToolImage';
 import { CommunityPoll, PollOption } from '../../types/community';
 import { toast } from 'react-hot-toast';
+import { soundEffects } from '../../utils/soundEffects';
 
 interface InteractivePollProps {
   promptId: string;
@@ -75,6 +76,7 @@ export const InteractivePoll: React.FC<InteractivePollProps> = ({
       localStorage.setItem(`tolzy_poll_${promptId}`, optionId);
     }
 
+    soundEffects.playLike();
     toast.success('تم تسجيل تصويتك بنجاح! 📊');
 
     try {

@@ -13,6 +13,8 @@ import {
   getCachedNotifications,
   saveCachedNotifications
 } from '../services/notification.service';
+import { soundEffects } from '../utils/soundEffects';
+import { toast } from 'react-hot-toast';
 
 interface NotificationsContextType {
   notifications: AppNotification[];
@@ -102,6 +104,13 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
             saveCachedNotifications(user.uid, updated);
             return updated;
           });
+
+          // Play real-time notification sound and show instant alert
+          soundEffects.playNotification();
+          toast(
+            `🔔 ${newNotif.actor_name || 'مستخدم'}: تفاعل جديد مع مساهمتك`,
+            { id: `notif-${newNotif.id}`, duration: 3500 }
+          );
         }
       )
       .on(

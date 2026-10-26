@@ -37,6 +37,7 @@ import { useToolMention } from '../hooks/useToolMention';
 import { extractMentionedToolSlugs, formatToolMentionToken } from '../utils/toolMention';
 import { useTools } from '../hooks/useTools';
 import { Tool } from '../types/tool';
+import { soundEffects } from '../utils/soundEffects';
 import type {
   CommunityPrompt,
   PromptTag,
@@ -328,6 +329,11 @@ const CommunityPromptPage: React.FC = () => {
       return next;
     });
 
+    if (!isRemoving && voteType === 'up') {
+      soundEffects.playLike();
+      toast.success('تم تسجيل إعجابك بالمشاركة! ❤️', { id: `like-${promptId}`, duration: 1500 });
+    }
+
     setPrompts((prev) =>
       prev.map((p) =>
         p.id === promptId
@@ -431,7 +437,8 @@ const CommunityPromptPage: React.FC = () => {
           ),
         }));
       }
-      toast.success('تم نشر التعليق 💬');
+      soundEffects.playComment();
+      toast.success('تم نشر تعليقك بنجاح! 💬');
     } catch {
       toast.error('فشل إرسال التعليق');
       setCommentsMap((prev) => ({
@@ -573,6 +580,7 @@ const CommunityPromptPage: React.FC = () => {
       }
 
       const result = await res.json();
+      soundEffects.playPublish();
       toast.success(isPollMode ? 'تم نشر التصويت بنجاح! 📊' : 'تم نشر مشاركتك بنجاح! 🚀');
 
       if (result.prompt) {
@@ -683,62 +691,160 @@ const CommunityPromptPage: React.FC = () => {
           <div className="lg:col-span-2 space-y-4 sm:space-y-5">
             
             {/* ─── NATIVE APP-LIKE POST COMPOSER ─── */}
-            <div className="bg-[#ffffff] border border-[#d2d2c8] rounded-2xl sm:rounded-[24px] p-3.5 sm:p-5 shadow-2xs space-y-3 sm:space-y-3.5">
-              
-              {/* Type Switcher Pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1">
-                {COMPOSER_POST_TYPES.map((t) => {
-                  const isSelected = composerType === t.type;
-                  return (
-                    <button
-                      key={t.type}
-                      type="button"
-                      onClick={() => handleTypeSelect(t.type)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 select-none cursor-pointer whitespace-nowrap ${
-                        isSelected
-                          ? 'bg-[#14140f] text-[#ffffff] shadow-xs'
-                          : 'bg-[#f5f5eb] text-[#6e6e64] hover:text-[#14140f] hover:bg-[#eaeae0]'
-                      }`}
-                    >
-                      <span>{t.icon}</span>
-                      <span>{t.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Composer Input Area */}
-              <div className="relative">
-                <div className="flex items-start gap-2.5 sm:gap-3">
-                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#14140f] text-[#beff50] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
-                    {user?.displayName?.[0]?.toUpperCase() || 'U'}
+            {!isComposerExpanded ? (
+              /* Collapsed State: Sleek social feed input bar with quick action chips */
+              <div className="bg-[#ffffff] border border-[#d2d2c8] rounded-2xl sm:rounded-[24px] p-3 sm:p-4 shadow-2xs space-y-2.5 transition-all">
+                <div 
+                  onClick={() => setIsComposerExpanded(true)}
+                  className="flex items-center gap-2.5 cursor-pointer"
+                >
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#14140f] text-[#beff50] font-bold text-xs flex items-center justify-center shrink-0 shadow-xs overflow-hidden">
+                    {user?.photoURL ? (
+                      <img src={user.photoURL} alt={user.displayName || 'User'} className="w-full h-full object-cover" />
+                    ) : (
+                      user?.displayName?.[0]?.toUpperCase() || 'U'
+                    )}
                   </div>
 
-                  <div className="flex-1 min-w-0 relative">
-                    {/* Optional Title Field */}
-                    {isComposerExpanded && (
-                      <input
-                        type="text"
-                        value={composerTitle}
-                        onChange={(e) => setComposerTitle(e.target.value)}
-                        placeholder={
-                          composerType === 'poll'
-                            ? 'سؤال الاستطلاع (مثال: أيهما أفضل للبرمجة: Cursor أم Windsurf؟)...'
-                            : composerType === 'stack'
-                            ? 'عنوان حزمة الأدوات (مثال: حزمتي المتكاملة لتصميم الواجهات)...'
-                            : 'عنوان المنشور (اختياري)...'
-                        }
-                        className="w-full px-3.5 py-2 mb-2 rounded-xl bg-[#f5f5eb] border border-[#d2d2c8] text-xs font-bold text-[#14140f] placeholder:text-[#a0a096] focus:outline-none focus:border-[#14140f]"
-                      />
-                    )}
+                  <div className="flex-1 bg-[#f5f5eb] hover:bg-[#ebebe0] border border-[#d2d2c8] rounded-full px-4 py-2 sm:py-2.5 text-xs sm:text-sm text-[#6e6e64] text-right transition-colors truncate">
+                    {user
+                      ? `ماذا يدور في ذهنك يا ${user.displayName?.split(' ')[0] || ''}؟ شارك فكرة أو استطلاعاً...`
+                      : 'سجّل دخولك لمشاركة منشور أو استطلاع رأي مع المجتمع...'}
+                  </div>
+                </div>
 
-                    {/* Main Content Area */}
+                {/* Quick Action Chips for Fast Creation on Mobile */}
+                <div className="flex items-center justify-between pt-1 border-t border-[#d2d2c8]/60 text-xs text-[#6e6e64] overflow-x-auto no-scrollbar gap-1">
+                  <button
+                    type="button"
+                    onClick={() => handleTypeSelect('poll')}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl hover:bg-[#f5f5eb] hover:text-[#14140f] transition-colors cursor-pointer shrink-0"
+                  >
+                    <span className="p-1 rounded-full bg-rose-50 text-rose-600 border border-rose-200">
+                      <BarChart2 className="w-3.5 h-3.5" />
+                    </span>
+                    <span className="font-bold text-[11px] sm:text-xs">استطلاع</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleTypeSelect('prompt')}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl hover:bg-[#f5f5eb] hover:text-[#14140f] transition-colors cursor-pointer shrink-0"
+                  >
+                    <span className="p-1 rounded-full bg-purple-50 text-purple-600 border border-purple-200">
+                      <Sparkles className="w-3.5 h-3.5" />
+                    </span>
+                    <span className="font-bold text-[11px] sm:text-xs">برومبت AI</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleTypeSelect('code')}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl hover:bg-[#f5f5eb] hover:text-[#14140f] transition-colors cursor-pointer shrink-0"
+                  >
+                    <span className="p-1 rounded-full bg-blue-50 text-blue-600 border border-blue-200">
+                      <Code className="w-3.5 h-3.5" />
+                    </span>
+                    <span className="font-bold text-[11px] sm:text-xs">كود</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleTypeSelect('stack')}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl hover:bg-[#f5f5eb] hover:text-[#14140f] transition-colors cursor-pointer shrink-0"
+                  >
+                    <span className="p-1 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-200">
+                      <Layers className="w-3.5 h-3.5" />
+                    </span>
+                    <span className="font-bold text-[11px] sm:text-xs">حزمة أدوات</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Expanded State: Full Rich Native Composer with Header, Pills, Builders, Toolbar */
+              <div className="bg-[#ffffff] border border-[#14140f] rounded-2xl sm:rounded-[24px] p-3.5 sm:p-5 shadow-sm space-y-3 sm:space-y-3.5 transition-all">
+                
+                {/* Header with User Info & Minimize Close Button */}
+                <div className="flex items-center justify-between pb-2 border-b border-[#d2d2c8]">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#14140f] text-[#beff50] font-bold text-xs flex items-center justify-center shrink-0 shadow-xs overflow-hidden">
+                      {user?.photoURL ? (
+                        <img src={user.photoURL} alt={user.displayName || 'User'} className="w-full h-full object-cover" />
+                      ) : (
+                        user?.displayName?.[0]?.toUpperCase() || 'U'
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-bold text-[#14140f] flex items-center gap-1.5">
+                        <span>{user?.displayName || 'مستخدم جديد'}</span>
+                        <span className="text-[10px] font-normal px-2 py-0.5 rounded-full bg-[#f5f5eb] border border-[#d2d2c8] text-[#6e6e64]">
+                          مشاركة جديدة
+                        </span>
+                      </h4>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsComposerExpanded(false);
+                      setShowPollBuilder(false);
+                      setShowTagsPicker(false);
+                    }}
+                    className="p-1.5 rounded-full text-[#6e6e64] hover:text-[#14140f] hover:bg-[#f5f5eb] transition-colors cursor-pointer"
+                    title="تصغير / إلغاء"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Type Switcher Pills */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1 snap-x">
+                  {COMPOSER_POST_TYPES.map((t) => {
+                    const isSelected = composerType === t.type;
+                    return (
+                      <button
+                        key={t.type}
+                        type="button"
+                        onClick={() => handleTypeSelect(t.type)}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 select-none cursor-pointer whitespace-nowrap snap-center ${
+                          isSelected
+                            ? 'bg-[#14140f] text-[#ffffff] shadow-xs'
+                            : 'bg-[#f5f5eb] text-[#6e6e64] hover:text-[#14140f] hover:bg-[#eaeae0]'
+                        }`}
+                      >
+                        <span>{t.icon}</span>
+                        <span>{t.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Fields Area */}
+                <div className="space-y-2 relative">
+                  {/* Title Field */}
+                  <input
+                    type="text"
+                    value={composerTitle}
+                    onChange={(e) => setComposerTitle(e.target.value)}
+                    placeholder={
+                      composerType === 'poll'
+                        ? 'سؤال الاستطلاع (مثال: أيهما أفضل للبرمجة: Cursor أم Windsurf؟)...'
+                        : composerType === 'stack'
+                        ? 'عنوان حزمة الأدوات (مثال: حزمتي المتكاملة لتصميم الواجهات)...'
+                        : 'عنوان المنشور (اختياري)...'
+                    }
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#f5f5eb] border border-[#d2d2c8] text-sm sm:text-xs font-bold text-[#14140f] placeholder:text-[#a0a096] focus:outline-none focus:border-[#14140f] transition-colors"
+                  />
+
+                  {/* Main Content Textarea */}
+                  <div className="relative">
                     <textarea
-                      rows={isComposerExpanded ? (composerType === 'poll' ? 2 : 3) : 1}
+                      rows={composerType === 'poll' ? 2 : 3}
                       placeholder={
                         user
                           ? composerType === 'poll'
-                            ? 'أضف وصفاً توضيحياً للاستطلاع أو اضغط بالأسفل لضبط الخيارات...'
+                            ? 'أضف وصفاً توضيحياً للاستطلاع أو حدد خيارات المقارنة بالأسفل...'
                             : `ماذا يدور في ذهنك يا ${user.displayName?.split(' ')[0] || ''}؟ (اكتب @ للإشارة لأداة)...`
                           : 'سجّل دخولك لمشاركة منشور أو استطلاع رأي مع المجتمع...'
                       }
@@ -749,9 +855,7 @@ const CommunityPromptPage: React.FC = () => {
                           e.target.value,
                           e.target.selectionStart || e.target.value.length
                         );
-                        if (!isComposerExpanded) setIsComposerExpanded(true);
                       }}
-                      onFocus={() => setIsComposerExpanded(true)}
                       onKeyDown={(e) => {
                         if (isMentionOpen && mentionMatches.length > 0) {
                           const intercepted = handleMentionKeyDown(e, mentionMatches.length, () => {
@@ -767,7 +871,7 @@ const CommunityPromptPage: React.FC = () => {
                           if (intercepted) return;
                         }
                       }}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#f5f5eb] border border-[#d2d2c8] text-xs text-[#14140f] placeholder:text-[#a0a096] focus:outline-none focus:border-[#14140f] resize-none leading-relaxed transition-all"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#f5f5eb] border border-[#d2d2c8] text-sm sm:text-xs text-[#14140f] placeholder:text-[#a0a096] focus:outline-none focus:border-[#14140f] resize-none leading-relaxed transition-colors"
                     />
 
                     {/* Floating Tool Mention Dropdown */}
@@ -787,38 +891,36 @@ const CommunityPromptPage: React.FC = () => {
                       }}
                     />
                   </div>
+
+                  {/* Mentioned Tools Chips */}
+                  {composerMentionedTools.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[11px]">
+                      <span className="font-bold text-[#6e6e64]">الأدوات المشار إليها:</span>
+                      {composerMentionedTools.map((toolId) => (
+                        <span
+                          key={toolId}
+                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#f5f5eb] border border-[#d2d2c8] text-[#14140f] font-mono text-[10px]"
+                        >
+                          <span>@{toolId}</span>
+                          <button
+                            type="button"
+                            onClick={() => setComposerMentionedTools((prev) => prev.filter((x) => x !== toolId))}
+                            className="hover:text-rose-600 transition-colors p-0.5 cursor-pointer"
+                          >
+                            <X className="w-2.5 h-2.5" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {/* Mentioned Tools Chips */}
-                {composerMentionedTools.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1.5 mt-2 mr-12 text-[11px]">
-                    <span className="font-bold text-[#6e6e64]">الأدوات المشار إليها:</span>
-                    {composerMentionedTools.map((toolId) => (
-                      <span
-                        key={toolId}
-                        className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#f5f5eb] border border-[#d2d2c8] text-[#14140f] font-mono text-[10px]"
-                      >
-                        <span>@{toolId}</span>
-                        <button
-                          type="button"
-                          onClick={() => setComposerMentionedTools((prev) => prev.filter((x) => x !== toolId))}
-                          className="hover:text-rose-600 transition-colors p-0.5 cursor-pointer"
-                        >
-                          <X className="w-2.5 h-2.5" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* ─── DEDICATED BUILDER ACCORDIONS (Poll / Stack / Code) ─── */}
-              {isComposerExpanded && (
+                {/* ─── DEDICATED BUILDER ACCORDIONS (Poll / Stack / Code) ─── */}
                 <div className="space-y-3 pt-1 border-t border-[#d2d2c8]">
                   
                   {/* 1. POLL BUILDER (Active when type === 'poll' OR toggled) */}
                   {(composerType === 'poll' || showPollBuilder) && (
-                    <div className="p-3.5 bg-[#f5f5eb] rounded-2xl border border-[#d2d2c8] space-y-2">
+                    <div className="p-3 sm:p-3.5 bg-[#f5f5eb] rounded-2xl border border-[#d2d2c8] space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-[#14140f] flex items-center gap-1.5">
                           <BarChart2 className="w-4 h-4 text-rose-500" />
@@ -855,7 +957,7 @@ const CommunityPromptPage: React.FC = () => {
 
                   {/* 2. TECH STACK BUILDER (Active when type === 'stack') */}
                   {composerType === 'stack' && (
-                    <div className="p-3.5 bg-[#f5f5eb] rounded-2xl border border-[#d2d2c8]">
+                    <div className="p-3 sm:p-3.5 bg-[#f5f5eb] rounded-2xl border border-[#d2d2c8]">
                       <TechStackBuilder
                         stackTools={composerStackTools}
                         onChange={setComposerStackTools}
@@ -865,7 +967,7 @@ const CommunityPromptPage: React.FC = () => {
 
                   {/* 3. CODE SNIPPET (Active when type === 'code') */}
                   {composerType === 'code' && (
-                    <div className="p-3.5 bg-[#f5f5eb] rounded-2xl border border-[#d2d2c8] space-y-2">
+                    <div className="p-3 sm:p-3.5 bg-[#f5f5eb] rounded-2xl border border-[#d2d2c8] space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-[#14140f] flex items-center gap-1.5">
                           <Code className="w-4 h-4 text-blue-600" />
@@ -923,8 +1025,22 @@ const CommunityPromptPage: React.FC = () => {
                   {/* Actions Bar */}
                   <div className="flex items-center justify-between pt-2">
                     
-                    {/* Secondary Toggles (Tags & Poll if in other modes) */}
+                    {/* Secondary Toggles (Tool mention, Poll & Tags) */}
                     <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nextContent = composerContent + (composerContent && !composerContent.endsWith(' ') ? ' @' : '@');
+                          setComposerContent(nextContent);
+                          handleMentionChange(nextContent, nextContent.length);
+                        }}
+                        className="px-2.5 py-1.5 rounded-xl bg-[#f5f5eb] hover:bg-[#ebebe0] text-[#6e6e64] hover:text-[#14140f] transition-colors border border-[#d2d2c8] text-xs font-mono font-bold flex items-center gap-1 cursor-pointer"
+                        title="الإشارة لأداة من الدليل (@tool)"
+                      >
+                        <span>@</span>
+                        <span className="hidden sm:inline text-[11px] font-sans">أداة</span>
+                      </button>
+
                       {composerType !== 'poll' && (
                         <button
                           type="button"
@@ -944,24 +1060,30 @@ const CommunityPromptPage: React.FC = () => {
                               setComposerPoll(null);
                             }
                           }}
-                          className="p-2 rounded-full hover:bg-[#f5f5eb] text-[#6e6e64] hover:text-[#14140f] transition-colors"
+                          className={`p-2 rounded-xl transition-colors border text-xs flex items-center gap-1 cursor-pointer ${
+                            showPollBuilder || composerPoll
+                              ? 'bg-rose-50 text-rose-600 border-rose-300'
+                              : 'bg-[#f5f5eb] hover:bg-[#ebebe0] text-[#6e6e64] hover:text-[#14140f] border-[#d2d2c8]'
+                          }`}
                           title="إضافة تصويت"
                         >
                           <BarChart2 className="w-4 h-4" />
+                          <span className="hidden sm:inline text-[11px]">تصويت</span>
                         </button>
                       )}
 
                       <button
                         type="button"
                         onClick={() => setShowTagsPicker(!showTagsPicker)}
-                        className={`p-2 rounded-full transition-colors ${
+                        className={`p-2 rounded-xl transition-colors border text-xs flex items-center gap-1 cursor-pointer ${
                           showTagsPicker || composerSelectedTags.length > 0
-                            ? 'bg-[#beff50] text-[#14140f]'
-                            : 'hover:bg-[#f5f5eb] text-[#6e6e64] hover:text-[#14140f]'
+                            ? 'bg-[#beff50] text-[#14140f] border-[#14140f]'
+                            : 'bg-[#f5f5eb] hover:bg-[#ebebe0] text-[#6e6e64] hover:text-[#14140f] border-[#d2d2c8]'
                         }`}
                         title="إضافة وسوم"
                       >
                         <Tag className="w-4 h-4" />
+                        <span className="hidden sm:inline text-[11px]">وسوم</span>
                       </button>
                     </div>
 
@@ -974,7 +1096,7 @@ const CommunityPromptPage: React.FC = () => {
                           setShowPollBuilder(false);
                           setShowTagsPicker(false);
                         }}
-                        className="px-3.5 py-1.5 rounded-full text-xs font-medium text-[#6e6e64] hover:bg-[#f5f5eb] transition-colors"
+                        className="px-3.5 py-1.5 rounded-full text-xs font-medium text-[#6e6e64] hover:bg-[#f5f5eb] transition-colors cursor-pointer"
                       >
                         إلغاء
                       </button>
@@ -983,7 +1105,7 @@ const CommunityPromptPage: React.FC = () => {
                         type="button"
                         onClick={handlePublishPost}
                         disabled={isPublishing}
-                        className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-[#14140f] hover:bg-[#30302a] text-[#ffffff] text-xs font-bold transition-all shadow-xs disabled:opacity-50 cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 rounded-full bg-[#14140f] hover:bg-[#30302a] text-[#ffffff] text-xs font-bold transition-all shadow-xs disabled:opacity-50 cursor-pointer"
                       >
                         {isPublishing ? (
                           <>
@@ -993,7 +1115,8 @@ const CommunityPromptPage: React.FC = () => {
                         ) : (
                           <>
                             <Send className="w-3.5 h-3.5 rotate-180" />
-                            <span>نشر في المجتمع</span>
+                            <span>نشر</span>
+                            <span className="hidden sm:inline">في المجتمع</span>
                           </>
                         )}
                       </button>
@@ -1002,9 +1125,9 @@ const CommunityPromptPage: React.FC = () => {
                   </div>
 
                 </div>
-              )}
 
-            </div>
+              </div>
+            )}
 
             {/* ─── 3. FEED FILTER TABS & SORT CONTROLS ─── */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
