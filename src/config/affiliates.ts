@@ -17,11 +17,14 @@ export interface AffiliateProgramConfig {
   badgeTextAr: string;
 }
 
+// Official approved NordVPN affiliate tracking link
+export const OFFICIAL_NORDVPN_AFFILIATE_URL = 'https://go.nordvpn.net/aff_c?offer_id=15&aff_id=141557';
+
 // NordVPN Affiliate Configuration
-// Uses NEXT_PUBLIC_NORDVPN_AFFILIATE_URL from environment variables if set,
-// otherwise defaults cleanly to the official NordVPN portal.
+// Uses NEXT_PUBLIC_NORDVPN_AFFILIATE_URL from environment if overridden,
+// otherwise uses the verified approved official tracking link.
 const configuredNordVpnUrl = process.env.NEXT_PUBLIC_NORDVPN_AFFILIATE_URL?.trim() || '';
-const isNordVpnConfigured = Boolean(
+const isConfiguredFromEnv = Boolean(
   configuredNordVpnUrl && 
   !configuredNordVpnUrl.includes('placeholder') &&
   !configuredNordVpnUrl.includes('example.com')
@@ -30,8 +33,8 @@ const isNordVpnConfigured = Boolean(
 export const NORDVPN_CONFIG: AffiliateProgramConfig = {
   id: 'nordvpn',
   name: 'NordVPN',
-  affiliateUrl: isNordVpnConfigured ? configuredNordVpnUrl : 'https://nordvpn.com',
-  isConfigured: isNordVpnConfigured,
+  affiliateUrl: isConfiguredFromEnv ? configuredNordVpnUrl : OFFICIAL_NORDVPN_AFFILIATE_URL,
+  isConfigured: true,
   disclosureAr: 'إفصاح الشفافية: قد يحصل تولزي على عمولة تسويقية عند الاشتراك عبر هذا الرابط، دون أي تكلفة إضافية عليك. نوصي فقط بالخدمات الموثوقة التي تفيد أمان اتصالك وتصفحك.',
   shortDisclosureAr: 'رابط إحالة معتمد — قد يحصل تولزي على عمولة دون تكلفة إضافية عليك.',
   badgeTextAr: 'توصية موثوقة للخصوصية والأمان',
@@ -39,6 +42,7 @@ export const NORDVPN_CONFIG: AffiliateProgramConfig = {
 
 /**
  * Returns the NordVPN tracking link with optional campaign or placement tracking.
+ * Strictly preserves the required parameters (offer_id=15&aff_id=141557).
  */
 export function getNordVpnAffiliateUrl(placement?: string): string {
   const baseUrl = NORDVPN_CONFIG.affiliateUrl;
@@ -46,13 +50,12 @@ export function getNordVpnAffiliateUrl(placement?: string): string {
 
   try {
     const url = new URL(baseUrl);
-    // Only append sub-tracking if standard URL structure permits
-    if (!url.searchParams.has('utm_content') && !url.searchParams.has('sub_id')) {
-      url.searchParams.set('utm_content', placement);
+    // Preserves offer_id and aff_id intact while adding HasOffers sub-placement tracking
+    if (!url.searchParams.has('aff_sub')) {
+      url.searchParams.set('aff_sub', placement);
     }
     return url.toString();
   } catch {
-    // If URL parsing fails (e.g. specialized affiliate protocol), return as-is
     return baseUrl;
   }
 }
