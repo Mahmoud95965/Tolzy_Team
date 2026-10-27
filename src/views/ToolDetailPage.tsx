@@ -11,6 +11,7 @@ import ToolsGrid from '../components/tools/ToolsGrid';
 import ShareToolModal from '../components/tools/ShareToolModal';
 import ToolImage from '../components/common/ToolImage';
 import ToolCommunityDiscussions from '../components/tools/ToolCommunityDiscussions';
+import ToolPrivacyRecommendation from '../components/tools/ToolPrivacyRecommendation';
 import { Tool } from '../types/tool';
 import {
   Star,
@@ -845,6 +846,9 @@ const ToolDetailPageNew: React.FC<ToolDetailPageProps> = ({ initialTool }) => {
                   </Link>
                 </div>
               </div>
+
+              {/* Contextual Tool Privacy Recommendation (Only renders if tool passed audit) */}
+              <ToolPrivacyRecommendation tool={tool} />
 
             </div>
 

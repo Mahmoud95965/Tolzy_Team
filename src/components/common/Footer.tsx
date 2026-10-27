@@ -220,6 +220,14 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
+                <Link href="/guide/vpn-privacy" className="text-[#d2d2c8] hover:text-[#beff50] transition-colors flex items-center gap-1.5">
+                  <span>دليل الخصوصية وVPN</span>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-[#beff50] text-[#14140f] font-bold">
+                    جديد
+                  </span>
+                </Link>
+              </li>
+              <li>
                 <Link href="/docs" className="text-[#d2d2c8] hover:text-[#beff50] transition-colors">
                   التوثيق البرمجي
                 </Link>

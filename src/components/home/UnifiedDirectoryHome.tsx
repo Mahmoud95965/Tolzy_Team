@@ -42,6 +42,7 @@ import { Tool } from '@/src/types/tool';
 import { Course } from '@/src/types/learn';
 import ToolImage from '@/src/components/common/ToolImage';
 import ToolDrawer from '@/src/components/tools/ToolDrawer';
+import PrivacySecuritySection from '@/src/components/home/PrivacySecuritySection';
 import { toast } from 'react-hot-toast';
 import { updateToolSave } from '@/src/services/tool-actions.service';
 import { getFallbackTools } from '@/src/data/fallbackTools';
@@ -1098,6 +1099,9 @@ export default function UnifiedDirectoryHome() {
             </div>
           )
         )}
+
+        {/* ─── TOLZY × NordVPN Privacy & Secure Browsing Section ─── */}
+        <PrivacySecuritySection />
       </div>
 
       {/* Tool Slide-over Detail Drawer */}
