@@ -134,7 +134,8 @@ export default function UnifiedDirectoryHome() {
   // Spotlight Tool: Pick a top featured tool for Bento Spotlight
   const spotlightTool = useMemo(() => {
     if (allTools.length === 0) return null;
-    return allTools.find(t => t.isFeatured && t.rating >= 4.8) || allTools[0];
+    const nordvpn = allTools.find(t => t.id === 'nordvpn' || t.name.toLowerCase() === 'nordvpn');
+    return nordvpn || allTools.find(t => t.isFeatured && t.rating >= 4.8) || allTools[0];
   }, [allTools]);
 
   // Launch 1-click comparison between two popular tools
@@ -681,6 +682,7 @@ export default function UnifiedDirectoryHome() {
                 <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-[18px] bg-[#ffffff] border border-[#14140f]/20 shadow-none shrink-0">
                   <ToolImage
                     name={spotlightTool.name}
+                    imageUrl={spotlightTool.imageUrl}
                     categoryName={Array.isArray(spotlightTool.category) ? spotlightTool.category[0] : spotlightTool.category}
                     size="lg"
                   />
@@ -730,7 +732,7 @@ export default function UnifiedDirectoryHome() {
                 <a
                   href={spotlightTool.url}
                   target="_blank"
-                  rel="noopener noreferrer"
+                  rel={spotlightTool.id === 'nordvpn' ? "sponsored noopener noreferrer" : "noopener noreferrer"}
                   onClick={(e) => e.stopPropagation()}
                   className="flex-1 md:flex-initial inline-flex items-center justify-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl sm:rounded-[28px] bg-[#14140f] hover:bg-[#30302a] text-[#ffffff] font-medium text-xs sm:text-sm transition-colors shadow-none text-center"
                 >

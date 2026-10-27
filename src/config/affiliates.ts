@@ -40,6 +40,50 @@ export const NORDVPN_CONFIG: AffiliateProgramConfig = {
   badgeTextAr: 'توصية موثوقة للخصوصية والأمان',
 };
 
+// Full Tool record for NordVPN in catalog and spotlight
+export const NORDVPN_TOOL: Tool = {
+  id: 'nordvpn',
+  name: 'NordVPN',
+  description: 'شبكة VPN عالمية مشفرة لحماية الخصوصية وتأمين الاتصال على شبكات Wi-Fi ومكافحة التهديدات الرقمية.',
+  longDescription: 'NordVPN هي إحدى أبرز وأسرع خدمات الشبكات الافتراضية الخاصة (VPN) الموثوقة عالمياً. تعتمد على بروتوكول NordLynx فائق السرعة، وتوفر تشفيراً قوياً (AES-256) مع سياسة صارمة مدققة خارجياً لعدم الاحتفاظ بالسجلات (Strict No-Logs Policy). تتضمن تقنية حماية التهديدات (Threat Protection) لحظر المواقع الضارة وأدوات التتبع، وتأمين جلسات العمل عن بُعد واستخدام أدوات الذكاء الاصطناعي على الشبكات المفتوحة.',
+  category: 'Technology',
+  subcategory: ['Security', 'Privacy', 'Network', 'Productivity'],
+  tags: ['NordVPN', 'VPN', 'أمن سيبراني', 'خصوصية', 'حماية الواي فاي', 'تشفير'],
+  url: OFFICIAL_NORDVPN_AFFILIATE_URL,
+  imageUrl: '/image/tools/nordvpn.svg',
+  pricing: 'Subscription',
+  features: [
+    'تشفير متقدم ببروتوكول NordLynx فائق السرعة',
+    'سياسة صارمة مدققة لعدم الاحتفاظ بالسجلات (No-Logs)',
+    'ميزة Threat Protection لفحص وحجب المواقع الضارة',
+    'مفتاح القفل التلقائي لحماية الاتصال (Kill Switch)',
+    'أكثر من 6000 خادم فائق السرعة في 111 دولة',
+    'تطبيقات أصلية سهلة لجميع الأجهزة والأنظمة'
+  ],
+  pros: [
+    'سرعات اتصال فائقة دون تأثير على التصفح أو أدوات الذكاء الاصطناعي',
+    'مدققة مستقلاً عدة مرات من PwC وDeloitte',
+    'تطبيقات مستقرة وسهلة الاستخدام بالعربية والإنجليزية',
+    'ضمان استرداد الأموال لمدة 30 يوماً'
+  ],
+  cons: [
+    'الاشتراك السنوي يوفر أفضل قيمة مقابل التكلفة مقارنة بالاشتراك الشهري'
+  ],
+  rating: 4.9,
+  reviewCount: 1420,
+  isNew: false,
+  isFeatured: true,
+  isPopular: true,
+  status: 'approved',
+  votes: { helpful: [], notHelpful: [] },
+  votingStats: {
+    helpfulCount: 48,
+    notHelpfulCount: 1,
+    totalVotes: 49
+  },
+  savedBy: []
+};
+
 /**
  * Returns the NordVPN tracking link with optional campaign or placement tracking.
  * Strictly preserves the required parameters (offer_id=15&aff_id=141557).

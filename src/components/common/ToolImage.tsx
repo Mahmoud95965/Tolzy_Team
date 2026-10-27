@@ -135,7 +135,7 @@ function resolveCategoryStyle(categoryName?: string, subcategoryName?: string): 
 }
 
 export interface ToolImageProps {
-  imageUrl?: string; // Kept for interface backward compatibility
+  imageUrl?: string;
   name: string;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
@@ -145,12 +145,14 @@ export interface ToolImageProps {
 }
 
 const ToolImage: React.FC<ToolImageProps> = ({
+  imageUrl,
   name,
   size = 'md',
   className = '',
   categoryName,
   subcategoryName,
 }) => {
+  const [hasError, setHasError] = React.useState(false);
   const { icon: Icon, bg, text, border } = resolveCategoryStyle(categoryName, subcategoryName);
 
   const sizeConfig = {
@@ -160,6 +162,26 @@ const ToolImage: React.FC<ToolImageProps> = ({
   };
 
   const { box, icon: iconSize } = sizeConfig[size] || sizeConfig.md;
+
+  const resolvedImageUrl = imageUrl || (name && name.toLowerCase().includes('nordvpn') ? '/image/tools/nordvpn.svg' : undefined);
+
+  if (resolvedImageUrl && !hasError) {
+    return (
+      <div
+        className={`${box} bg-[#ffffff] border border-[#d2d2c8] p-1 flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-105 shadow-xs select-none overflow-hidden ${className}`}
+        title={name}
+        aria-label={name}
+      >
+        <img
+          src={resolvedImageUrl}
+          alt={name}
+          className="w-full h-full object-contain"
+          onError={() => setHasError(true)}
+          loading="lazy"
+        />
+      </div>
+    );
+  }
 
   return (
     <div

@@ -1,5 +1,6 @@
 import { Tool } from '../types/tool';
 import rawData from '../../data/web-development-tools.json';
+import { NORDVPN_TOOL } from '../config/affiliates';
 
 // Normalize raw tools to strictly match the Tool interface
 function normalizeTool(raw: any, index: number): Tool {
@@ -69,8 +70,8 @@ function normalizeTool(raw: any, index: number): Tool {
 }
 
 // Cached normalized tools list with strictly unique IDs
-const seenToolIds = new Set<string>();
-const normalizedTools: Tool[] = ((rawData as any).tools || []).map((t: any, idx: number) => {
+const seenToolIds = new Set<string>(['nordvpn']);
+const rawNormalized: Tool[] = ((rawData as any).tools || []).map((t: any, idx: number) => {
   const tool = normalizeTool(t, idx);
   let finalId = tool.id;
   if (seenToolIds.has(finalId)) {
@@ -81,14 +82,18 @@ const normalizedTools: Tool[] = ((rawData as any).tools || []).map((t: any, idx:
   return tool;
 });
 
+const normalizedTools: Tool[] = [NORDVPN_TOOL, ...rawNormalized];
+
 export function getFallbackTools(): Tool[] {
   return normalizedTools;
 }
 
 export function getFallbackToolById(id: string): Tool | null {
   if (!id) return null;
-  const normalizedId = String(id).padStart(3, '0').toLowerCase();
-  const searchId = String(id).toLowerCase();
+  const searchId = String(id).toLowerCase().trim();
+  if (searchId === 'nordvpn') return NORDVPN_TOOL;
+
+  const normalizedId = searchId.padStart(3, '0');
   const found = normalizedTools.find(
     t => {
       const tid = String(t.id).toLowerCase();
