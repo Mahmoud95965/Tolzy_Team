@@ -13,6 +13,7 @@ import {
   getFallbackTotalCount,
   getFallbackCategoryCount
 } from '../data/fallbackTools';
+import { NORDVPN_TOOL } from '../config/affiliates';
 
 const TOOLS_PER_PAGE = 40;
 
@@ -142,7 +143,9 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       if (featuredCached && popularCached && newlyCached && 
           Array.isArray(featuredCached) && Array.isArray(popularCached) && Array.isArray(newlyCached)) {
-        setFeaturedTools(featuredCached);
+        const hasNord = featuredCached.some((t: any) => t.id === 'nordvpn');
+        const finalFeatured = hasNord ? featuredCached : [NORDVPN_TOOL, ...featuredCached];
+        setFeaturedTools(finalFeatured);
         setPopularTools(popularCached);
         setNewTools(newlyCached);
         return;

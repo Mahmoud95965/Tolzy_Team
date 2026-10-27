@@ -134,6 +134,15 @@ function resolveCategoryStyle(categoryName?: string, subcategoryName?: string): 
   return DEFAULT_STYLE;
 }
 
+const NordVpnEmblem: React.FC<{ className?: string }> = ({ className = "w-full h-full" }) => (
+  <svg className={className} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="32" height="32" rx="7" fill="#4687FF"/>
+    <g transform="translate(4, 4)">
+      <path d="M2.2838 21.5414A11.9866 11.9866 0 010 14.4832C0 7.8418 5.3727 2.4586 12 2.4586c6.6279 0 12 5.3832 12 12.0246a11.9853 11.9853 0 01-2.2838 7.0582l-5.7636-9.3783-.5565.9419.5645 2.6186L12 8.9338l-2.45 4.1447.5707 2.6451-2.0764-3.5555-5.7605 9.3733z" fill="#FFFFFF"/>
+    </g>
+  </svg>
+);
+
 export interface ToolImageProps {
   imageUrl?: string;
   name: string;
@@ -163,7 +172,20 @@ const ToolImage: React.FC<ToolImageProps> = ({
 
   const { box, icon: iconSize } = sizeConfig[size] || sizeConfig.md;
 
-  const resolvedImageUrl = imageUrl || (name && name.toLowerCase().includes('nordvpn') ? '/image/tools/nordvpn.svg' : undefined);
+  // Direct render for NordVPN official logo vector (zero latency, offline resilient)
+  if (name && name.toLowerCase().includes('nordvpn')) {
+    return (
+      <div
+        className={`${box} bg-[#ffffff] border border-[#d2d2c8] p-1 flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-105 shadow-xs select-none overflow-hidden ${className}`}
+        title={name}
+        aria-label={name}
+      >
+        <NordVpnEmblem className="w-full h-full object-contain" />
+      </div>
+    );
+  }
+
+  const resolvedImageUrl = imageUrl;
 
   if (resolvedImageUrl && !hasError) {
     return (

@@ -46,6 +46,7 @@ import PrivacySecuritySection from '@/src/components/home/PrivacySecuritySection
 import { toast } from 'react-hot-toast';
 import { updateToolSave } from '@/src/services/tool-actions.service';
 import { getFallbackTools } from '@/src/data/fallbackTools';
+import { NORDVPN_TOOL } from '@/src/config/affiliates';
 
 // Filter Pills Config for Tools with Lucide Icons
 const TOOL_PILLS = [
@@ -116,7 +117,7 @@ export default function UnifiedDirectoryHome() {
 
   // Combine and deduplicate all tools in memory (with instant fallback)
   const allTools = useMemo<Tool[]>(() => {
-    const combined = [...tools, ...featuredTools, ...popularTools, ...newTools];
+    const combined = [NORDVPN_TOOL, ...tools, ...featuredTools, ...popularTools, ...newTools];
     const seen = new Set<string>();
     const deduplicated: Tool[] = [];
     for (const tool of combined) {
@@ -126,16 +127,15 @@ export default function UnifiedDirectoryHome() {
       }
     }
     if (deduplicated.length === 0) {
-      return getFallbackTools();
+      return [NORDVPN_TOOL, ...getFallbackTools()];
     }
     return deduplicated;
   }, [tools, featuredTools, popularTools, newTools]);
 
-  // Spotlight Tool: Pick a top featured tool for Bento Spotlight
+  // Spotlight Tool: Strictly NordVPN as the featured Tool of the Day
   const spotlightTool = useMemo(() => {
-    if (allTools.length === 0) return null;
     const nordvpn = allTools.find(t => t.id === 'nordvpn' || t.name.toLowerCase() === 'nordvpn');
-    return nordvpn || allTools.find(t => t.isFeatured && t.rating >= 4.8) || allTools[0];
+    return nordvpn || NORDVPN_TOOL;
   }, [allTools]);
 
   // Launch 1-click comparison between two popular tools

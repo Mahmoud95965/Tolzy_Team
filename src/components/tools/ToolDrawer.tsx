@@ -321,7 +321,7 @@ const ToolDrawer: React.FC<ToolDrawerProps> = ({ isOpen, onClose, tool }) => {
                 <a
                   href={tool.url}
                   target="_blank"
-                  rel="noopener noreferrer"
+                  rel={tool.id === 'nordvpn' ? "sponsored noopener noreferrer" : "noopener noreferrer"}
                   className="col-span-2 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3.5 bg-[#beff50] hover:bg-[#abf03c] text-[#14140f] rounded-full font-bold text-xs sm:text-sm transition-colors shadow-none"
                 >
                   <span>زيارة الموقع</span>
@@ -349,6 +349,12 @@ const ToolDrawer: React.FC<ToolDrawerProps> = ({ isOpen, onClose, tool }) => {
                   )}
                 </button>
               </div>
+
+              {tool.id === 'nordvpn' && (
+                <p className="text-[11px] text-[#6e6e64] bg-[#f5f5eb] border border-[#d2d2c8] px-3 py-1.5 rounded-xl text-center leading-relaxed">
+                  ⭐ توصية معتمدة: قد يحصل تولزي على عمولة عند الاشتراك عبر هذا الرابط، دون أي تكلفة إضافية عليك.
+                </p>
+              )}
 
               {/* Compare Button */}
               <button
